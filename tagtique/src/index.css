@@ -94,8 +94,9 @@
     transform: translate(-50%, -50%) !important;
     margin: 0 !important;
     padding: 18px !important;
-    border: 2.5px solid #1B0F06 !important;
-    background: #FFFFFF !important;
+    border: none !important;
+    background: #F5B21F !important;
+    color: #FFFFFF !important;
     border-radius: 20px !important;
     width: 320px !important;
     box-shadow: none !important;

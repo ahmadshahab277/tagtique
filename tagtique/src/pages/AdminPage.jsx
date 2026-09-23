@@ -41,6 +41,8 @@ import {
 } from 'lucide-react';
 import QRScannerModal from '../components/QRScannerModal';
 import { buildScanUrl } from '../utils/scanUrl';
+import { renderStickerBlob, stickerFileName, triggerFileDownload } from '../utils/stickerImage';
+import { zipStore } from '../utils/zipStore';
 
 export default function AdminPage() {
   const { lastOrder } = useCart();
@@ -53,6 +55,9 @@ export default function AdminPage() {
   const [toastMessage, setToastMessage] = useState('');
   const [printModalItem, setPrintModalItem] = useState(null);
   const [printQrDataUrl, setPrintQrDataUrl] = useState('');
+  const [selectedOrderKeys, setSelectedOrderKeys] = useState([]);
+  const [selectedAssetKeys, setSelectedAssetKeys] = useState([]);
+  const [isBundling, setIsBundling] = useState(false);
 
   // Generate or resolve high-res QR Code data URL whenever a sticker is prepared for printing
   useEffect(() => {
@@ -61,7 +66,7 @@ export default function AdminPage() {
       QRCode.toDataURL(buildScanUrl(token), {
         width: 360,
         margin: 1,
-        color: { dark: '#1B0F06', light: '#FFFFFF' }
+        color: { dark: '#FFFFFF', light: '#1C120C' }
       }).then((url) => {
         setPrintQrDataUrl(url);
       }).catch(() => {
@@ -71,6 +76,44 @@ export default function AdminPage() {
       setPrintQrDataUrl('');
     }
   }, [printModalItem]);
+
+  const orderSelectionKey = (order) => String(order.tag_id || order.tagId || order.qr_code_value || order.orderId || order.rawId);
+  const assetSelectionKey = (asset) => String(asset.id || asset.qr_code_value || asset.qrId);
+
+  const toggleKey = (list, setList, key) => {
+    setList((current) => (current.includes(key) ? current.filter((item) => item !== key) : [...current, key]));
+  };
+
+  const downloadStickers = async (items) => {
+    const ready = (items || []).filter(Boolean);
+    if (!ready.length || isBundling) return;
+    setIsBundling(true);
+    try {
+      if (ready.length === 1) {
+        const blob = await renderStickerBlob(ready[0]);
+        triggerFileDownload(blob, stickerFileName(ready[0]));
+        showToast('Downloaded the full sticker');
+        return;
+      }
+      showToast(`Preparing ${ready.length} stickers...`);
+      const files = [];
+      const usedNames = new Set();
+      for (const item of ready) {
+        const blob = await renderStickerBlob(item);
+        let name = stickerFileName(item);
+        if (usedNames.has(name)) name = name.replace(/\.png$/, `-${files.length + 1}.png`);
+        usedNames.add(name);
+        files.push({ name, data: new Uint8Array(await blob.arrayBuffer()) });
+      }
+      triggerFileDownload(zipStore(files), `tagtique-stickers-${files.length}.zip`);
+      showToast(`Downloaded ${files.length} stickers as a zip`);
+    } catch (err) {
+      console.error('Sticker download failed:', err);
+      showToast('Could not download the stickers');
+    } finally {
+      setIsBundling(false);
+    }
+  };
 
   // Edit form state for vehicle number & order fields
   const [editForm, setEditForm] = useState({
@@ -822,6 +865,16 @@ export default function AdminPage() {
 
                   <button
                     type="button"
+                    disabled={isBundling || selectedOrderKeys.length === 0}
+                    onClick={() => downloadStickers(filteredOrders.filter((order) => selectedOrderKeys.includes(orderSelectionKey(order))))}
+                    className="px-4 py-1.5 rounded-full bg-tag-brown hover:bg-tag-brown-deep text-tag-bg text-xs font-extrabold flex items-center gap-1.5 transition-all shadow-warm-sm disabled:opacity-50"
+                  >
+                    <Download className="w-3.5 h-3.5 text-tag-amber" />
+                    <span>{isBundling ? 'Preparing...' : `Download bundle${selectedOrderKeys.length ? ` (${selectedOrderKeys.length})` : ''}`}</span>
+                  </button>
+
+                  <button
+                    type="button"
                     onClick={() => {
                       setGenerateForm({
                         type: 'unassigned',
@@ -900,7 +953,15 @@ export default function AdminPage() {
                   <table className="w-full text-left text-xs">
                     <thead>
                       <tr className="border-b border-tag-border bg-tag-pill/40 text-tag-brown-muted font-bold tracking-wider uppercase text-[10.5px]">
-                        <th className="py-3.5 pl-4">CUSTOMER NAME</th>
+                        <th className="py-3.5 pl-4">
+                          <input
+                            type="checkbox"
+                            checked={filteredOrders.length > 0 && filteredOrders.every((order) => selectedOrderKeys.includes(orderSelectionKey(order)))}
+                            onChange={(e) => setSelectedOrderKeys(e.target.checked ? filteredOrders.map(orderSelectionKey) : [])}
+                            aria-label="Select all stickers"
+                          />
+                        </th>
+                        <th className="py-3.5">CUSTOMER NAME</th>
                         <th className="py-3.5">VEHICLE NUMBER</th>
                         <th className="py-3.5">PHONE NUMBER</th>
                         <th className="py-3.5">GUARDIAN NUMBER</th>
@@ -913,15 +974,23 @@ export default function AdminPage() {
                     <tbody className="divide-y divide-tag-border/60">
                       {filteredOrders.length === 0 ? (
                         <tr>
-                          <td colSpan="8" className="py-12 text-center text-tag-brown-muted font-bold">
+                          <td colSpan="9" className="py-12 text-center text-tag-brown-muted font-bold">
                             No orders match your filter criteria.
                           </td>
                         </tr>
                       ) : (
                         filteredOrders.map((order) => (
                           <tr key={order.orderId} className="hover:bg-tag-bg/60 transition-colors">
-                            {/* Customer Name & Order ID & Serial */}
                             <td className="py-4 pl-4">
+                              <input
+                                type="checkbox"
+                                checked={selectedOrderKeys.includes(orderSelectionKey(order))}
+                                onChange={() => toggleKey(selectedOrderKeys, setSelectedOrderKeys, orderSelectionKey(order))}
+                                aria-label={`Select ${order.vehicleNumber || order.orderId}`}
+                              />
+                            </td>
+                            {/* Customer Name & Order ID & Serial */}
+                            <td className="py-4">
                               <div className="font-extrabold text-sm text-tag-brown capitalize">
                                 {order.customerName}
                               </div>
@@ -1033,12 +1102,12 @@ export default function AdminPage() {
 
                                 <button
                                   type="button"
-                                  onClick={() => showToast(`Downloaded QR for ${order.vehicleNumber}`)}
+                                  onClick={() => downloadStickers([order])}
                                   className="px-2.5 py-1 rounded-lg border border-tag-border bg-tag-card hover:bg-tag-pill text-tag-brown text-xs font-bold flex items-center gap-1 transition-colors"
-                                  title="Download SVG QR"
+                                  title="Download the full yellow sticker"
                                 >
                                   <Download className="w-3 h-3 text-tag-brown-light" />
-                                  <span className="hidden md:inline">Download QR</span>
+                                  <span className="hidden md:inline">Download sticker</span>
                                 </button>
 
                                 <button
@@ -1240,6 +1309,25 @@ export default function AdminPage() {
 
                   <button
                     type="button"
+                    disabled={isBundling || selectedAssetKeys.length === 0}
+                    onClick={() => {
+                      const chosen = dynamicQrAssets.filter((asset) => selectedAssetKeys.includes(assetSelectionKey(asset)));
+                      downloadStickers(chosen.map((asset) => (
+                        safeOrders.find((order) => order.orderId === asset.orderId || order.tag_id === asset.id || order.tagId === asset.id) || {
+                          vehicleNumber: asset.plate,
+                          qr_code_value: asset.qr_code_value || asset.qrId,
+                          serialNumber: asset.serialNumber
+                        }
+                      )));
+                    }}
+                    className="px-4 py-1.5 rounded-full bg-tag-brown hover:bg-tag-brown-deep text-tag-bg text-xs font-extrabold flex items-center gap-1.5 transition-all shadow-warm-sm disabled:opacity-50"
+                  >
+                    <Download className="w-3.5 h-3.5 text-tag-amber" />
+                    <span>{isBundling ? 'Preparing...' : `Download bundle${selectedAssetKeys.length ? ` (${selectedAssetKeys.length})` : ''}`}</span>
+                  </button>
+
+                  <button
+                    type="button"
                     onClick={() => {
                       setGenerateForm({
                         type: 'unassigned',
@@ -1284,7 +1372,15 @@ export default function AdminPage() {
                   <table className="w-full text-left text-xs">
                     <thead>
                       <tr className="border-b border-tag-border bg-tag-pill/40 text-tag-brown-muted font-bold tracking-wider uppercase text-[10.5px]">
-                        <th className="py-3.5 pl-4">ASSET PREVIEW</th>
+                        <th className="py-3.5 pl-4">
+                          <input
+                            type="checkbox"
+                            checked={dynamicQrAssets.length > 0 && dynamicQrAssets.every((asset) => selectedAssetKeys.includes(assetSelectionKey(asset)))}
+                            onChange={(e) => setSelectedAssetKeys(e.target.checked ? dynamicQrAssets.map(assetSelectionKey) : [])}
+                            aria-label="Select all QR stickers"
+                          />
+                        </th>
+                        <th className="py-3.5">ASSET PREVIEW</th>
                         <th className="py-3.5">QR IDENTIFIER</th>
                         <th className="py-3.5">LINKED ORDER #</th>
                         <th className="py-3.5">VEHICLE PLATE</th>
@@ -1303,7 +1399,7 @@ export default function AdminPage() {
                         a.plate.toLowerCase().includes(searchQuery.toLowerCase())
                       ).length === 0 ? (
                         <tr>
-                          <td colSpan="8" className="py-12 text-center text-tag-brown-muted font-bold">
+                          <td colSpan="9" className="py-12 text-center text-tag-brown-muted font-bold">
                             No QR code assets found. Assets will appear here as vehicle tags are registered.
                           </td>
                         </tr>
@@ -1316,8 +1412,16 @@ export default function AdminPage() {
                           a.plate.toLowerCase().includes(searchQuery.toLowerCase())
                         ).map((asset) => (
                         <tr key={asset.id} className="hover:bg-tag-bg/60 transition-colors">
-                          {/* Asset QR Thumbnail */}
                           <td className="py-4 pl-4">
+                            <input
+                              type="checkbox"
+                              checked={selectedAssetKeys.includes(assetSelectionKey(asset))}
+                              onChange={() => toggleKey(selectedAssetKeys, setSelectedAssetKeys, assetSelectionKey(asset))}
+                              aria-label={`Select ${asset.plate || asset.qrId}`}
+                            />
+                          </td>
+                          {/* Asset QR Thumbnail */}
+                          <td className="py-4">
                             <div className="w-10 h-10 rounded-xl bg-tag-pill border border-tag-border flex items-center justify-center p-1.5 shadow-2xs">
                               <QrCode className="w-full h-full text-tag-brown" />
                             </div>
@@ -1443,11 +1547,17 @@ export default function AdminPage() {
 
                               <button
                                 type="button"
-                                onClick={() => showToast(`Exported vector SVG for ${asset.qrId}`)}
+                                onClick={() => downloadStickers([
+                                  safeOrders.find((order) => order.orderId === asset.orderId || order.tag_id === asset.id || order.tagId === asset.id) || {
+                                    vehicleNumber: asset.plate,
+                                    qr_code_value: asset.qr_code_value || asset.qrId,
+                                    serialNumber: asset.serialNumber
+                                  }
+                                ])}
                                 className="px-2.5 py-1 rounded-lg border border-tag-border bg-tag-card hover:bg-tag-pill text-xs font-bold text-tag-brown flex items-center gap-1 transition-colors"
                               >
                                 <Download className="w-3 h-3 text-tag-brown-light" />
-                                <span>Export SVG</span>
+                                <span>Download sticker</span>
                               </button>
                             </div>
                           </td>
@@ -1736,22 +1846,17 @@ export default function AdminPage() {
             </div>
 
             {/* Actual Printable Physical Sticker Card */}
-            <div className="print-sticker-container w-full max-w-[320px] mx-auto p-5 rounded-3xl bg-white border-2 border-tag-brown flex flex-col items-center text-center gap-3 shadow-warm-md select-none relative overflow-hidden">
-              {/* Header Badge */}
-              <div className="w-full flex items-center justify-between pb-1 border-b border-tag-border/60">
-                <div className="flex items-center gap-1.5">
-                  <Shield className="w-3.5 h-3.5 fill-tag-amber text-tag-brown" />
-                  <span className="font-baloo font-extrabold text-xs tracking-wider text-tag-brown">
-                    TAGTIQUE
-                  </span>
-                </div>
-                <span className="text-[8px] font-bold tracking-widest uppercase text-tag-brown/60">
-                  SMART VEHICLE TAG
-                </span>
+            <div className="print-sticker-container w-full max-w-[340px] mx-auto px-5 pt-8 pb-6 rounded-3xl bg-[#F5B21F] flex flex-col items-center text-center gap-5 shadow-warm-md select-none text-white">
+              <div className="flex flex-col items-center gap-2 px-1">
+                <p dir="rtl" className="font-extrabold text-[26px] leading-snug text-white" style={{ fontFamily: '"Noto Sans Arabic", "Segoe UI", sans-serif' }}>
+                  اسکین کریں، رابطہ کریں
+                </p>
+                <p className="font-extrabold text-[26px] leading-tight text-white tracking-tight">
+                  Scan to Contact
+                </p>
               </div>
 
-              {/* Scannable QR Code */}
-              <div className="w-36 h-36 bg-white rounded-2xl p-2 border border-tag-border flex items-center justify-center shadow-2xs">
+              <div className="w-48 h-48 bg-[#1C120C] rounded-2xl p-2 flex items-center justify-center">
                 {printQrDataUrl ? (
                   <img
                     src={printQrDataUrl}
@@ -1759,35 +1864,13 @@ export default function AdminPage() {
                     className="w-full h-full object-contain select-none"
                   />
                 ) : (
-                  <QrCode className="w-full h-full text-tag-brown animate-pulse" />
+                  <QrCode className="w-full h-full text-white animate-pulse" />
                 )}
               </div>
 
-              {/* Micro-etched Serial Number - Small & Discreet for Supabase identification */}
-              <div className="flex flex-col items-center">
-                <span className="font-mono text-[8.5px] font-bold text-tag-brown/75 tracking-widest uppercase bg-tag-pill px-2 py-0.5 rounded border border-tag-border/60">
-                  SN: {printModalItem.serialNumber || (printModalItem.qr_code_value ? `SN-${printModalItem.qr_code_value.replace(/^tgt-/, '').replace(/[^a-zA-Z0-9]/g, '').slice(0, 8).toUpperCase()}` : `SN-${printModalItem.rawId || 'TAG'}`)}
-                </span>
-              </div>
-
-              {/* Vehicle Registration Plate */}
-              <div className="w-full px-3 py-1.5 rounded-xl bg-tag-bg border-2 border-tag-brown flex flex-col items-center shadow-2xs">
-                <span className="font-mono font-black text-lg text-tag-brown tracking-widest uppercase leading-none">
-                  {printModalItem.vehicleNumber || 'VEHICLE'}
-                </span>
-                <span className="text-[9px] font-semibold text-tag-brown-muted uppercase mt-0.5">
-                  {printModalItem.vehicleType || 'Car'}
-                </span>
-              </div>
-
-              {/* Scan instructions & Tag ID footer */}
-              <div className="flex flex-col items-center text-[9px] text-tag-brown-muted font-medium w-full">
-                <span>Scan with phone camera to contact owner securely</span>
-                <div className="flex items-center justify-between w-full text-[7.5px] font-mono text-tag-brown/50 tracking-wider mt-1 pt-1 border-t border-tag-border/40">
-                  <span>tagtique.co</span>
-                  <span>ID: {printModalItem.tag_id ? printModalItem.tag_id.slice(0, 8).toUpperCase() : printModalItem.rawId}</span>
-                </div>
-              </div>
+              <p className="font-bold text-sm tracking-wide text-white">
+                tagtique powered by ata
+              </p>
             </div>
 
             {/* Informative Supabase dynamic remapping notice banner */}
@@ -1815,17 +1898,11 @@ export default function AdminPage() {
                 {printQrDataUrl && (
                   <button
                     type="button"
-                    onClick={() => {
-                      const a = document.createElement('a');
-                      a.href = printQrDataUrl;
-                      a.download = `Tagtique_Sticker_${printModalItem.vehicleNumber || 'TAG'}_${printModalItem.serialNumber || 'SN'}.png`;
-                      a.click();
-                      showToast('Downloaded sticker QR asset');
-                    }}
+                    onClick={() => downloadStickers([printModalItem])}
                     className="px-3.5 py-2 rounded-full border border-tag-border bg-tag-card hover:bg-tag-pill text-xs font-bold text-tag-brown flex items-center gap-1.5 shadow-2xs"
                   >
                     <Download className="w-3.5 h-3.5 text-tag-brown-light" />
-                    <span>Download QR</span>
+                    <span>Download sticker</span>
                   </button>
                 )}
 
