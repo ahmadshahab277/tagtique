@@ -18,8 +18,9 @@ export default function ContactDriverModal({
   const hasPhone = Boolean(telUrl(phone));
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#1C120C]/70 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
-      <div className="bg-white rounded-t-3xl sm:rounded-3xl border border-[#EAE3D6] max-w-md w-full p-6 flex flex-col gap-5 shadow-warm-lg animate-slideUp">
+    <div className="fixed inset-0 z-50 bg-[#1C120C]/70 backdrop-blur-xs overflow-y-auto overscroll-contain">
+      <div className="min-h-full flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div className="bg-white rounded-t-3xl sm:rounded-3xl border border-[#EAE3D6] max-w-md w-full p-6 flex flex-col gap-5 shadow-warm-lg animate-slideUp max-h-[92dvh] overflow-y-auto">
         <div className="flex items-center justify-between border-b border-[#F2ECE1] pb-3.5">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
@@ -137,6 +138,7 @@ export default function ContactDriverModal({
         >
           Cancel
         </button>
+      </div>
       </div>
     </div>
   );

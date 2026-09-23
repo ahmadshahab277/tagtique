@@ -1,9 +1,9 @@
 import QRCode from 'qrcode';
 import { buildScanUrl } from './scanUrl';
 
-const SKIN = '#FDF7EC';
 const YELLOW = '#F5B21F';
-const BROWN = '#2E1B10';
+const WHITE = '#FFFFFF';
+const INK = '#1B0F06';
 
 function stickerToken(item) {
   return item?.qr_code_value || item?.qrId || item?.tag_id || item?.tagId || item?.rawId || 'tagtique';
@@ -28,7 +28,7 @@ export async function renderStickerBlob(item) {
   canvas.height = 1100;
   const ctx = canvas.getContext('2d');
 
-  ctx.fillStyle = SKIN;
+  ctx.fillStyle = YELLOW;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   try {
@@ -36,7 +36,7 @@ export async function renderStickerBlob(item) {
     await document.fonts.load('800 56px Manrope');
   } catch (_) {}
 
-  ctx.fillStyle = BROWN;
+  ctx.fillStyle = WHITE;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 
@@ -68,7 +68,7 @@ function drawStyledQr(text) {
   canvas.width = span;
   canvas.height = span + footer;
   const ctx = canvas.getContext('2d');
-  ctx.fillStyle = SKIN;
+  ctx.fillStyle = YELLOW;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   const center = (count - 1) / 2;
@@ -79,7 +79,7 @@ function drawStyledQr(text) {
     (row >= count - 7 && col < 7)
   );
 
-  ctx.fillStyle = YELLOW;
+  ctx.fillStyle = WHITE;
   for (let row = 0; row < count; row += 1) {
     for (let col = 0; col < count; col += 1) {
       if (!qr.modules.get(row, col) || inFinder(row, col)) continue;
@@ -98,9 +98,18 @@ function drawStyledQr(text) {
 
   const icon = cell * count * 0.2;
   const mid = (margin + count / 2) * cell;
-  drawPhoneIcon(ctx, mid - icon / 2, mid - icon / 2, icon, YELLOW);
+  drawPhoneIcon(ctx, mid - icon / 2, mid - icon / 2, icon, WHITE);
 
-  ctx.fillStyle = BROWN;
+  const inset = 7;
+  ctx.save();
+  ctx.strokeStyle = INK;
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.roundRect(inset, inset, span - inset * 2, span - inset * 2, 26);
+  ctx.stroke();
+  ctx.restore();
+
+  ctx.fillStyle = WHITE;
   ctx.font = '600 22px Manrope, "Segoe UI", sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -111,15 +120,15 @@ function drawStyledQr(text) {
 function drawFinderEye(ctx, col, row, cell) {
   const x = (col + 3.5) * cell;
   const y = (row + 3.5) * cell;
-  ctx.fillStyle = BROWN;
+  ctx.fillStyle = INK;
   ctx.beginPath();
   ctx.arc(x, y, cell * 3.15, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = SKIN;
+  ctx.fillStyle = YELLOW;
   ctx.beginPath();
   ctx.arc(x, y, cell * 2.15, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = BROWN;
+  ctx.fillStyle = INK;
   ctx.beginPath();
   ctx.arc(x, y, cell * 1.15, 0, Math.PI * 2);
   ctx.fill();

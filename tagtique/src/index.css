@@ -5,11 +5,15 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    overflow-x: clip;
   }
   
   body {
     background-color: #FDF7EC;
     color: #2E1B10;
+    overflow-x: clip;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   ::selection {
@@ -95,8 +99,8 @@
     margin: 0 !important;
     padding: 18px !important;
     border: none !important;
-    background: #FDF7EC !important;
-    color: #2E1B10 !important;
+    background: #F5B21F !important;
+    color: #FFFFFF !important;
     border-radius: 20px !important;
     width: 320px !important;
     box-shadow: none !important;

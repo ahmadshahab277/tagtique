@@ -37,7 +37,8 @@ import {
   Edit3,
   Check,
   Share2,
-  Camera
+  Camera,
+  Menu
 } from 'lucide-react';
 import QRScannerModal from '../components/QRScannerModal';
 import { buildScanUrl } from '../utils/scanUrl';
@@ -57,6 +58,7 @@ export default function AdminPage() {
   const [selectedOrderKeys, setSelectedOrderKeys] = useState([]);
   const [selectedAssetKeys, setSelectedAssetKeys] = useState([]);
   const [isBundling, setIsBundling] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   // Generate or resolve high-res QR Code data URL whenever a sticker is prepared for printing
   useEffect(() => {
@@ -620,7 +622,7 @@ export default function AdminPage() {
   const grossRevenuePkr = safeOrders.reduce((sum, o) => sum + (Number(o?.amount) || 0), 0);
 
   return (
-    <div className="min-h-screen flex bg-tag-bg text-tag-brown font-manrope selection:bg-tag-amber selection:text-tag-brown-deep">
+    <div className="min-h-screen flex bg-tag-bg text-tag-brown font-manrope selection:bg-tag-amber selection:text-tag-brown-deep overflow-x-clip">
       {/* Toast */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 bg-tag-brown text-tag-bg px-5 py-3 rounded-2xl shadow-warm-lg flex items-center gap-3 animate-fadeIn font-semibold text-xs border border-tag-amber/30">
@@ -629,9 +631,18 @@ export default function AdminPage() {
         </div>
       )}
 
+      {mobileNavOpen && (
+        <button
+          type="button"
+          aria-label="Close menu"
+          className="fixed inset-0 z-30 bg-tag-brown-deep/40 lg:hidden"
+          onClick={() => setMobileNavOpen(false)}
+        />
+      )}
+
       {/* LEFT SIDEBAR (Themed in warm luxury cream/pill/espresso) */}
-      <aside className="w-64 bg-[#FAF3E5] border-r border-tag-border flex flex-col justify-between shrink-0 sticky top-0 h-screen z-20 select-none shadow-xs">
-        <div className="flex flex-col">
+      <aside className={`w-64 bg-[#FAF3E5] border-r border-tag-border flex flex-col shrink-0 fixed lg:sticky top-0 h-screen z-40 select-none shadow-xs transition-transform duration-200 ${mobileNavOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+        <div className="flex flex-col min-h-0 flex-1 overflow-y-auto">
           {/* Header Brand */}
           <div className="p-6 pb-5 flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-tag-card border border-tag-border flex items-center justify-center text-tag-brown shadow-warm-sm">
@@ -651,7 +662,7 @@ export default function AdminPage() {
           <nav className="px-4 flex flex-col gap-1.5 mt-3">
             <button
               type="button"
-              onClick={() => setActiveNav('dashboard')}
+              onClick={() => { setActiveNav('dashboard'); setMobileNavOpen(false); }}
               className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all ${
                 activeNav === 'dashboard'
                   ? 'bg-gradient-to-r from-[#F4EADA] to-[#FCEFDA] text-tag-brown border border-tag-border shadow-warm-sm'
@@ -666,7 +677,7 @@ export default function AdminPage() {
 
             <button
               type="button"
-              onClick={() => setActiveNav('orders')}
+              onClick={() => { setActiveNav('orders'); setMobileNavOpen(false); }}
               className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all ${
                 activeNav === 'orders'
                   ? 'bg-gradient-to-r from-[#F4EADA] to-[#FCEFDA] text-tag-brown border border-tag-border shadow-warm-sm'
@@ -686,7 +697,7 @@ export default function AdminPage() {
 
             <button
               type="button"
-              onClick={() => setActiveNav('customers')}
+              onClick={() => { setActiveNav('customers'); setMobileNavOpen(false); }}
               className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all ${
                 activeNav === 'customers'
                   ? 'bg-gradient-to-r from-[#F4EADA] to-[#FCEFDA] text-tag-brown border border-tag-border shadow-warm-sm'
@@ -701,7 +712,7 @@ export default function AdminPage() {
 
             <button
               type="button"
-              onClick={() => setActiveNav('qrcodes')}
+              onClick={() => { setActiveNav('qrcodes'); setMobileNavOpen(false); }}
               className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all ${
                 activeNav === 'qrcodes'
                   ? 'bg-gradient-to-r from-[#F4EADA] to-[#FCEFDA] text-tag-brown border border-tag-border shadow-warm-sm'
@@ -716,7 +727,7 @@ export default function AdminPage() {
 
             <button
               type="button"
-              onClick={() => setIsScannerModalOpen(true)}
+              onClick={() => { setIsScannerModalOpen(true); setMobileNavOpen(false); }}
               className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm font-bold text-tag-brown-muted hover:text-tag-brown hover:bg-tag-card/60 transition-all group"
             >
               <div className="flex items-center gap-3">
@@ -730,7 +741,7 @@ export default function AdminPage() {
 
             <button
               type="button"
-              onClick={() => setActiveNav('settings')}
+              onClick={() => { setActiveNav('settings'); setMobileNavOpen(false); }}
               className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all ${
                 activeNav === 'settings'
                   ? 'bg-gradient-to-r from-[#F4EADA] to-[#FCEFDA] text-tag-brown border border-tag-border shadow-warm-sm'
@@ -770,12 +781,27 @@ export default function AdminPage() {
       {/* RIGHT WORKSPACE AREA */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Navbar */}
-        <header className="h-16 bg-[#FAF3E5] border-b border-tag-border px-8 flex items-center justify-between sticky top-0 z-10 shadow-xs">
-          {/* Search & Scanner Trigger */}
-          <div className="flex items-center gap-2.5">
+        <header className="min-h-14 bg-[#FAF3E5] border-b border-tag-border px-3 sm:px-6 lg:px-8 py-2 flex items-center justify-between gap-2 sticky top-0 z-20 shadow-xs">
+          <div className="flex items-center gap-2 min-w-0">
+            <button
+              type="button"
+              onClick={() => setMobileNavOpen(true)}
+              className="lg:hidden p-2 rounded-xl border border-tag-border bg-tag-card text-tag-brown"
+              aria-label="Open menu"
+            >
+              <Menu className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsSearchModalOpen(true)}
+              className="sm:hidden p-2 rounded-xl border border-tag-border bg-tag-bg text-tag-brown"
+              aria-label="Search"
+            >
+              <Search className="w-4 h-4" />
+            </button>
             <div
               onClick={() => setIsSearchModalOpen(true)}
-              className="flex items-center gap-2.5 text-xs text-tag-brown-muted bg-tag-bg hover:bg-tag-pill px-3.5 py-2 rounded-xl border border-tag-border cursor-pointer w-64 sm:w-72 transition-colors"
+              className="hidden sm:flex items-center gap-2.5 text-xs text-tag-brown-muted bg-tag-bg hover:bg-tag-pill px-3.5 py-2 rounded-xl border border-tag-border cursor-pointer w-52 md:w-72 transition-colors"
             >
               <Search className="w-3.5 h-3.5 text-tag-brown-light" />
               <span>Press</span>
@@ -797,7 +823,7 @@ export default function AdminPage() {
           </div>
 
           {/* Right Header Controls */}
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <button
               type="button"
               className="relative p-2 rounded-full text-tag-brown hover:bg-tag-card transition-colors"
@@ -807,7 +833,7 @@ export default function AdminPage() {
               <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-tag-amber ring-2 ring-[#FAF3E5]" />
             </button>
 
-            <div className="flex items-center gap-3 pl-3 border-l border-tag-border">
+            <div className="hidden md:flex items-center gap-3 pl-3 border-l border-tag-border">
               <div className="w-8 h-8 rounded-full bg-tag-pill border border-tag-border text-tag-brown flex items-center justify-center font-bold text-xs">
                 OA
               </div>
@@ -824,7 +850,7 @@ export default function AdminPage() {
         </header>
 
         {/* Main Content Area */}
-        <main className="flex-1 p-8 max-w-7xl w-full mx-auto flex flex-col gap-6">
+        <main className="flex-1 p-3 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto flex flex-col gap-6 min-w-0">
           {/* ======================================================== */}
           {/* TAB 1: ORDERS (E-TAG ORDERS & QR REGISTRY) - MATCHING IMG 1 */}
           {/* ======================================================== */}
@@ -1773,8 +1799,8 @@ export default function AdminPage() {
 
       {/* QUICK SEARCH PALETTE (CTRL+K) */}
       {isSearchModalOpen && (
-        <div className="fixed inset-0 z-50 bg-tag-brown-deep/50 backdrop-blur-xs flex items-start justify-center pt-24 px-4">
-          <div className="bg-tag-card rounded-3xl border border-tag-border shadow-warm-lg max-w-lg w-full overflow-hidden animate-fadeIn">
+        <div className="fixed inset-0 z-50 bg-tag-brown-deep/50 backdrop-blur-xs overflow-y-auto overscroll-contain px-4 py-6 sm:pt-24">
+          <div className="bg-tag-card rounded-3xl border border-tag-border shadow-warm-lg max-w-lg w-full overflow-hidden animate-fadeIn mx-auto">
             <div className="p-4 border-b border-tag-border flex items-center gap-3">
               <Search className="w-4 h-4 text-tag-brown-light" />
               <input
@@ -1816,8 +1842,9 @@ export default function AdminPage() {
 
       {/* PRINT STICKER MODAL */}
       {printModalItem && (
-        <div className="fixed inset-0 z-50 bg-tag-brown-deep/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-tag-card rounded-3xl border border-tag-border shadow-warm-lg max-w-md w-full p-6 flex flex-col gap-5 animate-fadeIn">
+        <div className="fixed inset-0 z-50 bg-tag-brown-deep/60 backdrop-blur-xs overflow-y-auto overscroll-contain">
+          <div className="min-h-full flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-tag-card rounded-t-3xl sm:rounded-3xl border border-tag-border shadow-warm-lg max-w-md w-full p-4 sm:p-6 pb-[max(1rem,env(safe-area-inset-bottom))] flex flex-col gap-4 animate-fadeIn">
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-tag-border pb-3 no-print">
               <div className="flex items-center gap-2.5">
@@ -1841,17 +1868,17 @@ export default function AdminPage() {
             </div>
 
             {/* Actual Printable Physical Sticker Card */}
-            <div className="print-sticker-container w-full max-w-[340px] mx-auto px-5 pt-8 pb-6 rounded-3xl bg-[#FDF7EC] flex flex-col items-center text-center gap-5 shadow-warm-md select-none">
-              <div className="flex flex-col items-center gap-2 px-1">
-                <p dir="rtl" className="font-extrabold text-[26px] leading-snug text-[#2E1B10]" style={{ fontFamily: '"Noto Sans Arabic", "Segoe UI", sans-serif' }}>
+            <div className="print-sticker-container w-full max-w-[340px] mx-auto px-3 sm:px-5 pt-5 sm:pt-8 pb-4 sm:pb-6 rounded-3xl bg-[#F5B21F] flex flex-col items-center text-center gap-3 sm:gap-5 shadow-warm-md select-none">
+              <div className="flex flex-col items-center gap-1.5 sm:gap-2 px-1">
+                <p dir="rtl" className="font-extrabold text-[22px] sm:text-[26px] leading-snug text-white" style={{ fontFamily: '"Noto Sans Arabic", "Segoe UI", sans-serif' }}>
                   اسکین کریں، رابطہ کریں
                 </p>
-                <p className="font-extrabold text-[22px] leading-tight text-[#2E1B10] tracking-tight">
+                <p className="font-extrabold text-[18px] sm:text-[22px] leading-tight text-white tracking-tight">
                   Scan to Contact Driver
                 </p>
               </div>
 
-              <div className="w-full bg-[#FDF7EC] rounded-2xl p-2 flex items-center justify-center">
+              <div className="w-full bg-[#F5B21F] rounded-2xl p-1 flex items-center justify-center">
                 {printQrDataUrl ? (
                   <img
                     src={printQrDataUrl}
@@ -1876,21 +1903,21 @@ export default function AdminPage() {
             </div>
 
             {/* Print Modal Footer Action Buttons */}
-            <div className="flex items-center justify-between gap-3 pt-2 border-t border-tag-border no-print flex-wrap">
+            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-2 border-t border-tag-border no-print">
               <button
                 type="button"
                 onClick={() => setPrintModalItem(null)}
-                className="px-4 py-2 rounded-full border border-tag-border text-xs font-bold text-tag-brown hover:bg-tag-pill"
+                className="w-full sm:w-auto px-4 py-2.5 rounded-full border border-tag-border text-xs font-bold text-tag-brown hover:bg-tag-pill"
               >
                 Close
               </button>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
                 {printQrDataUrl && (
                   <button
                     type="button"
                     onClick={() => downloadStickers([printModalItem])}
-                    className="px-3.5 py-2 rounded-full border border-tag-border bg-tag-card hover:bg-tag-pill text-xs font-bold text-tag-brown flex items-center gap-1.5 shadow-2xs"
+                    className="w-full sm:w-auto justify-center px-3.5 py-2.5 rounded-full border border-tag-border bg-tag-card hover:bg-tag-pill text-xs font-bold text-tag-brown flex items-center gap-1.5 shadow-2xs"
                   >
                     <Download className="w-3.5 h-3.5 text-tag-brown-light" />
                     <span>Download sticker</span>
@@ -1903,7 +1930,7 @@ export default function AdminPage() {
                     window.print();
                     showToast('Sticker sent to printer queue');
                   }}
-                  className="amber-gradient-btn px-5 py-2 rounded-full text-xs font-extrabold text-tag-brown flex items-center gap-1.5 shadow-warm-sm"
+                  className="w-full sm:w-auto justify-center amber-gradient-btn px-5 py-2.5 rounded-full text-xs font-extrabold text-tag-brown flex items-center gap-1.5 shadow-warm-sm"
                 >
                   <Printer className="w-3.5 h-3.5" />
                   <span>Print Sticker Now</span>
@@ -1911,13 +1938,15 @@ export default function AdminPage() {
               </div>
             </div>
           </div>
+          </div>
         </div>
       )}
 
       {/* EDIT / VIEW ORDER INSPECTOR MODAL */}
       {selectedOrder && (
-        <div className="fixed inset-0 z-50 bg-tag-brown-deep/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-tag-card rounded-3xl border border-tag-border shadow-warm-lg max-w-lg w-full p-6 flex flex-col gap-5 animate-fadeIn max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-tag-brown-deep/50 backdrop-blur-xs overflow-y-auto overscroll-contain p-3 sm:p-4">
+          <div className="min-h-full flex items-center justify-center">
+          <div className="bg-tag-card rounded-3xl border border-tag-border shadow-warm-lg max-w-lg w-full p-4 sm:p-6 flex flex-col gap-5 animate-fadeIn">
             <div className="flex items-center justify-between border-b border-tag-border pb-3">
               <div className="flex items-center gap-2.5">
                 <Package className="w-5 h-5 text-tag-amber" />
@@ -2157,14 +2186,14 @@ export default function AdminPage() {
               </div>
             </form>
           </div>
+          </div>
         </div>
       )}
       {/* ======================================================== */}
-      {/* GENERATE NEW QR TAG MODAL */}
-      {/* ======================================================== */}
       {isGenerateModalOpen && (
-        <div className="fixed inset-0 z-50 bg-tag-brown-deep/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-tag-card rounded-3xl border border-tag-border shadow-warm-lg max-w-lg w-full p-6 flex flex-col gap-5 animate-fadeIn max-h-[92vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-tag-brown-deep/60 backdrop-blur-xs overflow-y-auto overscroll-contain p-3 sm:p-4">
+          <div className="min-h-full flex items-center justify-center">
+          <div className="bg-tag-card rounded-3xl border border-tag-border shadow-warm-lg max-w-lg w-full p-4 sm:p-6 flex flex-col gap-5 animate-fadeIn">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-tag-border pb-3">
               <div className="flex items-center gap-2.5">
@@ -2421,6 +2450,7 @@ export default function AdminPage() {
               </div>
             </form>
           </div>
+          </div>
         </div>
       )}
 
@@ -2428,8 +2458,9 @@ export default function AdminPage() {
       {/* REASSIGN QR TAG DETAILS MODAL */}
       {/* ======================================================== */}
       {reassignModalOrder && (
-        <div className="fixed inset-0 z-50 bg-tag-brown-deep/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-tag-card rounded-3xl border border-tag-border shadow-warm-lg max-w-lg w-full p-6 flex flex-col gap-5 animate-fadeIn max-h-[92vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-tag-brown-deep/60 backdrop-blur-xs overflow-y-auto overscroll-contain p-3 sm:p-4">
+          <div className="min-h-full flex items-center justify-center">
+          <div className="bg-tag-card rounded-3xl border border-tag-border shadow-warm-lg max-w-lg w-full p-4 sm:p-6 flex flex-col gap-5 animate-fadeIn">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-tag-border pb-3">
               <div className="flex items-center gap-2.5">
@@ -2627,6 +2658,7 @@ export default function AdminPage() {
                 </button>
               </div>
             </form>
+          </div>
           </div>
         </div>
       )}

@@ -69,7 +69,7 @@ export default function PublicVehicleScanPage() {
       <VehicleHeader />
 
       {/* Main Container: Mobile-First Max Width */}
-      <main className="flex-1 w-full max-w-md mx-auto px-4 py-5 flex flex-col gap-5">
+      <main className="flex-1 w-full max-w-md md:max-w-lg mx-auto px-4 py-5 pb-10 flex flex-col gap-5">
         
         {/* State A: Loading */}
         {loading && <LoadingScreen />}

@@ -62,6 +62,11 @@ export default function QRScannerModal({
 
   const inputRef = useRef(null);
   const scanBufferRef = useRef('');
+  const submitScanRef = useRef(() => {});
+  const scanLockRef = useRef(false);
+  const lastInputAtRef = useRef(0);
+  const fastKeysRef = useRef(0);
+  const idleTimerRef = useRef(null);
   const html5QrCodeRef = useRef(null);
   const scannerContainerId = 'tagtique-qr-reader-viewport';
 
@@ -91,40 +96,66 @@ export default function QRScannerModal({
     }
   }, [isOpen, scannedTag, activeTab]);
 
-  // Global listener for USB / Bluetooth handheld barcode scanner guns
+  // USB / Bluetooth guns type into whichever element is focused, then send Enter.
+  // Capture the burst even when the scan field is not focused.
   useEffect(() => {
-    if (!isOpen || scannedTag) return;
+    if (!isOpen || scannedTag || activeTab !== 'scanner') return;
 
     let buffer = '';
-    let lastKeyTime = Date.now();
+    let lastKeyTime = 0;
+
+    const finish = (raw) => {
+      buffer = '';
+      scanBufferRef.current = '';
+      submitScanRef.current(raw);
+    };
 
     const handleKeyDown = (e) => {
-      // If user is already typing in an input element, let the input handle it
-      if (document.activeElement && document.activeElement.tagName === 'INPUT') {
+      const key = e.key || '';
+      const isSubmit = key === 'Enter' || key === 'Tab' || key === 'NumpadEnter' || e.code === 'Enter' || e.code === 'NumpadEnter';
+      const target = e.target;
+      const field = inputRef.current;
+      const inField = field && target === field;
+      const inOtherField = target && target !== field && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable);
+      if (inOtherField) return;
+
+      const now = Date.now();
+      if (!inField && now - lastKeyTime > 80) buffer = '';
+      lastKeyTime = now;
+
+      if (isSubmit) {
+        const fromField = field?.value || '';
+        const value = (fromField.length >= buffer.length ? fromField : buffer).replace(/[\r\n]/g, '').trim();
+        if (value.length >= 2) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (field) field.value = '';
+          setManualQuery('');
+          finish(value);
+        }
         return;
       }
 
-      const currentTime = Date.now();
-      // Hardware scanners typically type characters very quickly (< 100ms per character)
-      if (currentTime - lastKeyTime > 150) {
-        buffer = '';
-      }
-      lastKeyTime = currentTime;
-
-      if (e.key === 'Enter' || e.key === 'Tab') {
-        if (buffer.length >= 2) {
-          e.preventDefault();
-          handleDecodedResult(buffer.trim());
-          buffer = '';
+      if (!inField && key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        buffer += key;
+        scanBufferRef.current = buffer;
+        if (field) {
+          field.focus();
+          field.value = buffer;
+          setManualQuery(buffer);
         }
-      } else if (e.key.length === 1) {
-        buffer += e.key;
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, scannedTag]);
+    window.addEventListener('keydown', handleKeyDown, true);
+    const focusTimer = setTimeout(() => inputRef.current?.focus(), 60);
+    return () => {
+      clearTimeout(focusTimer);
+      clearTimeout(idleTimerRef.current);
+      window.removeEventListener('keydown', handleKeyDown, true);
+    };
+  }, [isOpen, scannedTag, activeTab]);
 
   // Audio chime & haptic feedback on recognition
   const playRecognitionChime = () => {
@@ -270,9 +301,19 @@ export default function QRScannerModal({
       setCameraError('Error retrieving tag record. Please try again.');
     } finally {
       setIsSearching(false);
+      scanLockRef.current = false;
       scanBufferRef.current = '';
       setManualQuery('');
+      if (inputRef.current) inputRef.current.value = '';
+      setTimeout(() => inputRef.current?.focus(), 40);
     }
+  };
+
+  submitScanRef.current = (raw) => {
+    const value = String(raw || '').replace(/[\r\n]/g, '').trim();
+    if (value.length < 2 || scanLockRef.current) return;
+    scanLockRef.current = true;
+    handleDecodedResult(value);
   };
 
   // File upload decode
@@ -768,44 +809,38 @@ export default function QRScannerModal({
                       type="text"
                       autoFocus
                       autoComplete="off"
-                      value={manualQuery}
-                      onChange={(e) => {
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck={false}
+                      defaultValue=""
+                      onInput={(e) => {
                         const raw = e.target.value.replace(/[\r\n]/g, '');
-                        if (!raw) {
-                          scanBufferRef.current = '';
-                        } else if (raw.length >= scanBufferRef.current.length) {
-                          scanBufferRef.current = raw;
-                        }
-                        setManualQuery(scanBufferRef.current);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === 'Tab') {
-                          e.preventDefault();
-                          const fromField = e.currentTarget.value || '';
-                          const fromBuffer = scanBufferRef.current || '';
-                          const value = (fromBuffer.length >= fromField.length ? fromBuffer : fromField).trim();
-                          scanBufferRef.current = '';
-                          setManualQuery('');
-                          if (value) handleDecodedResult(value);
-                          return;
-                        }
-                        if (e.key === 'Backspace') {
-                          scanBufferRef.current = scanBufferRef.current.slice(0, -1);
-                          return;
-                        }
-                        if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
-                          scanBufferRef.current += e.key;
-                        }
+                        if (raw !== e.target.value) e.target.value = raw;
+                        setManualQuery(raw);
+                        const now = Date.now();
+                        const gap = now - lastInputAtRef.current;
+                        lastInputAtRef.current = now;
+                        fastKeysRef.current = gap < 50 ? fastKeysRef.current + 1 : 0;
+                        clearTimeout(idleTimerRef.current);
+                        idleTimerRef.current = setTimeout(() => {
+                          const value = (inputRef.current?.value || '').trim();
+                          if (fastKeysRef.current >= 4 && value.length >= 4) {
+                            fastKeysRef.current = 0;
+                            if (inputRef.current) inputRef.current.value = '';
+                            setManualQuery('');
+                            submitScanRef.current(value);
+                          }
+                        }, 80);
                       }}
                       placeholder="Point scanner gun & pull trigger, or type e.g. STOCK-102 / SN-..."
-                      className="w-full pl-10 pr-3.5 py-3 rounded-2xl border-2 border-tag-amber/70 bg-white font-mono font-extrabold text-sm text-tag-brown outline-none focus:border-tag-amber uppercase tracking-wider shadow-warm-sm placeholder:font-sans placeholder:font-normal placeholder:text-xs"
+                      className="w-full pl-10 pr-3.5 py-3 rounded-2xl border-2 border-tag-amber/70 bg-white font-mono font-extrabold text-sm text-tag-brown outline-none focus:border-tag-amber tracking-wide shadow-warm-sm placeholder:font-sans placeholder:font-normal placeholder:text-xs"
                     />
                   </div>
 
                   <button
                     type="button"
                     disabled={isSearching || !manualQuery.trim()}
-                    onClick={() => handleDecodedResult(manualQuery.trim())}
+                    onClick={() => submitScanRef.current(inputRef.current?.value || manualQuery)}
                     className="amber-gradient-btn px-6 py-3 rounded-2xl text-xs font-extrabold text-tag-brown flex items-center gap-1.5 shadow-warm-sm disabled:opacity-50 shrink-0"
                   >
                     <Search className="w-3.5 h-3.5" />
