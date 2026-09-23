@@ -42,6 +42,10 @@ class TagCommunicationService {
     if (supabase && isSupabaseConfigured()) {
       try {
         // Query tags table by qr_code_value or id
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(clean);
+        const tagFilters = [`qr_code_value.eq.${clean}`];
+        if (isUuid) tagFilters.push(`id.eq.${clean}`);
+
         const { data: tagData, error: tagErr } = await supabase
           .from('tags')
           .select(`
@@ -64,7 +68,7 @@ class TagCommunicationService {
               )
             )
           `)
-          .or(`qr_code_value.eq.${clean},qr_code_value.ilike.%${clean}%,id.eq.${clean}`)
+          .or(tagFilters.join(','))
           .limit(1);
 
         if (!tagErr && tagData && tagData.length > 0) {
@@ -86,6 +90,8 @@ class TagCommunicationService {
               status: isDeactivated ? 'inactive' : 'active',
               isVerified: true,
               ownerName: cust.full_name ? cust.full_name.split(' ')[0] : 'Owner',
+              phoneNumber: cust.phone_number || '',
+              guardianNumber: cust.guardian_number || '',
               maskedPhone: cust.phone_number ? this.maskPhoneNumber(cust.phone_number) : '+92 ••• ••••000',
               maskedGuardian: cust.guardian_number ? this.maskPhoneNumber(cust.guardian_number) : null,
               hasGuardianConfigured: Boolean(cust.guardian_number),
@@ -137,6 +143,8 @@ class TagCommunicationService {
               status: isDeactivated ? 'inactive' : 'active',
               isVerified: true,
               ownerName: cust.full_name ? cust.full_name.split(' ')[0] : 'Owner',
+              phoneNumber: cust.phone_number || '',
+              guardianNumber: cust.guardian_number || '',
               maskedPhone: cust.phone_number ? this.maskPhoneNumber(cust.phone_number) : '+92 ••• ••••000',
               maskedGuardian: cust.guardian_number ? this.maskPhoneNumber(cust.guardian_number) : null,
               hasGuardianConfigured: Boolean(cust.guardian_number),
@@ -154,7 +162,9 @@ class TagCommunicationService {
 
     // 2. Fallback to Local Cached Inventory or standard Demo Data
     try {
-      const saved = localStorage.getItem('tagtique_admin_v3_orders');
+      const saved =
+        localStorage.getItem('tagtique_admin_v3_orders') ||
+        localStorage.getItem('tagtique_supabase_orders_cache');
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
@@ -176,6 +186,8 @@ class TagCommunicationService {
                 status: match.status === 'Deactivated' ? 'inactive' : 'active',
                 isVerified: true,
                 ownerName: match.customerName ? match.customerName.split(' ')[0] : 'Owner',
+                phoneNumber: match.phoneNumber || match.phone_number || '',
+                guardianNumber: match.guardianNumber || match.guardian_number || '',
                 maskedPhone: this.maskPhoneNumber(match.phoneNumber || '03000000000'),
                 maskedGuardian: match.guardianNumber ? this.maskPhoneNumber(match.guardianNumber) : null,
                 hasGuardianConfigured: Boolean(match.guardianNumber),

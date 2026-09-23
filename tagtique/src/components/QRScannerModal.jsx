@@ -61,6 +61,7 @@ export default function QRScannerModal({
   const [saveSuccessMsg, setSaveSuccessMsg] = useState('');
 
   const inputRef = useRef(null);
+  const scanBufferRef = useRef('');
   const html5QrCodeRef = useRef(null);
   const scannerContainerId = 'tagtique-qr-reader-viewport';
 
@@ -110,7 +111,7 @@ export default function QRScannerModal({
       }
       lastKeyTime = currentTime;
 
-      if (e.key === 'Enter') {
+      if (e.key === 'Enter' || e.key === 'Tab') {
         if (buffer.length >= 2) {
           e.preventDefault();
           handleDecodedResult(buffer.trim());
@@ -240,7 +241,16 @@ export default function QRScannerModal({
         setScannedTag(found);
         if (onTagSelected) onTagSelected(found);
       } else {
-        const q = String(rawInput).trim().toLowerCase();
+        const tokenMatch = String(rawInput).match(/[?&](?:token|qr|tag)=([^&\s]+)/i);
+        let scannedValue = String(rawInput).trim();
+        if (tokenMatch) {
+          try {
+            scannedValue = decodeURIComponent(tokenMatch[1]);
+          } catch (_) {
+            scannedValue = tokenMatch[1];
+          }
+        }
+        const q = scannedValue.toLowerCase();
         const local = orders.find((o) => {
           const vNum = (o.vehicleNumber || o.vehicle_number || '').toLowerCase();
           const sNum = (o.serialNumber || o.serial_number || '').toLowerCase();
@@ -260,6 +270,7 @@ export default function QRScannerModal({
       setCameraError('Error retrieving tag record. Please try again.');
     } finally {
       setIsSearching(false);
+      scanBufferRef.current = '';
       setManualQuery('');
     }
   };
@@ -756,12 +767,34 @@ export default function QRScannerModal({
                       id="scanner-gun-input"
                       type="text"
                       autoFocus
+                      autoComplete="off"
                       value={manualQuery}
-                      onChange={(e) => setManualQuery(e.target.value.toUpperCase())}
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/[\r\n]/g, '');
+                        if (!raw) {
+                          scanBufferRef.current = '';
+                        } else if (raw.length >= scanBufferRef.current.length) {
+                          scanBufferRef.current = raw;
+                        }
+                        setManualQuery(scanBufferRef.current);
+                      }}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
+                        if (e.key === 'Enter' || e.key === 'Tab') {
                           e.preventDefault();
-                          handleDecodedResult(manualQuery.trim());
+                          const fromField = e.currentTarget.value || '';
+                          const fromBuffer = scanBufferRef.current || '';
+                          const value = (fromBuffer.length >= fromField.length ? fromBuffer : fromField).trim();
+                          scanBufferRef.current = '';
+                          setManualQuery('');
+                          if (value) handleDecodedResult(value);
+                          return;
+                        }
+                        if (e.key === 'Backspace') {
+                          scanBufferRef.current = scanBufferRef.current.slice(0, -1);
+                          return;
+                        }
+                        if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                          scanBufferRef.current += e.key;
                         }
                       }}
                       placeholder="Point scanner gun & pull trigger, or type e.g. STOCK-102 / SN-..."

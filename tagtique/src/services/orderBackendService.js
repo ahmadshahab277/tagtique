@@ -724,18 +724,19 @@ class OrderBackendService {
     if (!query) return null;
     let clean = String(query).trim();
 
-    // 1. If it's a URL, extract the token query param
-    if (clean.includes('token=')) {
+    // Scanner guns send the full QR link. Pull out the tag token before lookup.
+    const tokenMatch = clean.match(/[?&](?:token|qr|tag)=([^&\s]+)/i);
+    if (tokenMatch) {
       try {
-        const u = new URL(clean.startsWith('http') ? clean : `https://${clean}`);
-        clean = u.searchParams.get('token') || clean;
+        clean = decodeURIComponent(tokenMatch[1]);
       } catch (_) {
-        const m = clean.match(/[?&]token=([^&]+)/);
-        if (m) clean = m[1];
+        clean = tokenMatch[1];
       }
-    } else if (clean.includes('qr=')) {
-      const m = clean.match(/[?&]qr=([^&]+)/);
-      if (m) clean = m[1];
+    } else if (/^https?:\/\//i.test(clean)) {
+      try {
+        const u = new URL(clean);
+        clean = u.searchParams.get('token') || u.searchParams.get('qr') || u.searchParams.get('tag') || clean;
+      } catch (_) {}
     }
 
     const unprefixClean = clean.replace(/^SN-|^#TGT-|^TGT-/, '').trim();

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Phone, MessageSquare, AlertTriangle, AlertCircle, ChevronRight, Shield } from 'lucide-react';
+import { Phone, MessageSquare, AlertTriangle, AlertCircle, ChevronRight } from 'lucide-react';
 
 export default function ActionCards({
   onContactDriver,
@@ -33,16 +33,11 @@ export default function ActionCards({
               <Phone className="w-5 h-5" />
             </div>
             <div className="flex flex-col">
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-base text-[#1C120C]">
-                  Contact Driver
-                </span>
-                <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-800 font-bold border border-emerald-200">
-                  Safe Relay
-                </span>
-              </div>
+              <span className="font-bold text-base text-[#1C120C]">
+                Contact Driver
+              </span>
               <span className="text-xs text-[#8C7A6B] font-medium leading-relaxed mt-0.5">
-                Contact the driver without sharing your personal number.
+                Call the driver from your phone SIM.
               </span>
             </div>
           </div>
@@ -64,7 +59,7 @@ export default function ActionCards({
                 Send a Message
               </span>
               <span className="text-xs text-[#8C7A6B] font-medium leading-relaxed mt-0.5">
-                Send a message to the vehicle owner.
+                Send a text or a WhatsApp message to the driver.
               </span>
             </div>
           </div>

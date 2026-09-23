@@ -1,29 +1,25 @@
-import React, { useState } from 'react';
-import { X, Phone, MessageSquare, ShieldCheck, Lock, CheckCircle2, ArrowRight } from 'lucide-react';
+import React from 'react';
+import { X, Phone, MessageSquare, ArrowRight } from 'lucide-react';
+import { smsUrl, telUrl, whatsappUrl } from '../../utils/contactLinks';
+
+function openLink(url) {
+  if (!url) return;
+  window.location.href = url;
+}
 
 export default function ContactDriverModal({
   isOpen,
   onClose,
-  vehicle,
-  onSelectSendMessage
+  vehicle
 }) {
-  const [callInitiated, setCallInitiated] = useState(false);
-
   if (!isOpen) return null;
 
-  const handleStartMaskedCall = () => {
-    setCallInitiated(true);
-    // In production, triggers the Twilio / Vonage / backend proxy bridge.
-    // For browser demonstration, sets up the simulated proxy dialer.
-    setTimeout(() => {
-      // simulate prompt or tel bridge
-    }, 1500);
-  };
+  const phone = vehicle?.phoneNumber || '';
+  const hasPhone = Boolean(telUrl(phone));
 
   return (
     <div className="fixed inset-0 z-50 bg-[#1C120C]/70 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
       <div className="bg-white rounded-t-3xl sm:rounded-3xl border border-[#EAE3D6] max-w-md w-full p-6 flex flex-col gap-5 shadow-warm-lg animate-slideUp">
-        {/* Header */}
         <div className="flex items-center justify-between border-b border-[#F2ECE1] pb-3.5">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
@@ -34,7 +30,7 @@ export default function ContactDriverModal({
                 Contact Vehicle Owner
               </h3>
               <span className="text-[11px] text-[#8C7A6B] font-medium">
-                Protected Anonymous Communication Relay
+                Call on SIM, text, or WhatsApp
               </span>
             </div>
           </div>
@@ -47,7 +43,6 @@ export default function ContactDriverModal({
           </button>
         </div>
 
-        {/* Vehicle Identity Context */}
         <div className="p-3.5 rounded-2xl bg-[#FAF7F2] border border-[#EAE3D6] flex items-center justify-between text-xs">
           <div className="flex flex-col">
             <span className="text-[10px] text-[#8C7A6B] font-bold uppercase tracking-wider">
@@ -62,103 +57,79 @@ export default function ContactDriverModal({
           </div>
         </div>
 
-        {/* Masked Call Status */}
-        {callInitiated ? (
-          <div className="p-5 rounded-2xl bg-emerald-50 border border-emerald-200 flex flex-col items-center text-center gap-3 animate-fadeIn">
-            <div className="w-12 h-12 rounded-full bg-emerald-600 text-white flex items-center justify-center animate-bounce shadow-warm-sm">
-              <Phone className="w-6 h-6" />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-bold text-base text-emerald-950">
-                Connecting Masked Voice Bridge...
-              </span>
-              <p className="text-xs text-emerald-800/80 mt-1 max-w-xs">
-                A secure proxy line is connecting you to the vehicle driver. Neither party's personal telephone number will be displayed.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2 pt-2 text-[11px] font-mono text-emerald-700">
-              <Lock className="w-3.5 h-3.5" />
-              <span>Proxy Bridge Active • +92 41 •••• RELAY</span>
-            </div>
-
+        <div className="flex flex-col gap-3">
             <button
               type="button"
-              onClick={() => setCallInitiated(false)}
-              className="mt-2 px-4 py-1.5 rounded-full border border-emerald-300 text-xs font-bold text-emerald-800 bg-white hover:bg-emerald-100"
-            >
-              Cancel Call Bridge
-            </button>
-          </div>
-        ) : (
-          /* Communication Options */
-          <div className="flex flex-col gap-3">
-            {/* OPTION 1: CALL DRIVER (MASKED) */}
-            <button
-              type="button"
-              onClick={handleStartMaskedCall}
-              className="w-full min-h-[64px] p-4 rounded-2xl bg-[#1C120C] hover:bg-[#2B1B10] active:scale-[0.99] text-white flex items-center justify-between text-left transition-all shadow-warm-sm group"
+              disabled={!hasPhone}
+              onClick={() => openLink(telUrl(phone))}
+              className="w-full min-h-[64px] p-4 rounded-2xl bg-[#1C120C] hover:bg-[#2B1B10] active:scale-[0.99] text-white flex items-center justify-between text-left transition-all shadow-warm-sm group disabled:opacity-50"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-[#E6AF2E] group-hover:scale-105 transition-transform shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-[#E6AF2E] shrink-0">
                   <Phone className="w-5 h-5" />
                 </div>
                 <div className="flex flex-col">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-sm sm:text-base text-[#FDF7EC]">
-                      Call Driver (Masked Call)
-                    </span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-400/30">
-                      Private
-                    </span>
-                  </div>
+                  <span className="font-bold text-sm sm:text-base text-[#FDF7EC]">
+                    Call on SIM
+                  </span>
                   <span className="text-xs text-white/70 font-medium">
-                    Call directly without revealing your personal number.
+                    Opens your phone dialer and calls the driver.
                   </span>
                 </div>
               </div>
-              <ArrowRight className="w-4 h-4 text-[#E6AF2E] group-hover:translate-x-1 transition-transform shrink-0" />
+              <ArrowRight className="w-4 h-4 text-[#E6AF2E] shrink-0" />
             </button>
 
-            {/* OPTION 2: SEND MESSAGE */}
             <button
               type="button"
-              onClick={() => {
-                onClose();
-                onSelectSendMessage();
-              }}
-              className="w-full min-h-[64px] p-4 rounded-2xl bg-[#FAF7F2] border border-[#EAE3D6] hover:border-[#1C120C]/30 hover:bg-[#F3EDE2] active:scale-[0.99] flex items-center justify-between text-left transition-all group"
+              disabled={!hasPhone}
+              onClick={() => openLink(smsUrl(phone))}
+              className="w-full min-h-[64px] p-4 rounded-2xl bg-[#FAF7F2] border border-[#EAE3D6] hover:border-[#1C120C]/30 hover:bg-[#F3EDE2] active:scale-[0.99] flex items-center justify-between text-left transition-all group disabled:opacity-50"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-white border border-[#EAE3D6] flex items-center justify-center text-[#975A16] group-hover:scale-105 transition-transform shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-white border border-[#EAE3D6] flex items-center justify-center text-[#1C120C] shrink-0">
                   <MessageSquare className="w-5 h-5" />
                 </div>
                 <div className="flex flex-col">
                   <span className="font-bold text-sm sm:text-base text-[#1C120C]">
-                    Send a Message
+                    Text on SIM
                   </span>
                   <span className="text-xs text-[#8C7A6B] font-medium">
-                    Send quick template or custom text to the driver.
+                    Opens your messages app to text the driver.
                   </span>
                 </div>
               </div>
-              <ArrowRight className="w-4 h-4 text-[#8C7A6B] group-hover:translate-x-1 transition-transform shrink-0" />
+              <ArrowRight className="w-4 h-4 text-[#8C7A6B] shrink-0" />
             </button>
+
+            <button
+              type="button"
+              disabled={!hasPhone}
+              onClick={() => openLink(whatsappUrl(phone, 'Hello, I scanned your Tagtique vehicle tag.'))}
+              className="w-full min-h-[64px] p-4 rounded-2xl bg-[#FAF7F2] border border-[#EAE3D6] hover:border-[#1C120C]/30 hover:bg-[#F3EDE2] active:scale-[0.99] flex items-center justify-between text-left transition-all group disabled:opacity-50"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700 shrink-0">
+                  <MessageSquare className="w-5 h-5" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-bold text-sm sm:text-base text-[#1C120C]">
+                    WhatsApp
+                  </span>
+                  <span className="text-xs text-[#8C7A6B] font-medium">
+                    Opens WhatsApp to message the driver.
+                  </span>
+                </div>
+              </div>
+              <ArrowRight className="w-4 h-4 text-[#8C7A6B] shrink-0" />
+            </button>
+          </div>
+        {!hasPhone && (
+          <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-950">
+            This vehicle does not have a phone number saved yet, so call, text, and WhatsApp stay unavailable until one is added.
           </div>
         )}
 
-        {/* Privacy Assurance Banner */}
-        <div className="p-3 rounded-2xl bg-amber-50/70 border border-amber-200/80 flex items-start gap-2.5 text-xs text-amber-950">
-          <ShieldCheck className="w-4 h-4 text-[#D49A1F] shrink-0 mt-0.5" />
-          <div className="flex flex-col text-[11px] leading-relaxed text-amber-900/90">
-            <strong>Zero Personal Number Exposure:</strong>
-            <span>
-              Tagtique operates on encrypted call and message proxies. Neither your phone number nor the driver's private contact is ever shown publicly.
-            </span>
-          </div>
-        </div>
-
-        {/* Close Button */}
         <button
           type="button"
           onClick={onClose}

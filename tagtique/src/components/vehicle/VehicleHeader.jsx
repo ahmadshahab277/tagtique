@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, Lock } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 
 export default function VehicleHeader() {
   return (
@@ -18,12 +18,6 @@ export default function VehicleHeader() {
               Smart Vehicle Contact
             </span>
           </div>
-        </div>
-
-        {/* Encrypted privacy badge */}
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FAF7F2] border border-[#EAE3D6] text-[10.5px] font-bold text-[#8C7A6B]">
-          <Lock className="w-3 h-3 text-[#E6AF2E]" />
-          <span>Encrypted Relay</span>
         </div>
       </div>
     </header>

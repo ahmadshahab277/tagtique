@@ -14,7 +14,7 @@ import {
   NetworkErrorScreen
 } from '../components/vehicle/StatusScreens';
 import { tagCommunicationService } from '../services/tagCommunicationService';
-import { ShieldCheck, Lock, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 
 export default function PublicVehicleScanPage() {
   const params = useParams();
@@ -106,22 +106,11 @@ export default function PublicVehicleScanPage() {
               onReportIssue={() => setIsReportModalOpen(true)}
             />
 
-            {/* Security & Trust Footer Assurance */}
-            <div className="mt-4 p-4 rounded-2xl bg-white border border-[#EAE3D6] flex flex-col gap-2 text-center text-xs text-[#8C7A6B] shadow-2xs">
-              <div className="flex items-center justify-center gap-1.5 font-bold text-[#1C120C]">
-                <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                <span>Tagtique Verified Contact Proxy</span>
-              </div>
+            <div className="mt-4 p-4 rounded-2xl bg-white border border-[#EAE3D6] flex flex-col gap-1 text-center text-xs text-[#8C7A6B] shadow-2xs">
+              <span className="font-bold text-[#1C120C]">Call or message the owner</span>
               <p className="text-[11px] leading-relaxed text-[#8C7A6B]">
-                Your communication is encrypted and routed securely through our smart vehicle proxy. Neither party's private telephone number or home address is exposed.
+                Use your phone SIM to call or text, or open WhatsApp. The QR code still does not contain the phone number.
               </p>
-              <div className="flex items-center justify-center gap-3 pt-1 text-[10.5px] font-mono text-[#A89889]">
-                <span>256-Bit SSL</span>
-                <span>•</span>
-                <span>Anti-Spam Filter</span>
-                <span>•</span>
-                <span>Audit Logged</span>
-              </div>
             </div>
 
             {/* Interactive Demo Test Toolbar (For customer demonstration) */}
@@ -163,7 +152,6 @@ export default function PublicVehicleScanPage() {
         isOpen={isContactModalOpen}
         onClose={() => setIsContactModalOpen(false)}
         vehicle={vehicle}
-        onSelectSendMessage={() => setIsMessageModalOpen(true)}
       />
 
       <SendMessageModal

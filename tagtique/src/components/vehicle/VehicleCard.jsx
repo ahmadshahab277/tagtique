@@ -60,7 +60,7 @@ export default function VehicleCard({ vehicle }) {
         <div className="flex items-center gap-1.5">
           <Shield className="w-3.5 h-3.5 text-emerald-600" />
           <span className="text-[11px] font-medium">
-            Owner phone number is protected & masked
+            Call, text, or WhatsApp the owner
           </span>
         </div>
         <span className="text-[10.5px] font-mono font-bold text-[#A89889]">

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, MessageSquare, Send, CheckCircle2, AlertCircle, Sparkles, Shield, RefreshCw } from 'lucide-react';
-import { tagCommunicationService } from '../../services/tagCommunicationService';
+import { smsUrl, whatsappUrl } from '../../utils/contactLinks';
 
 const SUGGESTED_QUICK_MESSAGES = [
   'Your vehicle is blocking my way',
@@ -28,34 +28,10 @@ export default function SendMessageModal({
     setMessage(text);
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     if (e) e.preventDefault();
     if (!message.trim()) {
       setErrorMessage('Please enter a message or choose a quick option.');
-      return;
-    }
-
-    setErrorMessage('');
-    setIsSending(true);
-
-    try {
-      const res = await tagCommunicationService.sendMessage({
-        tagId: vehicle?.tagId || 'TAG-001',
-        message: message.trim(),
-        senderName: senderName.trim(),
-        senderPhone: senderPhone.trim()
-      });
-
-      if (res.success) {
-        setReceiptData(res.data);
-        setIsSuccess(true);
-      } else {
-        setErrorMessage(res.error || 'Failed to send message. Please try again.');
-      }
-    } catch (err) {
-      setErrorMessage('An unexpected network error occurred.');
-    } finally {
-      setIsSending(false);
     }
   };
 
@@ -84,7 +60,7 @@ export default function SendMessageModal({
                 Send a Message
               </h3>
               <span className="text-[11px] text-[#8C7A6B] font-medium">
-                Vehicle Owner Notification Relay
+                Text on SIM or send on WhatsApp
               </span>
             </div>
           </div>
@@ -231,32 +207,36 @@ export default function SendMessageModal({
               </div>
             )}
 
-            {/* Submit Button */}
-            <div className="pt-2 flex items-center gap-2">
+            <div className="pt-2 flex flex-col gap-2">
+              {!vehicle?.phoneNumber && (
+                <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-950 text-xs">
+                  This vehicle does not have a phone number saved yet.
+                </div>
+              )}
+              <button
+                type="button"
+                disabled={!message.trim() || !smsUrl(vehicle?.phoneNumber)}
+                onClick={() => { window.location.href = smsUrl(vehicle?.phoneNumber, message.trim()); }}
+                className="w-full py-3 rounded-2xl bg-[#1C120C] hover:bg-[#2B1B10] active:scale-[0.99] text-[#FDF7EC] font-extrabold text-xs flex items-center justify-center gap-2 transition-all shadow-warm-sm disabled:opacity-50"
+              >
+                <Send className="w-4 h-4 text-[#E6AF2E]" />
+                <span>Text on SIM</span>
+              </button>
+              <button
+                type="button"
+                disabled={!message.trim() || !whatsappUrl(vehicle?.phoneNumber)}
+                onClick={() => { window.location.href = whatsappUrl(vehicle?.phoneNumber, message.trim()); }}
+                className="w-full py-3 rounded-2xl bg-emerald-700 hover:bg-emerald-800 active:scale-[0.99] text-white font-extrabold text-xs flex items-center justify-center gap-2 transition-all shadow-warm-sm disabled:opacity-50"
+              >
+                <MessageSquare className="w-4 h-4" />
+                <span>Send on WhatsApp</span>
+              </button>
               <button
                 type="button"
                 onClick={handleResetAndClose}
-                className="w-1/3 py-3 rounded-2xl border border-[#EAE3D6] text-xs font-bold text-[#1C120C] hover:bg-[#FAF7F2]"
+                className="w-full py-2.5 rounded-full border border-[#EAE3D6] text-xs font-bold text-[#1C120C] hover:bg-[#FAF7F2]"
               >
                 Cancel
-              </button>
-
-              <button
-                type="submit"
-                disabled={isSending || !message.trim()}
-                className="flex-1 py-3 rounded-2xl bg-[#1C120C] hover:bg-[#2B1B10] active:scale-[0.99] text-[#FDF7EC] font-extrabold text-xs flex items-center justify-center gap-2 transition-all shadow-warm-sm disabled:opacity-50"
-              >
-                {isSending ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 animate-spin text-[#E6AF2E]" />
-                    <span>Sending Notification...</span>
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-4 h-4 text-[#E6AF2E]" />
-                    <span>Send Message</span>
-                  </>
-                )}
               </button>
             </div>
           </form>
