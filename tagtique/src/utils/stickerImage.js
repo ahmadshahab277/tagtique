@@ -3,6 +3,7 @@ import { buildScanUrl } from './scanUrl';
 
 const SKIN = '#FDF7EC';
 const YELLOW = '#F5B21F';
+const BROWN = '#2E1B10';
 
 function stickerToken(item) {
   return item?.qr_code_value || item?.qrId || item?.tag_id || item?.tagId || item?.rawId || 'tagtique';
@@ -35,7 +36,7 @@ export async function renderStickerBlob(item) {
     await document.fonts.load('800 56px Manrope');
   } catch (_) {}
 
-  ctx.fillStyle = YELLOW;
+  ctx.fillStyle = BROWN;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 
@@ -99,7 +100,7 @@ function drawStyledQr(text) {
   const mid = (margin + count / 2) * cell;
   drawPhoneIcon(ctx, mid - icon / 2, mid - icon / 2, icon, YELLOW);
 
-  ctx.fillStyle = '#2E1B10';
+  ctx.fillStyle = BROWN;
   ctx.font = '600 22px Manrope, "Segoe UI", sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -110,7 +111,7 @@ function drawStyledQr(text) {
 function drawFinderEye(ctx, col, row, cell) {
   const x = (col + 3.5) * cell;
   const y = (row + 3.5) * cell;
-  ctx.fillStyle = YELLOW;
+  ctx.fillStyle = BROWN;
   ctx.beginPath();
   ctx.arc(x, y, cell * 3.15, 0, Math.PI * 2);
   ctx.fill();
@@ -118,7 +119,7 @@ function drawFinderEye(ctx, col, row, cell) {
   ctx.beginPath();
   ctx.arc(x, y, cell * 2.15, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = YELLOW;
+  ctx.fillStyle = BROWN;
   ctx.beginPath();
   ctx.arc(x, y, cell * 1.15, 0, Math.PI * 2);
   ctx.fill();

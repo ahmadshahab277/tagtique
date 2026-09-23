@@ -1843,10 +1843,10 @@ export default function AdminPage() {
             {/* Actual Printable Physical Sticker Card */}
             <div className="print-sticker-container w-full max-w-[340px] mx-auto px-5 pt-8 pb-6 rounded-3xl bg-[#FDF7EC] flex flex-col items-center text-center gap-5 shadow-warm-md select-none">
               <div className="flex flex-col items-center gap-2 px-1">
-                <p dir="rtl" className="font-extrabold text-[26px] leading-snug text-[#F5B21F]" style={{ fontFamily: '"Noto Sans Arabic", "Segoe UI", sans-serif' }}>
+                <p dir="rtl" className="font-extrabold text-[26px] leading-snug text-[#2E1B10]" style={{ fontFamily: '"Noto Sans Arabic", "Segoe UI", sans-serif' }}>
                   اسکین کریں، رابطہ کریں
                 </p>
-                <p className="font-extrabold text-[22px] leading-tight text-[#F5B21F] tracking-tight">
+                <p className="font-extrabold text-[22px] leading-tight text-[#2E1B10] tracking-tight">
                   Scan to Contact Driver
                 </p>
               </div>
