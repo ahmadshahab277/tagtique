@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin: 0; padding: 0; background: #FDF7EC; }
+  * { box-sizing: border-box; }
+  a { color: #8A5A2B; text-decoration: none; font-weight: 700; }
+  a:hover { color: #C4881F; }
+  input, textarea { font-family: Manrope, system-ui, sans-serif; }
+  input:focus, textarea:focus { outline: none; border-color: #F5B21F; }
+</style>
+</helmet>
+
+<div style="font-family: Manrope, system-ui, sans-serif; color: #2E1B10; background: #FDF7EC; overflow-x: hidden; min-height: 100vh;">
+
+  <header style="position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 14px clamp(20px, 4vw, 56px); background: rgba(253,247,236,.92); backdrop-filter: blur(10px); border-bottom: 1px solid #EADFCB; flex-wrap: wrap;">
+    <a href="Tagtique Home.dc.html" style="display: flex; align-items: center;"><img src="assets/tagtique-logo.png" alt="Tagtique" style="height: 42px; width: auto; display: block;" /></a>
+    <nav style="display: flex; align-items: center; gap: clamp(14px, 2.2vw, 30px); flex-wrap: wrap;">
+      <a href="Tagtique Home.dc.html#styles" style="font-size: 14.5px; color: #4A3423;">Tag styles</a>
+      <a href="Tagtique Home.dc.html#how" style="font-size: 14.5px; color: #4A3423;">How it works</a>
+      <a href="Tagtique Auth.dc.html" style="font-size: 14.5px; color: #4A3423;">Sign in</a>
+    </nav>
+  </header>
+
+  <div style="max-width: 1320px; margin: 0 auto; padding: clamp(18px, 2.4vw, 30px) clamp(20px, 4vw, 56px) clamp(44px, 5vw, 80px); display: flex; flex-direction: column; gap: clamp(20px, 2.6vw, 34px);">
+
+    <div style="display: flex; align-items: center; gap: 10px; font-family: 'Space Mono', monospace; font-size: 10.5px; letter-spacing: 1.3px; color: #8A5A2B;">
+      <a href="Tagtique Home.dc.html" style="font-family: 'Space Mono', monospace; font-size: 10.5px; letter-spacing: 1.3px;">HOME</a>
+      <span style="color: #C9B593;">/</span>
+      <a href="Tagtique Home.dc.html#styles" style="font-family: 'Space Mono', monospace; font-size: 10.5px; letter-spacing: 1.3px;">COLLECTION</a>
+      <span style="color: #C9B593;">/</span>
+      <span style="color: #6B543F;">BUILD YOUR TAG</span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr)); gap: clamp(22px, 3vw, 46px); align-items: start;">
+
+      <div style="display: flex; flex-direction: column; gap: 16px; position: sticky; top: 92px;">
+        <div style="position: relative; width: 100%; aspect-ratio: 1 / 1; border-radius: 34px; background: radial-gradient(70% 60% at 50% 34%, #FFF6E4 0%, #F4E7CF 52%, #EADAB9 100%); border: 1.5px solid #E7D6B6; overflow: hidden;">
+          <x-import component-from-global-scope="tag-3d" from="./tag-3d.js" variant="{{ finish }}" hint-size="100%,100%" style="position: absolute; inset: 0;"></x-import>
+          <div style="position: absolute; left: 18px; top: 16px; display: flex; flex-direction: column; gap: 4px; pointer-events: none;">
+            <span style="font-family: 'Space Mono', monospace; font-size: 10.5px; letter-spacing: 1.3px; color: #8A5A2B;">LIVE PREVIEW</span>
+            <span style="font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 19px; color: #2E1B10;">{{ finishName }}</span>
+          </div>
+          <div style="position: absolute; left: 18px; bottom: 16px; display: flex; align-items: center; gap: 8px; font-family: 'Space Mono', monospace; font-size: 10.5px; letter-spacing: 1.3px; color: #8A5A2B; pointer-events: none;">
+            <span style="width: 16px; height: 1px; background: #B79E78; flex: 0 0 auto;"></span>
+            <span style="white-space: nowrap;">DRAG TO SPIN IT</span>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 10px;">
+          <sc-for list="{{ shots }}" as="s" hint-placeholder-count="3">
+            <div style="aspect-ratio: 1 / 1; border-radius: 16px; border: 1.5px solid #EADFCB; background: repeating-linear-gradient(135deg, #F3E8D5 0 10px, #EFE1CA 10px 20px); display: flex; align-items: flex-end; padding: 8px;">
+              <span style="font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: .6px; line-height: 1.3; color: #8A5A2B; background: rgba(255,253,248,.88); padding: 5px 6px; border-radius: 7px;">{{ s.label }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: clamp(20px, 2.4vw, 30px);">
+
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <span style="align-self: flex-start; font-family: 'Space Mono', monospace; font-size: 10.5px; letter-spacing: 1.5px; color: #8A5A2B; background: #F4EADA; border-radius: 999px; padding: 7px 13px;">MADE TO ORDER · SHIPS IN 3 DAYS</span>
+          <h1 style="margin: 0; font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: clamp(30px, 3.6vw, 46px); line-height: 1.05; letter-spacing: -.6px; text-wrap: pretty;">Build the tag, then fill in the card.</h1>
+          <p style="margin: 0; font-size: 15.5px; line-height: 1.6; color: #5C452F; max-width: 480px;">Sealed acrylic, 38 × 52 mm, steel key loop. Everything below is changeable later — except the finish, so take your time there.</p>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px;">
+            <span style="font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 18px;">Finish</span>
+            <span style="font-size: 13px; color: #6B543F;">{{ finishNote }}</span>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 10px;">
+            <sc-for list="{{ finishes }}" as="f" hint-placeholder-count="3">
+              <button type="button" onClick="{{ f.pick }}" style="cursor: pointer; text-align: left; display: flex; align-items: center; gap: 11px; padding: 12px 14px; border-radius: 16px; background: #FFFDF8; font-family: Manrope, sans-serif; transition: transform .18s ease, border-color .18s ease; border: {{ f.border }};" style-hover="transform: translateY(-2px);">
+                <span style="width: 26px; height: 26px; border-radius: 50%; border: 2px solid #1B0F06; flex: 0 0 auto; background: {{ f.swatch }};"></span>
+                <span style="display: flex; flex-direction: column; min-width: 0;">
+                  <span style="font-weight: 800; font-size: 14px; color: #2E1B10;">{{ f.name }}</span>
+                  <span style="font-size: 12px; color: #6B543F;">{{ f.price }}</span>
+                </span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px;">
+            <span style="font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 18px;">Engraving on the back</span>
+            <span style="font-size: 12.5px; color: #6B543F;">{{ engraveCount }}</span>
+          </div>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button type="button" onClick="{{ engraveOff }}" style="cursor: pointer; font-family: Manrope, sans-serif; font-weight: 700; font-size: 13.5px; padding: 10px 16px; border-radius: 999px; background: #FFFDF8; color: #2E1B10; border: {{ engraveOffBorder }};">Leave it plain</button>
+            <button type="button" onClick="{{ engraveOn }}" style="cursor: pointer; font-family: Manrope, sans-serif; font-weight: 700; font-size: 13.5px; padding: 10px 16px; border-radius: 999px; background: #FFFDF8; color: #2E1B10; border: {{ engraveOnBorder }};">Engrave text · +$10</button>
+          </div>
+          <sc-if value="{{ engraved }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <input type="text" value="{{ engraveText }}" onChange="{{ setEngrave }}" maxLength="22" placeholder="Ayesha Khan" style="width: 100%; border: 2px solid #EADFCB; border-radius: 14px; padding: 13px 15px; font-size: 15px; font-weight: 600; color: #2E1B10; background: #FFFDF8;" />
+              <div style="display: flex; align-items: center; gap: 12px; background: #FFFDF8; border: 1.5px solid #EADFCB; border-radius: 16px; padding: 14px 16px;">
+                <span style="font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 1.2px; color: #9C8467; flex: 0 0 auto;">BACK</span>
+                <span style="flex: 1; min-width: 0; font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 17px; letter-spacing: .4px; color: #8A5A2B; border-bottom: 1px dashed #E0D0B5; padding-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ engravePreview }}</span>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <span style="font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 18px;">What the card shows</span>
+          <div style="background: #FFFDF8; border: 1.5px solid #EADFCB; border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 14px;">
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <label style="font-size: 10.5px; font-weight: 800; letter-spacing: .6px; color: #9C8467;">DISPLAY NAME</label>
+              <input type="text" value="{{ cardName }}" onChange="{{ setName }}" style="width: 100%; border: 2px solid #EADFCB; border-radius: 12px; padding: 11px 13px; font-size: 14.5px; font-weight: 700; color: #2E1B10; background: #FDF7EC;" />
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <label style="font-size: 10.5px; font-weight: 800; letter-spacing: .6px; color: #9C8467;">ONE-LINE BIO</label>
+              <input type="text" value="{{ cardBio }}" onChange="{{ setBio }}" style="width: 100%; border: 2px solid #EADFCB; border-radius: 12px; padding: 11px 13px; font-size: 14.5px; font-weight: 500; color: #2E1B10; background: #FDF7EC;" />
+            </div>
+            <div style="height: 1px; background: #EFE4D1;"></div>
+            <sc-for list="{{ fields }}" as="f" hint-placeholder-count="3">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 14px;">
+                <span style="display: flex; flex-direction: column; min-width: 0;">
+                  <span style="font-size: 14px; font-weight: 700; color: #2E1B10;">{{ f.label }}</span>
+                  <span style="font-size: 12.5px; color: #6B543F; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ f.value }}</span>
+                </span>
+                <button type="button" onClick="{{ f.toggle }}" aria-label="{{ f.label }}" style="flex: 0 0 auto; cursor: pointer; width: 46px; height: 27px; border-radius: 999px; padding: 3px; border: 2px solid #1B0F06; display: flex; justify-content: {{ f.justify }}; transition: background .2s ease; background: {{ f.track }};">
+                  <span style="width: 17px; height: 17px; border-radius: 50%; background: #FFFDF8;"></span>
+                </button>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="background: #2E1B10; color: #FDF7EC; border: 2.5px solid #1B0F06; border-radius: 24px; padding: clamp(20px, 2.4vw, 28px); display: flex; flex-direction: column; gap: 14px;">
+          <span style="font-family: 'Space Mono', monospace; font-size: 10.5px; letter-spacing: 1.4px; color: #F5B21F;">YOUR BUILD</span>
+          <sc-for list="{{ lines }}" as="l" hint-placeholder-count="2">
+            <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 14px; font-size: 14.5px;">
+              <span style="color: #E9D9C1; min-width: 0;">{{ l.label }}</span>
+              <span style="font-weight: 700; flex: 0 0 auto;">{{ l.amount }}</span>
+            </div>
+          </sc-for>
+          <div style="height: 1px; background: rgba(253,247,236,.18);"></div>
+          <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 14px;">
+            <span style="font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 19px;">Total</span>
+            <span style="font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 34px; line-height: 1; color: #F5B21F;">{{ total }}</span>
+          </div>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; padding-top: 4px;">
+            <button type="button" style="flex: 1 1 180px; border: 2px solid #1B0F06; background: linear-gradient(180deg, #FFC943, #F5B21F); color: #2E1B10; border-radius: 999px; padding: 14px; font-family: Manrope, sans-serif; font-weight: 800; font-size: 15px; cursor: pointer; transition: transform .18s ease;" style-hover="transform: translateY(-2px);">Add to bag</button>
+            <a href="Tagtique Home.dc.html#pricing" style="flex: 1 1 140px; text-align: center; border: 2px solid rgba(253,247,236,.35); color: #FDF7EC; border-radius: 999px; padding: 14px; font-weight: 700; font-size: 15px; transition: border-color .18s ease;" style-hover="border-color: #F5B21F; color: #FDF7EC;">Buy a trio instead</a>
+          </div>
+          <p style="margin: 0; font-size: 12.5px; line-height: 1.55; color: #A88B64;">Free replacement in the first year. The card stays free forever, whatever you buy.</p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;defaultFinish&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;cream&quot;,&quot;espresso&quot;,&quot;amber&quot;,&quot;glow&quot;],&quot;default&quot;:&quot;cream&quot;,&quot;tsType&quot;:&quot;'cream' | 'espresso' | 'amber' | 'glow'&quot;,&quot;section&quot;:&quot;Build&quot;}}">
+class Component extends DCLogic {
+  state = {
+    finish: null,
+    engraved: false,
+    engraveText: 'Ayesha Khan',
+    cardName: 'Ayesha Khan',
+    cardBio: 'Ceramics studio · Lahore',
+    fields: { phone: true, email: true, instagram: true, address: false }
+  };
+
+  get finish() { return this.state.finish ?? (this.props.defaultFinish ?? 'cream'); }
+
+  renderVals() {
+    const f = this.finish;
+    const on = '2px solid #F5B21F';
+    const off = '2px solid #EADFCB';
+    const data = {
+      cream: { name: 'Cream acrylic', price: '$19', swatch: '#FBF3E4', base: 19, note: 'Warm ivory, amber eyelet — the everyday one.' },
+      espresso: { name: 'Espresso', price: '$22', swatch: '#3A2318', base: 22, note: 'Matte deep brown, code stays high-contrast.' },
+      amber: { name: 'Amber', price: '$24', swatch: '#F5B21F', base: 24, note: 'Translucent honey that catches the light.' },
+      glow: { name: 'Nightlight', price: '$26', swatch: 'linear-gradient(150deg, #8BF7C8, #49E2D2 40%, #B394F2)', base: 26, note: 'Gradient acrylic that charges in daylight and glows after dark.' }
+    };
+    const cur = data[f];
+    const engraveFee = this.state.engraved ? 10 : 0;
+
+    const fieldDefs = [
+      { key: 'phone', label: 'Phone number', value: '+92 300 114 2288' },
+      { key: 'email', label: 'Email', value: 'ayesha@studio.co' },
+      { key: 'instagram', label: 'Instagram', value: '@ayesha.makes' },
+      { key: 'address', label: 'Studio address', value: 'Shown in lost-and-found mode only' }
+    ];
+
+    const lines = [{ label: cur.name + ' tag', amount: '$' + cur.base }];
+    if (this.state.engraved) lines.push({ label: 'Back engraving', amount: '$10' });
+    lines.push({ label: 'Shipping', amount: 'Free' });
+
+    return {
+      finish: f,
+      finishName: cur.name,
+      finishNote: cur.note,
+      finishes: Object.keys(data).map((k) => ({
+        name: data[k].name,
+        price: data[k].price,
+        swatch: data[k].swatch,
+        border: f === k ? on : off,
+        pick: () => this.setState({ finish: k })
+      })),
+      shots: [
+        { label: 'on a tote strap' },
+        { label: 'back detail' },
+        { label: 'in hand, scale' }
+      ],
+      engraved: this.state.engraved,
+      engraveOn: () => this.setState({ engraved: true }),
+      engraveOff: () => this.setState({ engraved: false }),
+      engraveOnBorder: this.state.engraved ? on : off,
+      engraveOffBorder: this.state.engraved ? off : on,
+      engraveText: this.state.engraveText,
+      engravePreview: this.state.engraveText.trim() || 'your name here',
+      engraveCount: this.state.engraved ? this.state.engraveText.length + ' / 22 characters' : 'Adds $10, made to order',
+      setEngrave: (e) => this.setState({ engraveText: e.target.value }),
+      cardName: this.state.cardName,
+      cardBio: this.state.cardBio,
+      setName: (e) => this.setState({ cardName: e.target.value }),
+      setBio: (e) => this.setState({ cardBio: e.target.value }),
+      fields: fieldDefs.map((d) => {
+        const isOn = this.state.fields[d.key];
+        return {
+          label: d.label,
+          value: d.value,
+          justify: isOn ? 'flex-end' : 'flex-start',
+          track: isOn ? '#F5B21F' : '#E0D0B5',
+          toggle: () => this.setState((s) => ({ fields: Object.assign({}, s.fields, { [d.key]: !s.fields[d.key] }) }))
+        };
+      }),
+      lines,
+      total: '$' + (cur.base + engraveFee)
+    };
+  }
+}
+
+</script>
+</body>
+</html>

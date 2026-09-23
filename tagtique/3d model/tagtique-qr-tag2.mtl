@@ -1,0 +1,25 @@
+# Exported by three-d-stage
+newmtl tag_gradient
+Kd 1.0000 1.0000 1.0000
+Ks 0.2000 0.2000 0.2000
+Ns 140
+d 1.0000
+
+newmtl pearl_eyelet
+Kd 0.8963 0.7913 0.9047
+Ks 0.2000 0.2000 0.2000
+Ns 156
+d 1.0000
+
+newmtl code_tint_upper
+Kd 1.0000 1.0000 1.0000
+Ks 0.2000 0.2000 0.2000
+Ns 132
+d 1.0000
+
+newmtl code_tint_lower
+Kd 1.0000 1.0000 1.0000
+Ks 0.2000 0.2000 0.2000
+Ns 132
+d 1.0000
+

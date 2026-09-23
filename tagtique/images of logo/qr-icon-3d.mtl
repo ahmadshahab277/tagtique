@@ -1,0 +1,31 @@
+# Exported by three-d-stage
+newmtl shell_white
+Kd 0.9301 0.9301 0.9387
+Ks 0.2000 0.2000 0.2000
+Ns 140
+d 1.0000
+
+newmtl ink_indigo
+Kd 0.0284 0.0343 0.0578
+Ks 0.2000 0.2000 0.2000
+Ns 124
+d 1.0000
+
+newmtl ink_graphite
+Kd 0.0356 0.0356 0.0356
+Ks 0.2000 0.2000 0.2000
+Ns 120
+d 1.0000
+
+newmtl ink_slate
+Kd 0.0242 0.0284 0.0331
+Ks 0.2000 0.2000 0.2000
+Ns 116
+d 1.0000
+
+newmtl bracket_charcoal
+Kd 0.0273 0.0307 0.0331
+Ks 0.2000 0.2000 0.2000
+Ns 132
+d 1.0000
+

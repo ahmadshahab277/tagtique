@@ -1,0 +1,109 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    background-color: #FDF7EC;
+    color: #2E1B10;
+  }
+
+  ::selection {
+    background-color: #F5B21F;
+    color: #1B0F06;
+  }
+}
+
+/* Glassmorphic and subtle custom styles */
+.glass-header {
+  background: rgba(253, 247, 236, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.amber-gradient-btn {
+  background: linear-gradient(180deg, #FFC943 0%, #F5B21F 100%);
+  border: 2px solid #1B0F06;
+  box-shadow: 0 10px 22px -12px rgba(245, 178, 31, 0.95);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.amber-gradient-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px -10px rgba(245, 178, 31, 1);
+}
+
+.amber-gradient-btn:active {
+  transform: translateY(0);
+}
+
+.card-outline-btn {
+  border: 2px solid #1B0F06;
+  background: #FDF7EC;
+  transition: all 0.18s ease;
+}
+
+.card-outline-btn:hover {
+  background: #F5B21F;
+  transform: translateY(-2px);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F4EADA;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D8C4A5;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #BFA57F;
+}
+
+/* Print Stylesheet - Prints only the physical vehicle sticker */
+@media print {
+  body {
+    background: #FFFFFF !important;
+    color: #1B0F06 !important;
+  }
+  
+  body * {
+    visibility: hidden;
+  }
+  
+  .print-sticker-container,
+  .print-sticker-container * {
+    visibility: visible !important;
+  }
+  
+  .print-sticker-container {
+    position: fixed !important;
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    margin: 0 !important;
+    padding: 18px !important;
+    border: 2.5px solid #1B0F06 !important;
+    background: #FFFFFF !important;
+    border-radius: 20px !important;
+    width: 320px !important;
+    box-shadow: none !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+}

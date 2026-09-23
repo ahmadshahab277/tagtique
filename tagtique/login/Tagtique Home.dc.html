@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin: 0; padding: 0; background: #FDF7EC; }
+  * { box-sizing: border-box; }
+  a { color: #8A5A2B; text-decoration: none; font-weight: 700; }
+  a:hover { color: #C4881F; }
+</style>
+</helmet>
+
+<div style="font-family: Manrope, system-ui, sans-serif; color: #2E1B10; background: #FDF7EC; overflow-x: hidden;">
+
+  <header style="position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 14px clamp(20px, 4vw, 56px); background: rgba(253,247,236,.92); backdrop-filter: blur(10px); border-bottom: 1px solid #EADFCB; flex-wrap: wrap;">
+    <a href="Tagtique Home.dc.html" style="display: flex; align-items: center;"><img src="assets/tagtique-logo.png" alt="Tagtique" style="height: 42px; width: auto; display: block;" /></a>
+    <nav style="display: flex; align-items: center; gap: clamp(14px, 2.2vw, 30px); flex-wrap: wrap;">
+      <a href="#styles" style="font-size: 14.5px; color: #4A3423;">Tag styles</a>
+      <a href="#how" style="font-size: 14.5px; color: #4A3423;">How it works</a>
+      <a href="#pricing" style="font-size: 14.5px; color: #4A3423;">Pricing</a>
+      <a href="Tagtique Auth.dc.html" style="font-size: 14.5px; color: #4A3423;">Sign in</a>
+      <a href="Tagtique Auth.dc.html" style="border: 2px solid #1B0F06; background: linear-gradient(180deg, #FFC943, #F5B21F); color: #2E1B10; font-size: 14.5px; font-weight: 800; padding: 10px 18px; border-radius: 999px; box-shadow: 0 10px 22px -14px rgba(245,178,31,.95); transition: transform .18s ease;" style-hover="transform: translateY(-2px); color: #2E1B10;">Get your tag</a>
+    </nav>
+  </header>
+
+  <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: clamp(24px, 4vw, 56px); align-items: center; padding: clamp(32px, 5vw, 76px) clamp(20px, 4vw, 56px) clamp(40px, 5vw, 72px); max-width: 1320px; margin: 0 auto;">
+    <div style="display: flex; flex-direction: column; gap: 24px; max-width: 560px;">
+      <span style="align-self: flex-start; font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 1.6px; color: #8A5A2B; background: #F4EADA; border-radius: 999px; padding: 8px 14px;">QR TAGS FOR PEOPLE, NOT PARCELS</span>
+      <h1 style="margin: 0; font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: clamp(38px, 5vw, 66px); line-height: 1.02; letter-spacing: -1px; text-wrap: pretty;">A tag worth showing off — and one scan does the talking.</h1>
+      <p style="margin: 0; font-size: clamp(16px, 1.3vw, 18.5px); line-height: 1.6; color: #5C452F; max-width: 480px; text-wrap: pretty;">Clip it to a bag, a jacket, a laptop or your keys. Anyone who scans it gets your name, number and socials — and you can change what they see whenever you like.</p>
+      <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+        <a href="#styles" style="border: 2px solid #1B0F06; background: linear-gradient(180deg, #FFC943, #F5B21F); color: #2E1B10; font-size: 16px; font-weight: 800; padding: 15px 28px; border-radius: 999px; box-shadow: 0 14px 28px -14px rgba(245,178,31,.95); transition: transform .18s ease;" style-hover="transform: translateY(-2px); color: #2E1B10;">Shop tags</a>
+        <a href="#how" style="border: 2px solid #E0D0B5; color: #4A3423; font-size: 16px; font-weight: 700; padding: 15px 24px; border-radius: 999px; transition: border-color .18s ease;" style-hover="border-color: #F5B21F; color: #2E1B10;">See how it works</a>
+      </div>
+      <div style="display: flex; gap: 22px; flex-wrap: wrap; font-size: 13.5px; color: #6B543F; padding-top: 4px;">
+        <span>No app to install</span>
+        <span style="color: #D4C3A6;">·</span>
+        <span>Waterproof &amp; scratch-proof</span>
+        <span style="color: #D4C3A6;">·</span>
+        <span>Ships in 3 days</span>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 18px; align-items: center;">
+      <div style="position: relative; width: 100%; max-width: 560px; aspect-ratio: 1 / 1; border-radius: 34px; background: radial-gradient(70% 60% at 50% 34%, #FFF6E4 0%, #F4E7CF 52%, #EADAB9 100%); border: 1.5px solid #E7D6B6; overflow: hidden;">
+        <x-import component-from-global-scope="tag-3d" from="./tag-3d.js" variant="{{ variant }}" hint-size="100%,100%" style="position: absolute; inset: 0;"></x-import>
+        <div style="position: absolute; left: 18px; bottom: 16px; display: flex; align-items: center; gap: 8px; font-family: 'Space Mono', monospace; font-size: 10.5px; letter-spacing: 1.3px; color: #8A5A2B; pointer-events: none;">
+          <span style="width: 16px; height: 1px; background: #B79E78; flex: 0 0 auto;"></span>
+          <span style="white-space: nowrap;">DRAG TO SPIN IT</span>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap; justify-content: center;">
+        <button type="button" onClick="{{ pickCream }}" style="display: flex; align-items: center; gap: 9px; cursor: pointer; font-family: Manrope, sans-serif; font-weight: 700; font-size: 13.5px; color: #2E1B10; background: #FFFDF8; padding: 8px 15px 8px 9px; border-radius: 999px; transition: border-color .18s ease, transform .18s ease; border: {{ creamBorder }};" style-hover="transform: translateY(-1px);">
+          <span style="width: 22px; height: 22px; border-radius: 50%; border: 2px solid #1B0F06; background: #FBF3E4;"></span>Cream acrylic
+        </button>
+        <button type="button" onClick="{{ pickEspresso }}" style="display: flex; align-items: center; gap: 9px; cursor: pointer; font-family: Manrope, sans-serif; font-weight: 700; font-size: 13.5px; color: #2E1B10; background: #FFFDF8; padding: 8px 15px 8px 9px; border-radius: 999px; transition: border-color .18s ease, transform .18s ease; border: {{ espressoBorder }};" style-hover="transform: translateY(-1px);">
+          <span style="width: 22px; height: 22px; border-radius: 50%; border: 2px solid #1B0F06; background: #3A2318;"></span>Espresso
+        </button>
+        <button type="button" onClick="{{ pickAmber }}" style="display: flex; align-items: center; gap: 9px; cursor: pointer; font-family: Manrope, sans-serif; font-weight: 700; font-size: 13.5px; color: #2E1B10; background: #FFFDF8; padding: 8px 15px 8px 9px; border-radius: 999px; transition: border-color .18s ease, transform .18s ease; border: {{ amberBorder }};" style-hover="transform: translateY(-1px);">
+          <span style="width: 22px; height: 22px; border-radius: 50%; border: 2px solid #1B0F06; background: #F5B21F;"></span>Amber
+        </button>
+        <button type="button" onClick="{{ pickGlow }}" style="display: flex; align-items: center; gap: 9px; cursor: pointer; font-family: Manrope, sans-serif; font-weight: 700; font-size: 13.5px; color: #2E1B10; background: #FFFDF8; padding: 8px 15px 8px 9px; border-radius: 999px; transition: border-color .18s ease, transform .18s ease; border: {{ glowBorder }};" style-hover="transform: translateY(-1px);">
+          <span style="width: 22px; height: 22px; border-radius: 50%; border: 2px solid #1B0F06; background: linear-gradient(150deg, #8BF7C8, #49E2D2 42%, #B394F2);"></span>Nightlight
+        </button>
+      </div>
+      <div style="font-size: 13.5px; color: #6B543F;">{{ variantNote }}</div>
+    </div>
+  </section>
+
+  <section id="how" style="background: linear-gradient(155deg, #4A2A18 0%, #2E1B10 60%, #221208 100%); color: #FDF7EC; padding: clamp(48px, 6vw, 86px) clamp(20px, 4vw, 56px);">
+    <div style="max-width: 1160px; margin: 0 auto; display: flex; flex-direction: column; gap: 38px;">
+      <div style="display: flex; flex-direction: column; gap: 12px; max-width: 620px;">
+        <span style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 1.6px; color: #F5B21F;">HOW IT WORKS</span>
+        <h2 style="margin: 0; font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: clamp(30px, 3.4vw, 46px); line-height: 1.08;">Three steps, then you never hand out a number again.</h2>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: clamp(22px, 3vw, 46px); align-items: start;">
+
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <sc-for list="{{ steps }}" as="s" hint-placeholder-count="3">
+            <button type="button" onClick="{{ s.pick }}" style="text-align: left; cursor: pointer; display: flex; gap: 18px; align-items: flex-start; padding: 20px 22px; border-radius: 20px; font-family: Manrope, sans-serif; transition: background .25s ease, border-color .25s ease, transform .25s ease; background: {{ s.bg }}; border: {{ s.border }}; transform: {{ s.shift }};">
+              <span style="flex: 0 0 auto; font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 40px; line-height: .9; color: {{ s.numColor }}; -webkit-text-stroke: {{ s.numStroke }};">{{ s.n }}</span>
+              <span style="display: flex; flex-direction: column; gap: 7px; min-width: 0;">
+                <span style="font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 21px; color: #FDF7EC;">{{ s.title }}</span>
+                <span style="font-size: 14.5px; line-height: 1.6; color: {{ s.bodyColor }};">{{ s.body }}</span>
+              </span>
+            </button>
+          </sc-for>
+          <div style="display: flex; align-items: center; gap: 10px; padding-left: 4px; font-family: 'Space Mono', monospace; font-size: 10.5px; letter-spacing: 1.2px; color: #A88B64;">
+            <span style="width: 16px; height: 1px; background: #A88B64; flex: 0 0 auto;"></span>
+            <span style="white-space: nowrap;">CLICK A STEP</span>
+          </div>
+        </div>
+
+        <div style="position: relative; border-radius: 26px; border: 1px solid rgba(253,247,236,.18); background: radial-gradient(90% 80% at 50% 0%, rgba(245,178,31,.18), rgba(253,247,236,.04) 70%); padding: clamp(22px, 2.6vw, 34px); min-height: 344px; display: flex; flex-direction: column; gap: 18px; overflow: hidden;">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+            <span style="font-family: 'Space Mono', monospace; font-size: 10.5px; letter-spacing: 1.4px; color: #F5B21F;">{{ activeKicker }}</span>
+            <span style="font-family: 'Space Mono', monospace; font-size: 10.5px; letter-spacing: 1.4px; color: #A88B64;">{{ activeCount }}</span>
+          </div>
+
+          <sc-if value="{{ isStep1 }}" hint-placeholder-val="{{ true }}">
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+              <div style="display: flex; gap: 14px; flex-wrap: wrap;">
+                <sc-for list="{{ swatches }}" as="w" hint-placeholder-count="4">
+                  <button type="button" onClick="{{ w.pick }}" style="cursor: pointer; background: transparent; border: none; padding: 0; display: flex; flex-direction: column; align-items: center; gap: 7px; font-family: Manrope, sans-serif;">
+                    <span style="width: 46px; height: 46px; border-radius: 50%; border: 2.5px solid #1B0F06; transition: box-shadow .2s ease, transform .2s ease; background: {{ w.fill }}; box-shadow: {{ w.ring }}; transform: {{ w.lift }};"></span>
+                    <span style="font-size: 11px; letter-spacing: .3px; color: {{ w.labelColor }};">{{ w.label }}</span>
+                  </button>
+                </sc-for>
+              </div>
+              <div style="display: flex; align-items: flex-end; gap: 18px; flex-wrap: wrap;">
+                <div style="width: 130px; height: 182px; border: 2.5px solid #1B0F06; border-radius: 26px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 11px; flex: 0 0 auto; transition: background .25s ease; background: {{ pickedFill }};">
+                  <span style="width: 18px; height: 18px; border-radius: 50%; border: 2.5px solid #1B0F06; background: {{ pickedAccent }};"></span>
+                  <span style="width: 76px; height: 76px; border-radius: 9px; background: repeating-conic-gradient(#231409 0% 25%, #FFFDF8 0% 50%) 0 0 / 15px 15px; border: 1.5px solid rgba(35,20,9,.25);"></span>
+                  <span style="width: 34px; height: 4px; border-radius: 999px; background: {{ pickedAccent }};"></span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 9px; font-size: 13.5px; color: #E9D9C1; padding-bottom: 6px; min-width: 170px; flex: 1 1 180px;">
+                  <span style="font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 18px; color: #FDF7EC;">{{ pickedName }}</span>
+                  <span>Acrylic, 38 × 52 mm</span>
+                  <span>Steel key loop included</span>
+                  <span style="color: #F5B21F; font-weight: 700;">{{ pickedTrait }}</span>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isStep2 }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+              <div style="background: #FFFDF8; border-radius: 18px; padding: 18px; display: flex; flex-direction: column; gap: 12px;">
+                <div style="display: flex; flex-direction: column; gap: 5px;">
+                  <span style="font-size: 10.5px; font-weight: 700; letter-spacing: .5px; color: #9C8467;">DISPLAY NAME</span>
+                  <span style="font-size: 14.5px; font-weight: 700; color: #2E1B10;">Ayesha Khan</span>
+                </div>
+                <div style="height: 1px; background: #EFE4D1;"></div>
+                <div style="display: flex; flex-direction: column; gap: 5px;">
+                  <span style="font-size: 10.5px; font-weight: 700; letter-spacing: .5px; color: #9C8467;">PHONE</span>
+                  <span style="display: flex; align-items: center; gap: 8px; font-size: 14.5px; font-weight: 600; color: #2E1B10;">+92 300 114 2288<span style="width: 2px; height: 16px; background: #F5B21F;"></span></span>
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <sc-for list="{{ toggles }}" as="t" hint-placeholder-count="3">
+                  <div style="display: flex; align-items: center; justify-content: space-between; gap: 14px; background: rgba(253,247,236,.07); border-radius: 14px; padding: 12px 14px;">
+                    <span style="font-size: 14px; color: #FDF7EC; min-width: 0;">{{ t.label }}</span>
+                    <span style="flex: 0 0 auto; width: 42px; height: 24px; border-radius: 999px; padding: 3px; display: flex; justify-content: {{ t.justify }}; background: {{ t.track }};">
+                      <span style="width: 18px; height: 18px; border-radius: 50%; background: #FDF7EC;"></span>
+                    </span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isStep3 }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; align-items: center; gap: 18px; flex-wrap: wrap;">
+              <div style="width: 150px; height: 150px; border-radius: 20px; background: #FFFDF8; border: 2.5px solid #1B0F06; display: flex; align-items: center; justify-content: center; flex: 0 0 auto;">
+                <span style="width: 104px; height: 104px; border-radius: 6px; background: repeating-conic-gradient(#231409 0% 25%, #FFFDF8 0% 50%) 0 0 / 16px 16px;"></span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 12px; flex: 1 1 180px; min-width: 170px;">
+                <div style="display: flex; align-items: center; gap: 10px; font-size: 14px; color: #FDF7EC;">
+                  <span style="width: 22px; height: 22px; border-radius: 50%; background: #F5B21F; color: #2E1B10; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex: 0 0 auto;">1</span>
+                  <span style="min-width: 0;">Camera spots the code</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px; font-size: 14px; color: #FDF7EC;">
+                  <span style="width: 22px; height: 22px; border-radius: 50%; background: #F5B21F; color: #2E1B10; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex: 0 0 auto;">2</span>
+                  <span style="min-width: 0;">Your card opens in the browser</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px; font-size: 14px; color: #FDF7EC;">
+                  <span style="width: 22px; height: 22px; border-radius: 50%; background: #F5B21F; color: #2E1B10; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex: 0 0 auto;">3</span>
+                  <span style="min-width: 0;">One tap and you are in their contacts</span>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+
+          <div style="margin-top: auto; font-size: 14px; line-height: 1.6; color: #E9D9C1; border-top: 1px solid rgba(253,247,236,.16); padding-top: 16px;">{{ activeFoot }}</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="styles" style="padding: clamp(48px, 6vw, 86px) clamp(20px, 4vw, 56px); max-width: 1220px; margin: 0 auto; display: flex; flex-direction: column; gap: 34px;">
+    <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
+      <div style="display: flex; flex-direction: column; gap: 10px; max-width: 560px;">
+        <span style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 1.6px; color: #8A5A2B;">THE COLLECTION</span>
+        <h2 style="margin: 0; font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: clamp(30px, 3.4vw, 46px); line-height: 1.08;">Tags you would wear even if they did nothing.</h2>
+      </div>
+      <a href="#pricing" style="font-size: 14.5px;">See all four finishes →</a>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 18px;">
+      <article style="background: #FFFDF8; border: 1.5px solid #EADFCB; border-radius: 24px; overflow: hidden; display: flex; flex-direction: column; transition: transform .2s ease, box-shadow .2s ease;" style-hover="transform: translateY(-4px); box-shadow: 0 24px 44px -28px rgba(46,27,16,.5);">
+        <div style="position: relative; aspect-ratio: 4 / 3; background: radial-gradient(72% 64% at 50% 38%, #FFF6E4 0%, #F4E7CF 54%, #EADAB9 100%);">
+          <x-import component-from-global-scope="tag-3d" from="./tag-3d.js" variant="cream" hint-size="100%,100%" style="position: absolute; inset: 0;"></x-import>
+          <span style="position: absolute; top: 12px; left: 12px; pointer-events: none; font-family: 'Space Mono', monospace; font-size: 9.5px; letter-spacing: 1.1px; color: #8A5A2B; background: rgba(255,253,248,.92); padding: 5px 9px; border-radius: 999px;">CREAM</span>
+        </div>
+        <div style="padding: 18px 18px 20px; display: flex; flex-direction: column; gap: 8px; flex: 1;">
+          <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 10px;">
+            <h3 style="margin: 0; font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 19px;">The Classic</h3>
+            <span style="font-weight: 800; font-size: 15px;">$19</span>
+          </div>
+          <p style="margin: 0; font-size: 13.5px; line-height: 1.55; color: #6B543F; flex: 1;">Rounded cream acrylic, amber eyelet, steel loop. Fits keys and bag straps.</p>
+          <a href="Tagtique Customize.dc.html" style="margin-top: 6px; text-align: center; border: 2px solid #1B0F06; background: #FDF7EC; border-radius: 999px; padding: 11px; font-weight: 800; font-size: 14px; color: #2E1B10; transition: background .18s ease;" style-hover="background: #F5B21F; color: #2E1B10;">Build this one</a>
+        </div>
+      </article>
+
+      <article style="background: #FFFDF8; border: 1.5px solid #EADFCB; border-radius: 24px; overflow: hidden; display: flex; flex-direction: column; transition: transform .2s ease, box-shadow .2s ease;" style-hover="transform: translateY(-4px); box-shadow: 0 24px 44px -28px rgba(46,27,16,.5);">
+        <div style="position: relative; aspect-ratio: 4 / 3; background: radial-gradient(72% 64% at 50% 38%, #FFF6E4 0%, #F4E7CF 54%, #EADAB9 100%);">
+          <x-import component-from-global-scope="tag-3d" from="./tag-3d.js" variant="espresso" hint-size="100%,100%" style="position: absolute; inset: 0;"></x-import>
+          <span style="position: absolute; top: 12px; left: 12px; pointer-events: none; font-family: 'Space Mono', monospace; font-size: 9.5px; letter-spacing: 1.1px; color: #8A5A2B; background: rgba(255,253,248,.92); padding: 5px 9px; border-radius: 999px;">ESPRESSO</span>
+        </div>
+        <div style="padding: 18px 18px 20px; display: flex; flex-direction: column; gap: 8px; flex: 1;">
+          <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 10px;">
+            <h3 style="margin: 0; font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 19px;">The Espresso</h3>
+            <span style="font-weight: 800; font-size: 15px;">$22</span>
+          </div>
+          <p style="margin: 0; font-size: 13.5px; line-height: 1.55; color: #6B543F; flex: 1;">Matte deep brown with a cream code panel. Quiet on a laptop lid.</p>
+          <a href="Tagtique Customize.dc.html" style="margin-top: 6px; text-align: center; border: 2px solid #1B0F06; background: #FDF7EC; border-radius: 999px; padding: 11px; font-weight: 800; font-size: 14px; color: #2E1B10; transition: background .18s ease;" style-hover="background: #F5B21F; color: #2E1B10;">Build this one</a>
+        </div>
+      </article>
+
+      <article style="background: #FFFDF8; border: 1.5px solid #EADFCB; border-radius: 24px; overflow: hidden; display: flex; flex-direction: column; transition: transform .2s ease, box-shadow .2s ease;" style-hover="transform: translateY(-4px); box-shadow: 0 24px 44px -28px rgba(46,27,16,.5);">
+        <div style="position: relative; aspect-ratio: 4 / 3; background: radial-gradient(72% 64% at 50% 38%, #FFF6E4 0%, #F4E7CF 54%, #EADAB9 100%);">
+          <x-import component-from-global-scope="tag-3d" from="./tag-3d.js" variant="amber" hint-size="100%,100%" style="position: absolute; inset: 0;"></x-import>
+          <span style="position: absolute; top: 12px; left: 12px; pointer-events: none; font-family: 'Space Mono', monospace; font-size: 9.5px; letter-spacing: 1.1px; color: #8A5A2B; background: rgba(255,253,248,.92); padding: 5px 9px; border-radius: 999px;">AMBER</span>
+        </div>
+        <div style="padding: 18px 18px 20px; display: flex; flex-direction: column; gap: 8px; flex: 1;">
+          <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 10px;">
+            <h3 style="margin: 0; font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 19px;">The Amber</h3>
+            <span style="font-weight: 800; font-size: 15px;">$24</span>
+          </div>
+          <p style="margin: 0; font-size: 13.5px; line-height: 1.55; color: #6B543F; flex: 1;">Translucent honey acrylic that glows when light passes through it.</p>
+          <a href="Tagtique Customize.dc.html" style="margin-top: 6px; text-align: center; border: 2px solid #1B0F06; background: #FDF7EC; border-radius: 999px; padding: 11px; font-weight: 800; font-size: 14px; color: #2E1B10; transition: background .18s ease;" style-hover="background: #F5B21F; color: #2E1B10;">Build this one</a>
+        </div>
+      </article>
+
+      <article style="background: #FFFDF8; border: 1.5px solid #EADFCB; border-radius: 24px; overflow: hidden; display: flex; flex-direction: column; transition: transform .2s ease, box-shadow .2s ease;" style-hover="transform: translateY(-4px); box-shadow: 0 24px 44px -28px rgba(46,27,16,.5);">
+        <div style="position: relative; aspect-ratio: 4 / 3; background: radial-gradient(72% 64% at 50% 38%, #FFF6E4 0%, #F4E7CF 54%, #EADAB9 100%);">
+          <x-import component-from-global-scope="tag-3d" from="./tag-3d.js" variant="glow" hint-size="100%,100%" style="position: absolute; inset: 0;"></x-import>
+          <span style="position: absolute; top: 12px; left: 12px; pointer-events: none; font-family: 'Space Mono', monospace; font-size: 9.5px; letter-spacing: 1.1px; color: #8A5A2B; background: rgba(255,253,248,.92); padding: 5px 9px; border-radius: 999px;">GLOW</span>
+        </div>
+        <div style="padding: 18px 18px 20px; display: flex; flex-direction: column; gap: 8px; flex: 1;">
+          <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 10px;">
+            <h3 style="margin: 0; font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 19px;">The Nightlight</h3>
+            <span style="font-weight: 800; font-size: 15px;">$26</span>
+          </div>
+          <p style="margin: 0; font-size: 13.5px; line-height: 1.55; color: #6B543F; flex: 1;">Mint-to-violet gradient acrylic that charges in daylight and glows after dark.</p>
+          <a href="Tagtique Customize.dc.html" style="margin-top: 6px; text-align: center; border: 2px solid #1B0F06; background: #FDF7EC; border-radius: 999px; padding: 11px; font-weight: 800; font-size: 14px; color: #2E1B10; transition: background .18s ease;" style-hover="background: #F5B21F; color: #2E1B10;">Build this one</a>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section style="padding: 0 clamp(20px, 4vw, 56px) clamp(48px, 6vw, 80px); max-width: 1220px; margin: 0 auto;">
+    <div style="position: relative; overflow: hidden; background: #FFFDF8; border: 1.5px solid #EADFCB; border-radius: 34px; padding: clamp(26px, 3.4vw, 50px); display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 310px), 1fr)); gap: clamp(28px, 3.4vw, 50px); align-items: center;">
+      <div style="position: absolute; right: -90px; top: -90px; width: 300px; height: 300px; border-radius: 50%; background: radial-gradient(circle, rgba(245,178,31,.20), rgba(245,178,31,0) 68%); pointer-events: none;"></div>
+
+      <div style="position: relative; display: flex; flex-direction: column; gap: 16px;">
+        <span style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 1.6px; color: #8A5A2B;">WHAT THEY SEE</span>
+        <h2 style="margin: 0; font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: clamp(26px, 2.9vw, 40px); line-height: 1.08; letter-spacing: -.5px; text-wrap: pretty;">Your card opens in their browser. Nothing to download.</h2>
+        <p style="margin: 0; font-size: 15.5px; line-height: 1.6; color: #5C452F; max-width: 420px;">Three modes, one tag. Flip between them any time — the code on the tag never changes.</p>
+
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; padding-top: 2px;">
+          <sc-for list="{{ modes }}" as="m" hint-placeholder-count="3">
+            <button type="button" onClick="{{ m.pick }}" style="cursor: pointer; font-family: Manrope, sans-serif; font-weight: 700; font-size: 13.5px; padding: 10px 16px; border-radius: 999px; transition: background .2s ease, color .2s ease, border-color .2s ease; background: {{ m.bg }}; color: {{ m.color }}; border: {{ m.border }};">{{ m.label }}</button>
+          </sc-for>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px; border-left: 2px solid #F0E3CE; padding: 2px 0 2px 16px;">
+          <span style="font-family: 'Space Mono', monospace; font-size: 10.5px; letter-spacing: 1.3px; color: #A18A6B;">{{ modeKicker }}</span>
+          <p style="margin: 0; font-size: 14.5px; line-height: 1.6; color: #4A3423; max-width: 400px;">{{ modeBlurb }}</p>
+        </div>
+      </div>
+
+      <div style="position: relative; display: flex; justify-content: center; align-items: center; min-height: 420px;">
+        <div style="position: absolute; width: 260px; height: 260px; border-radius: 50%; background: radial-gradient(circle, rgba(245,178,31,.22), rgba(245,178,31,0) 70%);"></div>
+
+        <div style="position: relative; width: 268px; border: 2.5px solid #1B0F06; border-radius: 38px; background: #FDF7EC; padding: 13px; box-shadow: 0 34px 56px -30px rgba(46,27,16,.62); transform: rotate(-2.2deg);">
+          <div style="display: flex; justify-content: center; padding-bottom: 9px;"><span style="width: 52px; height: 5px; border-radius: 999px; background: #E2D2B7;"></span></div>
+          <div style="border: 1.5px solid #EADFCB; border-radius: 26px; background: #FFFDF8; padding: 18px 17px; display: flex; flex-direction: column; gap: 14px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+              <span style="font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 1.1px; color: #A18A6B;">tagtique.co/ayesha</span>
+              <span style="font-size: 9.5px; font-weight: 800; letter-spacing: .6px; padding: 3px 8px; border-radius: 999px; background: {{ badgeBg }}; color: {{ badgeColor }};">{{ badgeText }}</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="width: 48px; height: 48px; border-radius: 50%; background: repeating-linear-gradient(135deg, #F3E8D5 0 6px, #EFE1CA 6px 12px); border: 2px solid #1B0F06; flex: 0 0 auto;"></div>
+              <div style="display: flex; flex-direction: column; min-width: 0;">
+                <span style="font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 18px;">{{ cardName }}</span>
+                <span style="font-size: 12.5px; color: #6B543F;">{{ cardSub }}</span>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 9px;">
+              <sc-for list="{{ cardRows }}" as="row" hint-placeholder-count="3">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12.5px; padding-bottom: 8px; border-bottom: 1px solid #EFE4D1;">
+                  <span style="color: #9C8467; font-weight: 700; flex: 0 0 auto;">{{ row.k }}</span>
+                  <span style="font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: {{ row.color }};">{{ row.v }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="text-align: center; border: 2px solid #1B0F06; border-radius: 999px; padding: 11px; background: #F5B21F; font-size: 13.5px; font-weight: 800; color: #2E1B10;">{{ cardCta }}</div>
+          </div>
+        </div>
+
+        <div style="position: absolute; left: 0; top: 16px; display: flex; align-items: center; gap: 8px; background: #FFFDF8; border: 1.5px solid #EADFCB; border-radius: 999px; padding: 8px 13px; box-shadow: 0 16px 30px -22px rgba(46,27,16,.7);">
+          <span style="width: 7px; height: 7px; border-radius: 50%; background: #3F8F5B; flex: 0 0 auto;"></span>
+          <span style="font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: .9px; color: #6B543F;">SCAN #128 · 2 MIN AGO</span>
+        </div>
+        <div style="position: absolute; left: 6px; bottom: 18px; display: flex; flex-direction: column; gap: 2px; background: #2E1B10; color: #FDF7EC; border-radius: 16px; padding: 11px 15px; box-shadow: 0 20px 34px -24px rgba(46,27,16,.8);">
+          <span style="font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 20px; line-height: 1; color: #F5B21F;">0.8s</span>
+          <span style="font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: .9px; color: #A88B64;">SCAN TO CARD</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="pricing" style="padding: 0 clamp(20px, 4vw, 56px) clamp(48px, 6vw, 80px); max-width: 1220px; margin: 0 auto; display: flex; flex-direction: column; gap: clamp(24px, 3vw, 38px);">
+    <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap;">
+      <div style="display: flex; flex-direction: column; gap: 10px; max-width: 580px;">
+        <span style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 1.6px; color: #8A5A2B;">PRICING</span>
+        <h2 style="margin: 0; font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: clamp(30px, 3.4vw, 46px); line-height: 1.08; letter-spacing: -.5px;">Buy the tag once. The card stays free.</h2>
+      </div>
+      <div style="display: flex; align-items: center; gap: 9px; background: #F4EADA; border-radius: 999px; padding: 9px 15px; font-family: 'Space Mono', monospace; font-size: 10.5px; letter-spacing: 1.2px; color: #8A5A2B;">
+        <span style="width: 7px; height: 7px; border-radius: 50%; background: #3F8F5B; flex: 0 0 auto;"></span>
+        <span>ONE-TIME · NO SUBSCRIPTION</span>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 272px), 1fr)); gap: clamp(14px, 1.6vw, 20px); align-items: stretch;">
+
+      <div style="background: #FFFDF8; border: 1.5px solid #EADFCB; border-radius: 26px; padding: clamp(22px, 2.2vw, 28px); display: flex; flex-direction: column; gap: 18px; transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;" style-hover="transform: translateY(-4px); box-shadow: 0 26px 48px -32px rgba(46,27,16,.55); border-color: #E0CBA6;">
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
+          <div style="display: flex; flex-direction: column; gap: 3px;">
+            <h3 style="margin: 0; font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 21px;">Single tag</h3>
+            <span style="font-size: 12.5px; color: #8A6B4B;">For your keys</span>
+          </div>
+          <span style="display: flex; gap: 4px; flex: 0 0 auto; padding-top: 5px;">
+            <span style="width: 15px; height: 15px; border-radius: 50%; border: 1.5px solid #1B0F06; background: #FBF3E4;"></span>
+          </span>
+        </div>
+        <div style="display: flex; align-items: baseline; gap: 8px;">
+          <span style="font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 46px; line-height: 1; letter-spacing: -1px;">$19</span>
+          <span style="font-size: 13px; color: #8A6B4B;">one-time</span>
+        </div>
+        <div style="height: 1px; background: #EFE4D1;"></div>
+        <div style="display: flex; flex-direction: column; gap: 10px; flex: 1;">
+          <div style="display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.45; color: #4A3423;"><span style="flex: 0 0 auto; width: 18px; height: 18px; border-radius: 50%; background: #F4EADA; color: #8A5A2B; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; margin-top: 1px;">✓</span><span style="min-width: 0;">One acrylic tag, finish of your choice</span></div>
+          <div style="display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.45; color: #4A3423;"><span style="flex: 0 0 auto; width: 18px; height: 18px; border-radius: 50%; background: #F4EADA; color: #8A5A2B; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; margin-top: 1px;">✓</span><span style="min-width: 0;">Unlimited edits to your card</span></div>
+          <div style="display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.45; color: #4A3423;"><span style="flex: 0 0 auto; width: 18px; height: 18px; border-radius: 50%; background: #F4EADA; color: #8A5A2B; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; margin-top: 1px;">✓</span><span style="min-width: 0;">Lost-and-found mode included</span></div>
+        </div>
+        <a href="Tagtique Customize.dc.html" style="text-align: center; border: 2px solid #1B0F06; background: #FDF7EC; border-radius: 999px; padding: 13px; font-weight: 800; font-size: 14.5px; color: #2E1B10; transition: background .18s ease;" style-hover="background: #F5B21F; color: #2E1B10;">Choose single</a>
+      </div>
+
+      <div style="background: linear-gradient(168deg, #3A2318 0%, #2E1B10 58%, #221208 100%); color: #FDF7EC; border: 2.5px solid #1B0F06; border-radius: 26px; padding: clamp(24px, 2.4vw, 30px); display: flex; flex-direction: column; gap: 18px; position: relative; box-shadow: 0 34px 60px -34px rgba(46,27,16,.75);">
+        <span style="position: absolute; top: -14px; left: 26px; background: #F5B21F; color: #2E1B10; border: 2px solid #1B0F06; border-radius: 999px; font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 1.1px; font-weight: 700; padding: 5px 13px;">MOST BOUGHT</span>
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
+          <div style="display: flex; flex-direction: column; gap: 3px;">
+            <h3 style="margin: 0; font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 21px;">Trio pack</h3>
+            <span style="font-size: 12.5px; color: #A88B64;">Bag, keys, laptop</span>
+          </div>
+          <span style="display: flex; gap: 4px; flex: 0 0 auto; padding-top: 5px;">
+            <span style="width: 15px; height: 15px; border-radius: 50%; border: 1.5px solid #14090A; background: #FBF3E4;"></span>
+            <span style="width: 15px; height: 15px; border-radius: 50%; border: 1.5px solid #14090A; background: #3A2318;"></span>
+            <span style="width: 15px; height: 15px; border-radius: 50%; border: 1.5px solid #14090A; background: #F5B21F;"></span>
+          </span>
+        </div>
+        <div style="display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;">
+          <span style="font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 46px; line-height: 1; letter-spacing: -1px; color: #F5B21F;">$45</span>
+          <span style="font-size: 13px; color: #A88B64; text-decoration: line-through;">$57</span>
+          <span style="font-size: 12px; font-weight: 800; color: #2E1B10; background: #F5B21F; border-radius: 999px; padding: 3px 9px;">$15 a tag</span>
+        </div>
+        <div style="height: 1px; background: rgba(253,247,236,.18);"></div>
+        <div style="display: flex; flex-direction: column; gap: 10px; flex: 1;">
+          <div style="display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.45; color: #E9D9C1;"><span style="flex: 0 0 auto; width: 18px; height: 18px; border-radius: 50%; background: rgba(245,178,31,.22); color: #F5B21F; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; margin-top: 1px;">✓</span><span style="min-width: 0;">Three tags in mixed finishes</span></div>
+          <div style="display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.45; color: #E9D9C1;"><span style="flex: 0 0 auto; width: 18px; height: 18px; border-radius: 50%; background: rgba(245,178,31,.22); color: #F5B21F; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; margin-top: 1px;">✓</span><span style="min-width: 0;">All pointing at the same card</span></div>
+          <div style="display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.45; color: #E9D9C1;"><span style="flex: 0 0 auto; width: 18px; height: 18px; border-radius: 50%; background: rgba(245,178,31,.22); color: #F5B21F; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; margin-top: 1px;">✓</span><span style="min-width: 0;">Scan history across all three</span></div>
+        </div>
+        <a href="Tagtique Customize.dc.html" style="text-align: center; border: 2px solid #1B0F06; background: linear-gradient(180deg, #FFC943, #F5B21F); border-radius: 999px; padding: 13px; font-weight: 800; font-size: 14.5px; color: #2E1B10; transition: transform .18s ease;" style-hover="transform: translateY(-2px); color: #2E1B10;">Choose trio</a>
+      </div>
+
+      <div style="background: #FFFDF8; border: 1.5px solid #EADFCB; border-radius: 26px; padding: clamp(22px, 2.2vw, 28px); display: flex; flex-direction: column; gap: 18px; transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;" style-hover="transform: translateY(-4px); box-shadow: 0 26px 48px -32px rgba(46,27,16,.55); border-color: #E0CBA6;">
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
+          <div style="display: flex; flex-direction: column; gap: 3px;">
+            <h3 style="margin: 0; font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 21px;">Engraved</h3>
+            <span style="font-size: 12.5px; color: #8A6B4B;">Made to order</span>
+          </div>
+          <span style="flex: 0 0 auto; font-family: 'Space Mono', monospace; font-size: 9.5px; letter-spacing: 1px; color: #8A5A2B; border: 1px dashed #DCC7A4; border-radius: 7px; padding: 4px 7px; white-space: nowrap;">A–Z</span>
+        </div>
+        <div style="display: flex; align-items: baseline; gap: 8px;">
+          <span style="font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 46px; line-height: 1; letter-spacing: -1px;">$29</span>
+          <span style="font-size: 13px; color: #8A6B4B;">one-time</span>
+        </div>
+        <div style="height: 1px; background: #EFE4D1;"></div>
+        <div style="display: flex; flex-direction: column; gap: 10px; flex: 1;">
+          <div style="display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.45; color: #4A3423;"><span style="flex: 0 0 auto; width: 18px; height: 18px; border-radius: 50%; background: #F4EADA; color: #8A5A2B; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; margin-top: 1px;">✓</span><span style="min-width: 0;">Your name or studio on the back</span></div>
+          <div style="display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.45; color: #4A3423;"><span style="flex: 0 0 auto; width: 18px; height: 18px; border-radius: 50%; background: #F4EADA; color: #8A5A2B; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; margin-top: 1px;">✓</span><span style="min-width: 0;">Any of the three finishes</span></div>
+          <div style="display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.45; color: #4A3423;"><span style="flex: 0 0 auto; width: 18px; height: 18px; border-radius: 50%; background: #F4EADA; color: #8A5A2B; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; margin-top: 1px;">✓</span><span style="min-width: 0;">Ships in about a week</span></div>
+        </div>
+        <a href="Tagtique Customize.dc.html" style="text-align: center; border: 2px solid #1B0F06; background: #FDF7EC; border-radius: 999px; padding: 13px; font-weight: 800; font-size: 14.5px; color: #2E1B10; transition: background .18s ease;" style-hover="background: #F5B21F; color: #2E1B10;">Choose engraved</a>
+      </div>
+    </div>
+
+    <div style="display: flex; align-items: center; justify-content: center; gap: clamp(14px, 2.4vw, 32px); flex-wrap: wrap; border: 1.5px dashed #E0D0B5; border-radius: 20px; padding: 16px 22px; font-size: 13.5px; color: #6B543F;">
+      <span>Free card, forever</span>
+      <span style="color: #D4C3A6;">·</span>
+      <span>Free replacement in year one</span>
+      <span style="color: #D4C3A6;">·</span>
+      <span>Ships worldwide in 3 days</span>
+    </div>
+  </section>
+
+  <section style="padding: 0 clamp(20px, 4vw, 56px) clamp(48px, 6vw, 80px); max-width: 820px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px;">
+    <h2 style="margin: 0; font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: clamp(26px, 2.8vw, 38px); line-height: 1.1;">Questions people ask first</h2>
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <sc-for list="{{ faqs }}" as="f" hint-placeholder-count="4">
+        <div style="background: #FFFDF8; border: 1.5px solid #EADFCB; border-radius: 18px; overflow: hidden;">
+          <button type="button" onClick="{{ f.toggle }}" style="width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 14px; text-align: left; background: transparent; border: none; cursor: pointer; padding: 18px 20px; font-family: Manrope, sans-serif; font-weight: 700; font-size: 15.5px; color: #2E1B10;">
+            {{ f.q }}
+            <span style="flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%; background: #F4EADA; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 800; color: #8A5A2B; transition: transform .24s ease, background .2s ease; transform: {{ f.iconRotate }};">+</span>
+          </button>
+          <sc-if value="{{ f.open }}" hint-placeholder-val="{{ false }}">
+            <p style="margin: 0; padding: 0 20px 20px; font-size: 14.5px; line-height: 1.65; color: #5C452F;">{{ f.a }}</p>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <footer style="background: #2E1B10; color: #E9D9C1; padding: clamp(36px, 4vw, 60px) clamp(20px, 4vw, 56px) 30px;">
+    <div style="max-width: 1220px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 28px; align-items: start;">
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <img src="assets/tagtique-logo.png" alt="Tagtique" style="width: 168px; height: auto; display: block;" />
+          <p style="margin: 0; font-size: 14px; line-height: 1.6; max-width: 280px;">QR tags made to be seen. Designed in Lahore, shipped worldwide.</p>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <span style="font-family: 'Space Mono', monospace; font-size: 10.5px; letter-spacing: 1.4px; color: #F5B21F;">SHOP</span>
+          <a href="#styles" style="font-size: 14px; color: #E9D9C1; font-weight: 500;">Tag styles</a>
+          <a href="#pricing" style="font-size: 14px; color: #E9D9C1; font-weight: 500;">Pricing</a>
+          <a href="#styles" style="font-size: 14px; color: #E9D9C1; font-weight: 500;">Engraving</a>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <span style="font-family: 'Space Mono', monospace; font-size: 10.5px; letter-spacing: 1.4px; color: #F5B21F;">ACCOUNT</span>
+          <a href="Tagtique Auth.dc.html" style="font-size: 14px; color: #E9D9C1; font-weight: 500;">Sign in</a>
+          <a href="Tagtique Auth.dc.html" style="font-size: 14px; color: #E9D9C1; font-weight: 500;">Create account</a>
+          <a href="#how" style="font-size: 14px; color: #E9D9C1; font-weight: 500;">How it works</a>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <span style="font-family: 'Space Mono', monospace; font-size: 10.5px; letter-spacing: 1.4px; color: #F5B21F;">HELP</span>
+          <a href="#faq" style="font-size: 14px; color: #E9D9C1; font-weight: 500;">Shipping</a>
+          <a href="#faq" style="font-size: 14px; color: #E9D9C1; font-weight: 500;">Returns</a>
+          <a href="#faq" style="font-size: 14px; color: #E9D9C1; font-weight: 500;">Contact us</a>
+        </div>
+      </div>
+      <div style="border-top: 1px solid rgba(253,247,236,.16); padding-top: 18px; display: flex; justify-content: space-between; gap: 14px; flex-wrap: wrap; font-size: 13px;">
+        <span>© 2026 Tagtique</span>
+        <span>Privacy · Terms</span>
+      </div>
+    </div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;defaultFinish&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;cream&quot;,&quot;espresso&quot;,&quot;amber&quot;],&quot;default&quot;:&quot;cream&quot;,&quot;tsType&quot;:&quot;'cream' | 'espresso' | 'amber'&quot;,&quot;section&quot;:&quot;Hero&quot;}}">
+class Component extends DCLogic {
+  state = { variant: null, openFaq: 0, step: 0, cardMode: 'public' };
+
+  get variant() { return this.state.variant ?? (this.props.defaultFinish ?? 'cream'); }
+
+  renderVals() {
+    const v = this.variant;
+    const on = '2px solid #F5B21F';
+    const off = '2px solid #EADFCB';
+    const notes = {
+      cream: 'Cream acrylic · warm ivory with an amber eyelet — the everyday one.',
+      espresso: 'Espresso · deep brown, matte finish, code stays high-contrast.',
+      amber: 'Amber · translucent honey that catches light on a bag strap.',
+      glow: 'Nightlight · mint-to-violet gradient that keeps glowing after dark.'
+    };
+    const swatchData = [
+      { key: 'cream', label: 'Cream', fill: '#FFF0D6', accent: '#F5B21F', name: 'Cream acrylic', trait: 'Own code, engraved' },
+      { key: 'espresso', label: 'Espresso', fill: '#3A2318', accent: '#F5B21F', name: 'Espresso', trait: 'Matte, fingerprint-proof' },
+      { key: 'amber', label: 'Amber', fill: '#F5B21F', accent: '#3A2318', name: 'Amber', trait: 'Translucent, catches light' },
+      { key: 'glow', label: 'Nightlight', fill: 'linear-gradient(150deg, #8BF7C8, #49E2D2 42%, #B394F2)', accent: '#8BF7C8', name: 'Nightlight', trait: 'Charges by day, glows at night' }
+    ];
+    const picked = swatchData.find((s) => s.key === v) || swatchData[0];
+
+    const faqData = [
+      { q: 'Do people need an app to scan it?', a: 'No. Every modern phone camera reads the code and opens your card in the browser. Older phones can use any free scanner app.' },
+      { q: 'Can I change my details later?', a: 'Yes — as often as you like. The tag points to your card, not to fixed text, so you can swap your number or hide a social in seconds.' },
+      { q: 'What if I lose the item it is on?', a: 'Turn on lost-and-found mode and the card shows a short message plus one contact route, keeping everything else private.' },
+      { q: 'Will it survive rain and keys?', a: 'The tags are sealed acrylic with a steel loop. Water, sweat and pocket scratches do not affect the code.' }
+    ];
+
+    const faqs = faqData.map((f, i) => ({
+      q: f.q,
+      a: f.a,
+      open: this.state.openFaq === i,
+      iconRotate: this.state.openFaq === i ? 'rotate(45deg)' : 'rotate(0deg)',
+      toggle: () => this.setState((s) => ({ openFaq: s.openFaq === i ? -1 : i }))
+    }));
+
+    const stepData = [
+      { n: '1', title: 'Pick a finish, make it yours', body: 'Cream, espresso, amber or glow-in-the-dark Nightlight — then choose whether your name gets engraved on the back.', kicker: 'STEP 1 · CHOOSE', foot: 'Every tag carries its own code, so two people never share a card.' },
+      { n: '2', title: 'Fill in what you want seen', body: 'Name, number, socials, a studio link. Flip anything private without reprinting a thing.', kicker: 'STEP 2 · SET UP YOUR CARD', foot: 'Edits go live the moment you save — the tag itself never changes.' },
+      { n: '3', title: 'Someone scans, you are saved', body: 'Their camera opens your card in the browser. One tap and you are in their contacts.', kicker: 'STEP 3 · THEY SCAN', foot: 'No app, no account for them. It works on any phone made in the last decade.' }
+    ];
+    const muted = '#B9A488';
+    const modeData = {
+      public: {
+        label: 'Public', kicker: 'PUBLIC CARD',
+        blurb: 'Everything you are happy to hand out — the version most people will ever see.',
+        badgeText: 'PUBLIC', badgeBg: '#E4F0E6', badgeColor: '#2F6B44',
+        name: 'Ayesha Khan', sub: 'Ceramics studio · Lahore', cta: 'Save contact',
+        rows: [
+          { k: 'Phone', v: '+92 300 114 2288', color: '#2E1B10' },
+          { k: 'Email', v: 'ayesha@studio.co', color: '#2E1B10' },
+          { k: 'Instagram', v: '@ayesha.makes', color: '#2E1B10' }
+        ]
+      },
+      private: {
+        label: 'Private', kicker: 'PRIVATE CARD',
+        blurb: 'Hide anything you would rather not put on a keyring. Hidden rows stay off the page entirely.',
+        badgeText: 'LIMITED', badgeBg: '#F4EADA', badgeColor: '#8A5A2B',
+        name: 'Ayesha Khan', sub: 'Ceramics studio', cta: 'Send a message',
+        rows: [
+          { k: 'Phone', v: 'Hidden', color: muted },
+          { k: 'Email', v: 'ayesha@studio.co', color: '#2E1B10' },
+          { k: 'Instagram', v: 'Hidden', color: muted }
+        ]
+      },
+      lost: {
+        label: 'Lost & found', kicker: 'LOST-AND-FOUND MODE',
+        blurb: 'Flip this on when something goes missing: one way to reach you, a reward note, nothing else.',
+        badgeText: 'LOST', badgeBg: '#FBE3C8', badgeColor: '#9A4A12',
+        name: 'Please call the owner', sub: 'Reward offered · no questions', cta: 'Call now',
+        rows: [
+          { k: 'Call', v: '+92 300 114 2288', color: '#2E1B10' },
+          { k: 'Item', v: 'Olive canvas tote', color: '#2E1B10' },
+          { k: 'Other details', v: 'Hidden', color: muted }
+        ]
+      }
+    };
+    const modeKeys = ['public', 'private', 'lost'];
+    const mode = this.state.cardMode;
+    const cm = modeData[mode];
+
+    const active = this.state.step;
+    const steps = stepData.map((s, i) => ({
+      n: s.n,
+      title: s.title,
+      body: s.body,
+      bg: active === i ? 'rgba(245,178,31,.13)' : 'rgba(253,247,236,.045)',
+      border: active === i ? '1.5px solid rgba(245,178,31,.55)' : '1.5px solid rgba(253,247,236,.12)',
+      shift: active === i ? 'translateX(6px)' : 'translateX(0)',
+      numColor: active === i ? '#F5B21F' : 'transparent',
+      numStroke: active === i ? '0' : '1.4px rgba(253,247,236,.45)',
+      bodyColor: active === i ? '#E9D9C1' : '#A88B64',
+      pick: () => this.setState({ step: i })
+    }));
+
+    const toggleData = [
+      { label: 'Phone number', on: true },
+      { label: 'Instagram', on: true },
+      { label: 'Home address', on: false }
+    ];
+
+    return {
+      steps,
+      isStep1: active === 0,
+      isStep2: active === 1,
+      isStep3: active === 2,
+      activeKicker: stepData[active].kicker,
+      activeCount: '0' + (active + 1) + ' / 03',
+      activeFoot: stepData[active].foot,
+      toggles: toggleData.map((t) => ({
+        label: t.label,
+        justify: t.on ? 'flex-end' : 'flex-start',
+        track: t.on ? '#F5B21F' : 'rgba(253,247,236,.22)'
+      })),
+      variant: v,
+      variantNote: notes[v],
+      creamBorder: v === 'cream' ? on : off,
+      espressoBorder: v === 'espresso' ? on : off,
+      amberBorder: v === 'amber' ? on : off,
+      pickCream: () => this.setState({ variant: 'cream' }),
+      pickEspresso: () => this.setState({ variant: 'espresso' }),
+      pickAmber: () => this.setState({ variant: 'amber' }),
+      glowBorder: v === 'glow' ? on : off,
+      pickGlow: () => this.setState({ variant: 'glow' }),
+      swatches: swatchData.map((s) => ({
+        label: s.label,
+        fill: s.fill,
+        pick: () => this.setState({ variant: s.key }),
+        ring: v === s.key ? '0 0 0 3px rgba(245,178,31,.6)' : 'none',
+        lift: v === s.key ? 'translateY(-2px)' : 'none',
+        labelColor: v === s.key ? '#F5B21F' : '#A88B64'
+      })),
+      pickedFill: picked.fill,
+      pickedAccent: picked.accent,
+      pickedName: picked.name,
+      pickedTrait: picked.trait,
+      faqs,
+      modes: modeKeys.map((k) => ({
+        label: modeData[k].label,
+        bg: mode === k ? '#2E1B10' : '#FDF7EC',
+        color: mode === k ? '#FDF7EC' : '#4A3423',
+        border: mode === k ? '2px solid #1B0F06' : '2px solid #EADFCB',
+        pick: () => this.setState({ cardMode: k })
+      })),
+      modeKicker: cm.kicker,
+      modeBlurb: cm.blurb,
+      badgeText: cm.badgeText,
+      badgeBg: cm.badgeBg,
+      badgeColor: cm.badgeColor,
+      cardName: cm.name,
+      cardSub: cm.sub,
+      cardRows: cm.rows,
+      cardCta: cm.cta
+    };
+  }
+}
+</script>
+</body>
+</html>
