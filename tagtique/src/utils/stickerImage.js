@@ -60,9 +60,9 @@ export async function renderStickerBlob(item) {
 function drawStyledQr(text) {
   const qr = QRCode.create(text, { errorCorrectionLevel: 'H' });
   const count = qr.modules.size;
-  const margin = 2;
+  const margin = 4;
   const cell = 16;
-  const footer = 46;
+  const footer = 52;
   const span = (count + margin * 2) * cell;
   const canvas = document.createElement('canvas');
   canvas.width = span;
@@ -72,40 +72,41 @@ function drawStyledQr(text) {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   const center = (count - 1) / 2;
-  const clearRadius = count * 0.17;
+  const clearRadius = 3.4;
   const inFinder = (row, col) => (
     (row < 7 && col < 7) ||
     (row < 7 && col >= count - 7) ||
     (row >= count - 7 && col < 7)
   );
 
-  ctx.fillStyle = WHITE;
+  ctx.fillStyle = INK;
   for (let row = 0; row < count; row += 1) {
     for (let col = 0; col < count; col += 1) {
       if (!qr.modules.get(row, col) || inFinder(row, col)) continue;
       const dx = col - center;
       const dy = row - center;
       if (dx * dx + dy * dy < clearRadius * clearRadius) continue;
-      ctx.beginPath();
-      ctx.arc((col + margin + 0.5) * cell, (row + margin + 0.5) * cell, cell * 0.36, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.fillRect((col + margin) * cell, (row + margin) * cell, cell, cell);
     }
   }
 
-  drawFinderEye(ctx, margin, margin, cell);
-  drawFinderEye(ctx, margin + count - 7, margin, cell);
-  drawFinderEye(ctx, margin, margin + count - 7, cell);
+  drawFinderEye(ctx, 0, 0, cell, margin);
+  drawFinderEye(ctx, count - 7, 0, cell, margin);
+  drawFinderEye(ctx, 0, count - 7, cell, margin);
 
-  const icon = cell * count * 0.2;
+  const icon = cell * 4.2;
   const mid = (margin + count / 2) * cell;
-  drawPhoneIcon(ctx, mid - icon / 2, mid - icon / 2, icon, WHITE);
+  ctx.fillStyle = YELLOW;
+  ctx.beginPath();
+  ctx.arc(mid, mid, icon * 0.62, 0, Math.PI * 2);
+  ctx.fill();
+  drawPhoneIcon(ctx, mid - icon / 2, mid - icon / 2, icon, INK);
 
-  const inset = 7;
   ctx.save();
   ctx.strokeStyle = INK;
-  ctx.lineWidth = 5;
+  ctx.lineWidth = 6;
   ctx.beginPath();
-  ctx.roundRect(inset, inset, span - inset * 2, span - inset * 2, 26);
+  ctx.roundRect(4, 4, span - 8, span - 8, 22);
   ctx.stroke();
   ctx.restore();
 
@@ -117,21 +118,15 @@ function drawStyledQr(text) {
   return canvas;
 }
 
-function drawFinderEye(ctx, col, row, cell) {
-  const x = (col + 3.5) * cell;
-  const y = (row + 3.5) * cell;
+function drawFinderEye(ctx, col, row, cell, margin) {
+  const x = (col + margin) * cell;
+  const y = (row + margin) * cell;
   ctx.fillStyle = INK;
-  ctx.beginPath();
-  ctx.arc(x, y, cell * 3.15, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.fillRect(x, y, 7 * cell, 7 * cell);
   ctx.fillStyle = YELLOW;
-  ctx.beginPath();
-  ctx.arc(x, y, cell * 2.15, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.fillRect(x + cell, y + cell, 5 * cell, 5 * cell);
   ctx.fillStyle = INK;
-  ctx.beginPath();
-  ctx.arc(x, y, cell * 1.15, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.fillRect(x + 2 * cell, y + 2 * cell, 3 * cell, 3 * cell);
 }
 
 function drawPhoneIcon(ctx, x, y, size, color) {
