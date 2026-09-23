@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import QRCode from 'qrcode';
+import { renderStyledQrDataUrl, renderStickerBlob, stickerFileName, triggerFileDownload } from '../utils/stickerImage';
 import { useCart } from '../context/CartContext';
 import { orderBackendService } from '../services/orderBackendService';
 import { isSupabaseConfigured } from '../services/supabaseClient';
@@ -41,7 +41,6 @@ import {
 } from 'lucide-react';
 import QRScannerModal from '../components/QRScannerModal';
 import { buildScanUrl } from '../utils/scanUrl';
-import { renderStickerBlob, stickerFileName, triggerFileDownload } from '../utils/stickerImage';
 import { zipStore } from '../utils/zipStore';
 
 export default function AdminPage() {
@@ -63,11 +62,7 @@ export default function AdminPage() {
   useEffect(() => {
     if (printModalItem) {
       const token = printModalItem.qr_code_value || printModalItem.qrId || printModalItem.tag_id || printModalItem.rawId || 'tagtique';
-      QRCode.toDataURL(buildScanUrl(token), {
-        width: 360,
-        margin: 1,
-        color: { dark: '#FFFFFF', light: '#1C120C' }
-      }).then((url) => {
+      renderStyledQrDataUrl(buildScanUrl(token)).then((url) => {
         setPrintQrDataUrl(url);
       }).catch(() => {
         setPrintQrDataUrl(printModalItem.qr_image_url || '');
@@ -1846,31 +1841,27 @@ export default function AdminPage() {
             </div>
 
             {/* Actual Printable Physical Sticker Card */}
-            <div className="print-sticker-container w-full max-w-[340px] mx-auto px-5 pt-8 pb-6 rounded-3xl bg-[#F5B21F] flex flex-col items-center text-center gap-5 shadow-warm-md select-none text-white">
+            <div className="print-sticker-container w-full max-w-[340px] mx-auto px-5 pt-8 pb-6 rounded-3xl bg-[#FDF7EC] flex flex-col items-center text-center gap-5 shadow-warm-md select-none">
               <div className="flex flex-col items-center gap-2 px-1">
-                <p dir="rtl" className="font-extrabold text-[26px] leading-snug text-white" style={{ fontFamily: '"Noto Sans Arabic", "Segoe UI", sans-serif' }}>
+                <p dir="rtl" className="font-extrabold text-[26px] leading-snug text-[#F5B21F]" style={{ fontFamily: '"Noto Sans Arabic", "Segoe UI", sans-serif' }}>
                   اسکین کریں، رابطہ کریں
                 </p>
-                <p className="font-extrabold text-[26px] leading-tight text-white tracking-tight">
-                  Scan to Contact
+                <p className="font-extrabold text-[22px] leading-tight text-[#F5B21F] tracking-tight">
+                  Scan to Contact Driver
                 </p>
               </div>
 
-              <div className="w-48 h-48 bg-[#1C120C] rounded-2xl p-2 flex items-center justify-center">
+              <div className="w-full bg-[#FDF7EC] rounded-2xl p-2 flex items-center justify-center">
                 {printQrDataUrl ? (
                   <img
                     src={printQrDataUrl}
                     alt="Scan QR"
-                    className="w-full h-full object-contain select-none"
+                    className="w-full h-auto object-contain select-none"
                   />
                 ) : (
-                  <QrCode className="w-full h-full text-white animate-pulse" />
+                  <QrCode className="w-40 h-40 text-[#F5B21F] animate-pulse" />
                 )}
               </div>
-
-              <p className="font-bold text-sm tracking-wide text-white">
-                tagtique powered by ata
-              </p>
             </div>
 
             {/* Informative Supabase dynamic remapping notice banner */}

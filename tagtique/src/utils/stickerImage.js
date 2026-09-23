@@ -1,8 +1,8 @@
 import QRCode from 'qrcode';
 import { buildScanUrl } from './scanUrl';
 
+const SKIN = '#FDF7EC';
 const YELLOW = '#F5B21F';
-const INK = '#1C120C';
 
 function stickerToken(item) {
   return item?.qr_code_value || item?.qrId || item?.tag_id || item?.tagId || item?.rawId || 'tagtique';
@@ -14,31 +14,20 @@ export function stickerFileName(item) {
   return `tagtique-sticker-${safe || 'tag'}.png`;
 }
 
-function roundedRect(ctx, x, y, w, h, r) {
-  const radius = Math.min(r, w / 2, h / 2);
-  ctx.beginPath();
-  ctx.moveTo(x + radius, y);
-  ctx.arcTo(x + w, y, x + w, y + h, radius);
-  ctx.arcTo(x + w, y + h, x, y + h, radius);
-  ctx.arcTo(x, y + h, x, y, radius);
-  ctx.arcTo(x, y, x + w, y, radius);
-  ctx.closePath();
+export async function renderStyledQrDataUrl(text) {
+  const canvas = drawStyledQr(text);
+  return canvas.toDataURL('image/png');
 }
 
 export async function renderStickerBlob(item) {
-  const qrDataUrl = await QRCode.toDataURL(buildScanUrl(stickerToken(item)), {
-    width: 720,
-    margin: 1,
-    errorCorrectionLevel: 'H',
-    color: { dark: '#FFFFFF', light: INK }
-  });
+  const qrDataUrl = await renderStyledQrDataUrl(buildScanUrl(stickerToken(item)));
 
   const canvas = document.createElement('canvas');
   canvas.width = 900;
   canvas.height = 1100;
   const ctx = canvas.getContext('2d');
 
-  ctx.fillStyle = YELLOW;
+  ctx.fillStyle = SKIN;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   try {
@@ -46,34 +35,103 @@ export async function renderStickerBlob(item) {
     await document.fonts.load('800 56px Manrope');
   } catch (_) {}
 
-  ctx.fillStyle = '#FFFFFF';
+  ctx.fillStyle = YELLOW;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 
   const urdu = 'اسکین کریں، رابطہ کریں';
-  const english = 'Scan to Contact';
-  const footer = 'tagtique powered by ata';
-  fitFont(ctx, urdu, 64, '"Noto Sans Arabic", "Segoe UI", Tahoma, sans-serif', canvas.width - 80);
-  ctx.fillText(urdu, canvas.width / 2, 120);
-  fitFont(ctx, english, 52, 'Manrope, "Segoe UI", sans-serif', canvas.width - 80);
-  ctx.fillText(english, canvas.width / 2, 210);
-
-  const qrSize = 560;
-  const qrX = (canvas.width - qrSize) / 2;
-  const qrY = 300;
-  ctx.fillStyle = INK;
-  roundedRect(ctx, qrX - 28, qrY - 28, qrSize + 56, qrSize + 56, 36);
-  ctx.fill();
+  const english = 'Scan to Contact Driver';
+  fitFont(ctx, urdu, 52, '"Noto Sans Arabic", "Segoe UI", Tahoma, sans-serif', canvas.width - 90);
+  ctx.fillText(urdu, canvas.width / 2, 78);
+  fitFont(ctx, english, 40, 'Manrope, "Segoe UI", sans-serif', canvas.width - 90);
+  ctx.fillText(english, canvas.width / 2, 142);
 
   const image = await loadImage(qrDataUrl);
-  ctx.drawImage(image, qrX, qrY, qrSize, qrSize);
-
-  ctx.fillStyle = '#FFFFFF';
-  ctx.font = '700 32px Manrope, "Segoe UI", sans-serif';
-  ctx.fillText(footer, canvas.width / 2, 1020);
+  const qrSize = 820;
+  const qrX = (canvas.width - qrSize) / 2;
+  const qrY = 190;
+  ctx.drawImage(image, qrX, qrY, qrSize, qrSize * (image.height / image.width));
 
   const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
   return blob;
+}
+
+function drawStyledQr(text) {
+  const qr = QRCode.create(text, { errorCorrectionLevel: 'H' });
+  const count = qr.modules.size;
+  const margin = 2;
+  const cell = 16;
+  const footer = 46;
+  const span = (count + margin * 2) * cell;
+  const canvas = document.createElement('canvas');
+  canvas.width = span;
+  canvas.height = span + footer;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = SKIN;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const center = (count - 1) / 2;
+  const clearRadius = count * 0.17;
+  const inFinder = (row, col) => (
+    (row < 7 && col < 7) ||
+    (row < 7 && col >= count - 7) ||
+    (row >= count - 7 && col < 7)
+  );
+
+  ctx.fillStyle = YELLOW;
+  for (let row = 0; row < count; row += 1) {
+    for (let col = 0; col < count; col += 1) {
+      if (!qr.modules.get(row, col) || inFinder(row, col)) continue;
+      const dx = col - center;
+      const dy = row - center;
+      if (dx * dx + dy * dy < clearRadius * clearRadius) continue;
+      ctx.beginPath();
+      ctx.arc((col + margin + 0.5) * cell, (row + margin + 0.5) * cell, cell * 0.36, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  drawFinderEye(ctx, margin, margin, cell);
+  drawFinderEye(ctx, margin + count - 7, margin, cell);
+  drawFinderEye(ctx, margin, margin + count - 7, cell);
+
+  const icon = cell * count * 0.2;
+  const mid = (margin + count / 2) * cell;
+  drawPhoneIcon(ctx, mid - icon / 2, mid - icon / 2, icon, YELLOW);
+
+  ctx.fillStyle = '#2E1B10';
+  ctx.font = '600 22px Manrope, "Segoe UI", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('powered by Tagtique', canvas.width / 2, span + footer / 2);
+  return canvas;
+}
+
+function drawFinderEye(ctx, col, row, cell) {
+  const x = (col + 3.5) * cell;
+  const y = (row + 3.5) * cell;
+  ctx.fillStyle = YELLOW;
+  ctx.beginPath();
+  ctx.arc(x, y, cell * 3.15, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = SKIN;
+  ctx.beginPath();
+  ctx.arc(x, y, cell * 2.15, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = YELLOW;
+  ctx.beginPath();
+  ctx.arc(x, y, cell * 1.15, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawPhoneIcon(ctx, x, y, size, color) {
+  const path = new Path2D('M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z');
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(size / 24, size / 24);
+  ctx.fillStyle = color;
+  ctx.fill(path);
+  ctx.restore();
 }
 
 function fitFont(ctx, text, size, family, maxWidth) {
