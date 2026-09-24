@@ -26,8 +26,8 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const subtotal = cartItems.length > 0 
-    ? cartItems.reduce((acc, item) => acc + (item.totalPrice || 1499), 0)
-    : 1499;
+    ? cartItems.reduce((acc, item) => acc + (item.totalPrice || 999), 0)
+    : 999;
   const isFreeStandard = true;
   const shippingFee = shippingMethod === 'express' ? 500 : 0;
   const finalTotal = subtotal + shippingFee;
@@ -63,15 +63,15 @@ export default function CheckoutPage() {
       items: cartItems.length > 0 ? cartItems : [
         {
           id: 1,
-          finishName: 'Cream acrylic',
-          basePrice: 1499,
-          isEngraved: true,
-          engravedText: 'Ayesha Khan',
-          totalPrice: 1499
+          finishName: 'Shiny acrylic',
+          basePrice: 999,
+          isEngraved: false,
+          engravedText: '',
+          totalPrice: 999
         }
       ],
       subtotal,
-      finalTotal: finalTotal || 1499
+      finalTotal: finalTotal || 999
     };
 
     setTimeout(() => {
@@ -386,11 +386,11 @@ export default function CheckoutPage() {
               {(cartItems.length > 0 ? cartItems : [
                 {
                   id: 1,
-                  finishName: 'Cream Acrylic',
-                  basePrice: 1499,
-                  isEngraved: true,
-                  engravedText: 'Ali Khan',
-                  totalPrice: 1499,
+                  finishName: 'Shiny Acrylic',
+                  basePrice: 999,
+                  isEngraved: false,
+                  engravedText: '',
+                  totalPrice: 999,
                   displayName: 'Ali Khan'
                 }
               ]).map((item, idx) => (
@@ -412,7 +412,7 @@ export default function CheckoutPage() {
                     </span>
                   </div>
                   <span className="font-mono font-bold text-sm text-tag-brown">
-                    PKR {item.totalPrice?.toLocaleString() || '1,499'}
+                    PKR {item.totalPrice?.toLocaleString() || '999'}
                   </span>
                 </div>
               ))}
@@ -424,7 +424,7 @@ export default function CheckoutPage() {
             <div className="flex flex-col gap-2 text-sm text-tag-brown-muted font-medium">
               <div className="flex justify-between">
                 <span>Subtotal</span>
-                <span className="font-mono font-bold">PKR {subtotal.toLocaleString() || '1,499'}</span>
+                <span className="font-mono font-bold">PKR {subtotal.toLocaleString() || '999'}</span>
               </div>
               <div className="flex justify-between">
                 <span>Doorstep Courier (Pakistan)</span>
@@ -441,7 +441,7 @@ export default function CheckoutPage() {
             <div className="flex justify-between items-baseline">
               <span className="font-baloo font-bold text-xl text-tag-brown">Total</span>
               <span className="font-baloo font-extrabold text-3xl text-tag-brown">
-                PKR {finalTotal.toLocaleString() || '1,499'}
+                PKR {finalTotal.toLocaleString() || '999'}
               </span>
             </div>
 

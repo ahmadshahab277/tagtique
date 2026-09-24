@@ -33,46 +33,39 @@ const PACKAGES = [
     id: 'single',
     name: 'Single Tag',
     tagsCount: 1,
-    pkrPrice: 1499,
-    oldPkrPrice: 1899,
-    usdPrice: 19,
-    desc: '1 QR Tag · One-time fee'
+    pkrPrice: 999,
+    oldPkrPrice: null,
+    usdPrice: 12,
+    desc: '1 shiny QR Tag · One-time fee'
   },
   {
     id: 'pack2',
     name: 'Pack of 2',
     tagsCount: 2,
-    pkrPrice: 2499,
-    oldPkrPrice: 3499,
-    usdPrice: 29,
-    desc: '2 QR Tags · One-time fee',
+    pkrPrice: 1499,
+    oldPkrPrice: null,
+    usdPrice: 18,
+    desc: '2 shiny QR Tags · One-time fee',
     isPopular: true
   },
   {
-    id: 'family',
-    name: 'Family Pack',
-    tagsCount: 4,
-    pkrPrice: 4499,
-    oldPkrPrice: 6499,
-    usdPrice: 49,
-    desc: '4 QR Tags · One-time fee'
+    id: 'pack3',
+    name: 'Pack of 3',
+    tagsCount: 3,
+    pkrPrice: 1999,
+    oldPkrPrice: null,
+    usdPrice: 24,
+    desc: '3 shiny QR Tags · One-time fee'
   }
 ];
 
 const MATERIALS = [
   {
-    id: 'cast_acrylic',
-    name: '3M Cast Optical Acrylic',
-    badge: 'Standard Included',
+    id: 'shiny',
+    name: 'Shiny Acrylic',
+    badge: 'Included on all packages',
     extraPkr: 0,
-    desc: 'Precision laser-cut 3mm solid cast acrylic with UV-bonded core.'
-  },
-  {
-    id: 'high_gloss',
-    name: 'High-Gloss Acrylic Hard Tag',
-    badge: 'Premium Edition (+PKR 350/tag)',
-    extraPkr: 350,
-    desc: '3mm beveled rigid acrylic badge with diamond-polished edges.'
+    desc: 'High-gloss shiny acrylic finish — same premium material on every tag.'
   }
 ];
 
@@ -93,10 +86,18 @@ export default function OrderPage() {
   const { userProfile, setUserProfile, completeOrder } = useCart();
 
   // Package & Material
-  const [selectedPackageId, setSelectedPackageId] = useState('pack2');
-  const [selectedMaterialId, setSelectedMaterialId] = useState('cast_acrylic');
+  const initialPackage =
+    ['single', 'pack2', 'pack3'].includes(searchParams.get('package'))
+      ? searchParams.get('package')
+      : searchParams.get('bundle') === 'trio'
+        ? 'pack3'
+        : 'pack2';
+  const [selectedPackageId, setSelectedPackageId] = useState(initialPackage);
+  const [selectedMaterialId] = useState('shiny');
   const [selectedFinish, setSelectedFinish] = useState(searchParams.get('finish') || 'cream');
-  const [customQuantity, setCustomQuantity] = useState(2);
+  const [customQuantity, setCustomQuantity] = useState(
+    PACKAGES.find((p) => p.id === initialPackage)?.tagsCount || 2
+  );
 
   // Laser Engraving
   const [isEngraved, setIsEngraved] = useState(searchParams.get('engraved') === 'true');
@@ -177,7 +178,7 @@ export default function OrderPage() {
 
   // Pricing calculations
   const basePkrPrice = selectedPackage.pkrPrice;
-  const materialExtraPkr = selectedMaterial.extraPkr * customQuantity;
+  const materialExtraPkr = 0;
   const engravingExtraPkr = isEngraved ? 400 * customQuantity : 0;
   const totalPkr = basePkrPrice + materialExtraPkr + engravingExtraPkr;
 
@@ -193,11 +194,11 @@ export default function OrderPage() {
   };
 
   const handleQuantityChange = (delta) => {
-    const newQty = Math.max(1, Math.min(10, customQuantity + delta));
+    const newQty = Math.max(1, Math.min(3, customQuantity + delta));
     setCustomQuantity(newQty);
     if (newQty === 1) setSelectedPackageId('single');
     else if (newQty === 2) setSelectedPackageId('pack2');
-    else if (newQty >= 4) setSelectedPackageId('family');
+    else setSelectedPackageId('pack3');
   };
 
   const handlePlaceOrder = (e) => {
@@ -264,7 +265,7 @@ export default function OrderPage() {
         totalAmount: totalPkr,
         paymentStatus: paymentMethod === 'cod' ? 'pending' : 'pending_transfer',
         deliveryStatus: 'pending',
-        tagMaterial: selectedMaterial.id === 'cast_acrylic' ? 'acrylic' : 'vinyl',
+        tagMaterial: 'shiny',
         shippingAddress: {
           address: address || '208 Chak Road, West Canal Road',
           city: city || 'Faisalabad'
@@ -367,9 +368,11 @@ export default function OrderPage() {
                         <span className="font-baloo font-extrabold text-2xl text-tag-brown">
                           {pkg.pkrPrice.toLocaleString()}
                         </span>
-                        <span className="text-[11px] line-through text-tag-brown-subtle">
-                          {pkg.oldPkrPrice.toLocaleString()}
-                        </span>
+                        {pkg.oldPkrPrice ? (
+                          <span className="text-[11px] line-through text-tag-brown-subtle">
+                            {pkg.oldPkrPrice.toLocaleString()}
+                          </span>
+                        ) : null}
                       </div>
                       <span className="text-[11.5px] font-semibold text-tag-brown-muted mt-0.5">
                         {pkg.desc}
@@ -380,45 +383,26 @@ export default function OrderPage() {
               })}
             </div>
 
-            {/* Tag Material Options */}
+            {/* Tag Material — single shiny finish for all packages */}
             <div className="flex flex-col gap-2.5 pt-2 border-t border-tag-border/60">
               <span className="font-mono text-[11px] font-bold tracking-wider text-tag-brown-light uppercase">
                 TAG MATERIAL & SPECIFICATION
               </span>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {MATERIALS.map((mat) => {
-                  const isSelected = selectedMaterialId === mat.id;
-                  return (
-                    <div
-                      key={mat.id}
-                      onClick={() => setSelectedMaterialId(mat.id)}
-                      className={`p-3.5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col gap-1.5 ${
-                        isSelected
-                          ? 'bg-tag-bg border-tag-brown shadow-xs ring-1 ring-tag-amber/30'
-                          : 'bg-tag-card border-tag-border hover:bg-tag-bg/40'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-xs sm:text-[13px] text-tag-brown">
-                          {mat.name}
-                        </span>
-                        <div
-                          className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                            isSelected ? 'border-tag-brown bg-tag-amber' : 'border-tag-border'
-                          }`}
-                        >
-                          {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-tag-brown" />}
-                        </div>
-                      </div>
-                      <p className="text-[11px] text-tag-brown-muted leading-tight font-medium">
-                        {mat.desc}
-                      </p>
-                      <span className="font-mono text-[10px] font-bold text-tag-amber-deep">
-                        {mat.badge}
-                      </span>
-                    </div>
-                  );
-                })}
+              <div className="p-3.5 rounded-2xl border-2 border-tag-brown bg-tag-bg shadow-xs ring-1 ring-tag-amber/30 flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-xs sm:text-[13px] text-tag-brown">
+                    Shiny Acrylic
+                  </span>
+                  <div className="w-4 h-4 rounded-full border border-tag-brown bg-tag-amber flex items-center justify-center">
+                    <div className="w-1.5 h-1.5 rounded-full bg-tag-brown" />
+                  </div>
+                </div>
+                <p className="text-[11px] text-tag-brown-muted leading-tight font-medium">
+                  High-gloss shiny acrylic finish — same premium material on every package.
+                </p>
+                <span className="font-mono text-[10px] font-bold text-tag-amber-deep">
+                  Included on all packages
+                </span>
               </div>
             </div>
 

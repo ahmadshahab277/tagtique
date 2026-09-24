@@ -25,20 +25,20 @@ export default function PricingSection() {
         {/* 3 Pricing Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 items-stretch">
           
-          {/* 1. Single Tag */}
+          {/* 1. Single Tag — PKR 999 */}
           <div className="bg-tag-card border-[1.5px] border-tag-border rounded-3xl p-6 sm:p-8 flex flex-col justify-between gap-6 transition-all duration-300 hover:-translate-y-2 hover:shadow-warm-lg">
             <div className="flex flex-col gap-4">
               <div className="flex items-start justify-between">
                 <div>
                   <h3 className="font-baloo font-bold text-2xl text-tag-brown">Single tag</h3>
-                  <span className="text-xs text-tag-brown-subtle font-medium">For your keys or bag</span>
+                  <span className="text-xs text-tag-brown-subtle font-medium">1 shiny acrylic tag</span>
                 </div>
                 <div className="w-5 h-5 rounded-full border border-tag-brown bg-[#FBF3E4]" />
               </div>
 
               <div className="flex items-baseline gap-2">
                 <span className="font-mono text-base font-bold text-tag-brown-light">PKR</span>
-                <span className="font-baloo font-extrabold text-4xl sm:text-5xl text-tag-brown">1,499</span>
+                <span className="font-baloo font-extrabold text-4xl sm:text-5xl text-tag-brown">999</span>
                 <span className="text-xs font-semibold text-tag-brown-subtle">one-time</span>
               </div>
 
@@ -49,7 +49,7 @@ export default function PricingSection() {
                   <span className="w-5 h-5 rounded-full bg-tag-pill text-tag-brown-light flex items-center justify-center flex-shrink-0 text-xs font-bold mt-0.5">
                     <Check className="w-3 h-3" />
                   </span>
-                  <span>One cast acrylic tag, finish of your choice</span>
+                  <span>One shiny acrylic QR tag</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <span className="w-5 h-5 rounded-full bg-tag-pill text-tag-brown-light flex items-center justify-center flex-shrink-0 text-xs font-bold mt-0.5">
@@ -67,21 +67,20 @@ export default function PricingSection() {
             </div>
 
             <Link
-              to="/order?finish=cream"
+              to="/order?package=single"
               className="w-full text-center border-2 border-tag-brown-deep bg-tag-bg hover:bg-tag-amber rounded-full py-3 text-sm font-extrabold text-tag-brown transition-all duration-150 shadow-xs active:scale-98 inline-block"
             >
               Choose single
             </Link>
           </div>
 
-          {/* 2. Trio Pack (Featured) */}
+          {/* 2. Pack of 2 — PKR 1,499 (Featured) */}
           <div
             className="relative border-[2.5px] border-tag-brown-deep rounded-3xl p-6 sm:p-8 flex flex-col justify-between gap-6 shadow-warm-lg transition-all duration-300 hover:-translate-y-2 text-[#FDF7EC]"
             style={{
               background: 'linear-gradient(168deg, #3A2318 0%, #2E1B10 58%, #221208 100%)'
             }}
           >
-            {/* Pill Badge */}
             <span className="absolute -top-3.5 left-6 bg-tag-amber text-tag-brown-deep border-2 border-tag-brown-deep rounded-full font-mono text-[10px] font-bold tracking-wider px-3.5 py-1 flex items-center gap-1 shadow-sm">
               MOST BOUGHT
             </span>
@@ -89,22 +88,20 @@ export default function PricingSection() {
             <div className="flex flex-col gap-4">
               <div className="flex items-start justify-between pt-1">
                 <div>
-                  <h3 className="font-baloo font-bold text-2xl text-[#FDF7EC]">Trio pack</h3>
-                  <span className="text-xs text-[#A88B64] font-medium">Bag, keys, jacket or laptop</span>
+                  <h3 className="font-baloo font-bold text-2xl text-[#FDF7EC]">Pack of 2</h3>
+                  <span className="text-xs text-[#A88B64] font-medium">2 shiny acrylic tags</span>
                 </div>
                 <div className="flex -space-x-1.5">
                   <span className="w-4 h-4 rounded-full border border-black bg-[#FBF3E4]" />
-                  <span className="w-4 h-4 rounded-full border border-black bg-[#3A2318]" />
                   <span className="w-4 h-4 rounded-full border border-black bg-[#F5B21F]" />
                 </div>
               </div>
 
               <div className="flex items-baseline gap-2.5 flex-wrap">
                 <span className="font-mono text-base font-bold text-tag-amber">PKR</span>
-                <span className="font-baloo font-extrabold text-4xl sm:text-5xl text-tag-amber">2,499</span>
-                <span className="text-sm line-through text-[#A88B64]">PKR 3,499</span>
+                <span className="font-baloo font-extrabold text-4xl sm:text-5xl text-tag-amber">1,499</span>
                 <span className="text-xs font-bold text-tag-brown-deep bg-tag-amber px-2.5 py-0.5 rounded-full">
-                  PKR 833 a tag
+                  PKR 750 a tag
                 </span>
               </div>
 
@@ -115,48 +112,53 @@ export default function PricingSection() {
                   <span className="w-5 h-5 rounded-full bg-tag-amber/20 text-tag-amber flex items-center justify-center flex-shrink-0 text-xs font-bold mt-0.5">
                     <Check className="w-3 h-3" />
                   </span>
-                  <span>Three acrylic tags in any mix of finishes</span>
+                  <span>Two shiny acrylic tags</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <span className="w-5 h-5 rounded-full bg-tag-amber/20 text-tag-amber flex items-center justify-center flex-shrink-0 text-xs font-bold mt-0.5">
                     <Check className="w-3 h-3" />
                   </span>
-                  <span>All pointing to your single synced card</span>
+                  <span>Both synced to your live profile card</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <span className="w-5 h-5 rounded-full bg-tag-amber/20 text-tag-amber flex items-center justify-center flex-shrink-0 text-xs font-bold mt-0.5">
                     <Check className="w-3 h-3" />
                   </span>
-                  <span>Scan analytics and logs across all three</span>
+                  <span>Scan analytics across both tags</span>
                 </li>
               </ul>
             </div>
 
             <Link
-              to="/order?bundle=trio"
+              to="/order?package=pack2"
               className="amber-gradient-btn w-full py-3.5 rounded-full text-sm font-extrabold text-tag-brown transition-all shadow-md active:scale-98 text-center inline-block"
             >
-              Choose trio
+              Choose pack of 2
             </Link>
           </div>
 
-          {/* 3. Engraved */}
+          {/* 3. Pack of 3 — PKR 1,999 */}
           <div className="bg-tag-card border-[1.5px] border-tag-border rounded-3xl p-6 sm:p-8 flex flex-col justify-between gap-6 transition-all duration-300 hover:-translate-y-2 hover:shadow-warm-lg">
             <div className="flex flex-col gap-4">
               <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="font-baloo font-bold text-2xl text-tag-brown">Custom Engraved</h3>
-                  <span className="text-xs text-tag-brown-subtle font-medium">Laser-etched on back</span>
+                  <h3 className="font-baloo font-bold text-2xl text-tag-brown">Pack of 3</h3>
+                  <span className="text-xs text-tag-brown-subtle font-medium">3 shiny acrylic tags</span>
                 </div>
-                <span className="font-mono text-[10px] font-bold text-tag-brown-light border border-dashed border-tag-border px-2 py-0.5 rounded-md">
-                  A–Z
-                </span>
+                <div className="flex -space-x-1.5">
+                  <span className="w-4 h-4 rounded-full border border-tag-border bg-[#FBF3E4]" />
+                  <span className="w-4 h-4 rounded-full border border-tag-border bg-[#3A2318]" />
+                  <span className="w-4 h-4 rounded-full border border-tag-border bg-[#F5B21F]" />
+                </div>
               </div>
 
-              <div className="flex items-baseline gap-2">
+              <div className="flex items-baseline gap-2 flex-wrap">
                 <span className="font-mono text-base font-bold text-tag-brown-light">PKR</span>
-                <span className="font-baloo font-extrabold text-4xl sm:text-5xl text-tag-brown">2,999</span>
+                <span className="font-baloo font-extrabold text-4xl sm:text-5xl text-tag-brown">1,999</span>
                 <span className="text-xs font-semibold text-tag-brown-subtle">one-time</span>
+                <span className="text-xs font-bold text-tag-brown bg-tag-pill px-2.5 py-0.5 rounded-full border border-tag-border">
+                  PKR 666 a tag
+                </span>
               </div>
 
               <div className="h-[1px] bg-tag-border" />
@@ -166,28 +168,28 @@ export default function PricingSection() {
                   <span className="w-5 h-5 rounded-full bg-tag-pill text-tag-brown-light flex items-center justify-center flex-shrink-0 text-xs font-bold mt-0.5">
                     <Check className="w-3 h-3" />
                   </span>
-                  <span>Your custom name, handle or studio on reverse</span>
+                  <span>Three shiny acrylic tags</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <span className="w-5 h-5 rounded-full bg-tag-pill text-tag-brown-light flex items-center justify-center flex-shrink-0 text-xs font-bold mt-0.5">
                     <Check className="w-3 h-3" />
                   </span>
-                  <span>Available on any of the four tag finishes</span>
+                  <span>All pointing to your single synced card</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <span className="w-5 h-5 rounded-full bg-tag-pill text-tag-brown-light flex items-center justify-center flex-shrink-0 text-xs font-bold mt-0.5">
                     <Check className="w-3 h-3" />
                   </span>
-                  <span>Ships within 2–3 business days</span>
+                  <span>Best value for bag, keys and vehicle</span>
                 </li>
               </ul>
             </div>
 
             <Link
-              to="/order?engraved=true"
+              to="/order?package=pack3"
               className="w-full text-center border-2 border-tag-brown-deep bg-tag-bg hover:bg-tag-amber rounded-full py-3 text-sm font-extrabold text-tag-brown transition-all duration-150 shadow-xs active:scale-98 inline-block"
             >
-              Choose engraved
+              Choose pack of 3
             </Link>
           </div>
 
@@ -197,7 +199,7 @@ export default function PricingSection() {
         <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 p-4 rounded-2xl border-[1.5px] border-dashed border-tag-border text-xs sm:text-sm font-semibold text-tag-brown-muted bg-tag-card/50">
           <span>Free digital card, forever</span>
           <span className="text-tag-border">·</span>
-          <span>1-Year physical replacement warranty</span>
+          <span>Same shiny acrylic material on every package</span>
           <span className="text-tag-border">·</span>
           <span>Free Express courier delivery across Pakistan</span>
         </div>

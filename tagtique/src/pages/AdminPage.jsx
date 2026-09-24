@@ -239,13 +239,13 @@ export default function AdminPage() {
             phone_number: lastOrder.customer?.phone || '0300-1234567',
             guardianNumber: '0300-6622175',
             guardian_number: '0300-6622175',
-            package: lastOrder.items?.length > 2 ? 'Family Pack' : lastOrder.items?.length === 2 ? 'Pack of 2' : 'Single Tag',
-            packageSub: firstItem.finishName || 'Vinyl Tag',
-            package_type: lastOrder.items?.length > 2 ? 'Family Pack' : lastOrder.items?.length === 2 ? 'Pack of 2' : 'Single Tag',
+            package: lastOrder.items?.length >= 3 ? 'Pack of 3' : lastOrder.items?.length === 2 ? 'Pack of 2' : 'Single Tag',
+            packageSub: firstItem.finishName || 'Shiny Acrylic',
+            package_type: lastOrder.items?.length >= 3 ? 'Pack of 3' : lastOrder.items?.length === 2 ? 'Pack of 2' : 'Single Tag',
             status: 'Pending',
             changeStatus: 'Pending',
-            amount: Number(lastOrder.finalTotal || lastOrder.subtotal) || 1499,
-            total_amount: Number(lastOrder.finalTotal || lastOrder.subtotal) || 1499,
+            amount: Number(lastOrder.finalTotal || lastOrder.subtotal) || 999,
+            total_amount: Number(lastOrder.finalTotal || lastOrder.subtotal) || 999,
             date: new Date().toISOString().slice(0, 10),
             location: lastOrder.shippingAddress?.city ? `${lastOrder.shippingAddress.city}, PK` : 'Faisalabad, PK',
             qrId: `QR-${rawId}-1`,
@@ -963,7 +963,7 @@ export default function AdminPage() {
                     <option value="ALL">All Packages</option>
                     <option value="Single Tag">Single Tag</option>
                     <option value="Pack of 2">Pack of 2</option>
-                    <option value="Family Pack">Family Pack</option>
+                    <option value="Pack of 3">Pack of 3</option>
                   </select>
                 </div>
               </div>
@@ -2406,7 +2406,7 @@ export default function AdminPage() {
                     className="w-full px-3 py-2 rounded-xl border border-tag-border bg-white font-bold text-xs text-tag-brown outline-none focus:border-tag-amber"
                   >
                     <option value="vinyl">Vinyl Sticker Tag</option>
-                    <option value="acrylic">Acrylic Luxury Shield</option>
+                    <option value="shiny">Shiny Acrylic</option>
                   </select>
                 </div>
 
@@ -2421,7 +2421,7 @@ export default function AdminPage() {
                   >
                     <option value="Single Tag">Single Tag</option>
                     <option value="Pack of 2">Pack of 2</option>
-                    <option value="Family Pack">Family Pack</option>
+                    <option value="Pack of 3">Pack of 3</option>
                   </select>
                 </div>
               </div>
