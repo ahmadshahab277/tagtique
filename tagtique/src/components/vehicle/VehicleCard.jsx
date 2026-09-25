@@ -1,10 +1,10 @@
 import React from 'react';
-import { ShieldCheck, CheckCircle2, Car, Shield } from 'lucide-react';
+import { ShieldCheck, Car, Shield } from 'lucide-react';
 
 export default function VehicleCard({ vehicle }) {
-  const vehicleName = vehicle?.vehicleName || 'Toyota Corolla';
+  const rawName = vehicle?.vehicleName || 'Car';
+  const vehicleName = rawName.replace(/\s*\(verified\)\s*/i, '').trim() || 'Car';
   const registrationNumber = vehicle?.registrationNumber || 'ABC-123';
-  const tagId = vehicle?.tagId || 'TAG-001';
 
   return (
     <div className="w-full bg-white rounded-3xl border border-[#EAE3D6] p-5 sm:p-6 shadow-warm-sm flex flex-col gap-4 relative overflow-hidden">
@@ -21,27 +21,26 @@ export default function VehicleCard({ vehicle }) {
         {/* Green Active Indicator */}
         <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-bold">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span>Vehicle profile active</span>
+          <span>Ready to contact</span>
         </div>
       </div>
 
       {/* Main Vehicle Plate & Identity */}
       <div className="flex items-center justify-between gap-4 pt-1">
         <div className="flex flex-col">
-          <span className="text-xs font-bold text-[#8C7A6B] uppercase tracking-wider">
-            Vehicle
+          <span className="text-sm font-bold text-[#8C7A6B]">
+            This vehicle
           </span>
-          <h2 className="text-xl sm:text-2xl font-baloo font-extrabold text-[#1C120C] leading-tight">
+          <h2 className="text-2xl font-baloo font-extrabold text-[#1C120C] leading-tight">
             {vehicleName}
           </h2>
 
-          <div className="flex items-center gap-2 mt-2">
-            <span className="text-xs font-bold text-[#8C7A6B]">
-              Registration:
+          <div className="flex flex-col gap-1.5 mt-3">
+            <span className="text-sm font-bold text-[#8C7A6B]">
+              Number plate
             </span>
-            {/* Embossed Luxury License Plate Pill */}
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[#FAF7F2] border-2 border-[#1C120C]/15 font-mono font-black text-sm text-[#1C120C] uppercase tracking-wider shadow-2xs">
-              <span className="text-[10px] px-1 py-0.5 rounded bg-emerald-700 text-white font-bold tracking-normal font-sans">
+            <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#FAF7F2] border-2 border-[#1C120C]/15 font-mono font-black text-lg text-[#1C120C] uppercase tracking-wider shadow-2xs w-fit">
+              <span className="text-xs px-1.5 py-0.5 rounded bg-emerald-700 text-white font-bold tracking-normal font-sans">
                 PK
               </span>
               <span>{registrationNumber}</span>
@@ -56,15 +55,10 @@ export default function VehicleCard({ vehicle }) {
       </div>
 
       {/* Privacy Guarantee Notice */}
-      <div className="pt-3 border-t border-[#F2ECE1] flex items-center justify-between text-xs text-[#8C7A6B]">
-        <div className="flex items-center gap-1.5">
-          <Shield className="w-3.5 h-3.5 text-emerald-600" />
-          <span className="text-[11px] font-medium">
-            Call, text, or WhatsApp the owner
-          </span>
-        </div>
-        <span className="text-[10.5px] font-mono font-bold text-[#A89889]">
-          ID: {tagId}
+      <div className="pt-3 border-t border-[#F2ECE1] flex items-center gap-1.5 text-sm text-[#8C7A6B]">
+        <Shield className="w-4 h-4 text-emerald-600 shrink-0" />
+        <span className="font-medium">
+          The phone number stays private on this page.
         </span>
       </div>
     </div>

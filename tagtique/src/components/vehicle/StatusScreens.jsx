@@ -11,10 +11,10 @@ export function LoadingScreen() {
       </div>
       <div className="flex flex-col gap-1">
         <h3 className="font-baloo font-extrabold text-xl text-[#1C120C]">
-          Verifying Tagtique Profile...
+          Finding this vehicle...
         </h3>
-        <p className="text-xs text-[#8C7A6B]">
-          Connecting to secure vehicle proxy network
+        <p className="text-sm text-[#8C7A6B]">
+          One moment
         </p>
       </div>
     </div>
