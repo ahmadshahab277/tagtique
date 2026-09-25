@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Shield, ExternalLink } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -25,17 +24,6 @@ export default function Footer() {
             <div className="flex items-center gap-2 text-xs font-mono text-tag-amber pt-2">
               <span className="w-2 h-2 rounded-full bg-tag-amber" />
               <span>SOLID ACRYLIC & STAINLESS STEEL</span>
-            </div>
-            <div className="pt-2">
-              <Link
-                to="/admin"
-                className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-[#13111C] hover:bg-[#1F1B2C] border border-white/20 text-white text-xs font-bold transition-all shadow-md group font-manrope"
-                title="Switch to Operations Admin Panel"
-              >
-                <Shield className="w-3.5 h-3.5 text-white/90 group-hover:text-tag-amber transition-colors" />
-                <span>Switch to Admin Panel ➔</span>
-                <ExternalLink className="w-3.5 h-3.5 text-white/70 group-hover:text-white transition-colors" />
-              </Link>
             </div>
           </div>
 

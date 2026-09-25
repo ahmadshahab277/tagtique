@@ -14,7 +14,7 @@ import CheckoutPage from './pages/CheckoutPage';
 import OrderConfirmationPage from './pages/OrderConfirmationPage';
 import PublicProfilePage from './pages/PublicProfilePage';
 import PublicVehicleScanPage from './pages/PublicVehicleScanPage';
-import AdminPage from './pages/AdminPage';
+import AdminRoute from './components/AdminRoute';
 
 // Scroll to top on every route change
 function ScrollToTop() {
@@ -136,8 +136,8 @@ function AppContent() {
             {/* Legacy Profile Card Route */}
             <Route path="/card/:username" element={<PublicProfilePage />} />
 
-            {/* Dedicated Admin Control Panel */}
-            <Route path="/admin" element={<AdminPage />} />
+            {/* Admin console. The page stays unmounted until the admin session is valid. */}
+            <Route path="/admin" element={<AdminRoute />} />
 
             {/* Fallback */}
             <Route path="*" element={<HomePage />} />

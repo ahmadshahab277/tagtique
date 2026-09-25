@@ -38,13 +38,15 @@ import {
   Check,
   Share2,
   Camera,
-  Menu
+  Menu,
+  LogOut
 } from 'lucide-react';
+import { endAdminSession } from '../auth/adminSession';
 import QRScannerModal from '../components/QRScannerModal';
 import { buildScanUrl } from '../utils/scanUrl';
 import { zipStore } from '../utils/zipStore';
 
-export default function AdminPage() {
+export default function AdminPage({ onLogout }) {
   const { lastOrder } = useCart();
   const [activeNav, setActiveNav] = useState('orders'); // Default to Orders matching image 1
   const [searchQuery, setSearchQuery] = useState('');
@@ -775,6 +777,18 @@ export default function AdminPage() {
             <span>Customer View</span>
             <ExternalLink className="w-3.5 h-3.5 text-tag-amber" />
           </Link>
+
+          <button
+            type="button"
+            onClick={() => {
+              endAdminSession();
+              onLogout?.();
+            }}
+            className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold text-tag-brown hover:bg-tag-card transition-colors border border-transparent hover:border-tag-border flex items-center gap-2"
+          >
+            <LogOut className="w-3.5 h-3.5 text-tag-amber" />
+            <span>Log out</span>
+          </button>
         </div>
       </aside>
 
@@ -824,6 +838,18 @@ export default function AdminPage() {
 
           {/* Right Header Controls */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <button
+              type="button"
+              onClick={() => {
+                endAdminSession();
+                onLogout?.();
+              }}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-tag-border bg-tag-card text-xs font-bold text-tag-brown hover:bg-tag-pill transition-colors"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Log out</span>
+            </button>
+
             <button
               type="button"
               className="relative p-2 rounded-full text-tag-brown hover:bg-tag-card transition-colors"
