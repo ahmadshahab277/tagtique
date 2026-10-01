@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const CartContext = createContext();
 
-const INITIAL_CART = [];
 
 const DEFAULT_PROFILE = {
   name: '',

@@ -22,13 +22,6 @@
   }
 }
 
-/* Glassmorphic and subtle custom styles */
-.glass-header {
-  background: rgba(253, 247, 236, 0.92);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
 .amber-gradient-btn {
   background: linear-gradient(180deg, #FFC943 0%, #F5B21F 100%);
   border: 2px solid #1B0F06;
@@ -43,17 +36,6 @@
 
 .amber-gradient-btn:active {
   transform: translateY(0);
-}
-
-.card-outline-btn {
-  border: 2px solid #1B0F06;
-  background: #FDF7EC;
-  transition: all 0.18s ease;
-}
-
-.card-outline-btn:hover {
-  background: #F5B21F;
-  transform: translateY(-2px);
 }
 
 /* Custom scrollbar */

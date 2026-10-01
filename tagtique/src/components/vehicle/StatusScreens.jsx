@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldAlert, AlertCircle, WifiOff, RefreshCw, HelpCircle, Lock } from 'lucide-react';
+import { WifiOff, RefreshCw, HelpCircle, Lock } from 'lucide-react';
 
 export function LoadingScreen() {
   return (

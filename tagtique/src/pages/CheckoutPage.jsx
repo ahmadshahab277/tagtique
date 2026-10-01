@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { ShieldCheck, Truck, CreditCard, ChevronRight, Lock } from 'lucide-react';
+import { ShieldCheck, Truck, Lock } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export default function CheckoutPage() {
