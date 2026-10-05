@@ -8,11 +8,11 @@ const FAQS = [
   },
   {
     q: 'Can I change my phone number or Instagram handle later?',
-    a: 'Yes, as many times as you like. You manage your card from your Tagtique account. Changes update instantaneously for anyone who scans your tag in the future. The engraved QR on the physical acrylic never needs replacing.'
+    a: 'Yes, as many times as you like. You manage your card from your Tagtique account. Changes update instantaneously for anyone who scans your sticker in the future. The high-definition QR on the durable waterproof sticker never needs replacing.'
   },
   {
-    q: 'Is the tag waterproof and scratch-proof?',
-    a: 'Yes. Each tag is manufactured from cast optical acrylic with subsurface resin-sealed QR panels. Rain, pool water, coffee spills, and daily key scratches will not degrade or affect readability.'
+    q: 'Is the sticker waterproof and scratch-proof?',
+    a: 'Yes. Each sticker is printed on high-grade waterproof vinyl with a scratch-resistant gloss protective laminate. Rain, pressure washes, outdoor sunlight, and daily weather will not degrade or affect readability.'
   },
   {
     q: 'What happens if my keys or bag get lost?',

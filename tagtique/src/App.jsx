@@ -109,7 +109,7 @@ function AppContent() {
     <div className="min-h-screen bg-tag-bg text-tag-brown flex flex-col selection:bg-tag-amber selection:text-tag-brown-deep">
       {!isStandalone && <Navbar />}
       
-      <main className="flex-1">
+      <main className={`flex-1 ${!isStandalone ? 'pt-20 sm:pt-24' : ''}`}>
         <ErrorBoundary>
           <Routes>
             {/* Home Page */}

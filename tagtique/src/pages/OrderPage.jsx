@@ -27,12 +27,12 @@ import confetti from 'canvas-confetti';
 const PACKAGES = [
   {
     id: 'single',
-    name: 'Single Tag',
+    name: 'Single Sticker',
     tagsCount: 1,
     pkrPrice: 999,
     oldPkrPrice: null,
     usdPrice: 12,
-    desc: '1 shiny QR Tag · One-time fee'
+    desc: '1 glossy QR Sticker · One-time fee'
   },
   {
     id: 'pack2',
@@ -41,7 +41,7 @@ const PACKAGES = [
     pkrPrice: 1499,
     oldPkrPrice: null,
     usdPrice: 18,
-    desc: '2 shiny QR Tags · One-time fee',
+    desc: '2 glossy QR Stickers · One-time fee',
     isPopular: true
   },
   {
@@ -51,30 +51,30 @@ const PACKAGES = [
     pkrPrice: 1999,
     oldPkrPrice: null,
     usdPrice: 24,
-    desc: '3 shiny QR Tags · One-time fee'
+    desc: '3 glossy QR Stickers · One-time fee'
   }
 ];
 
 const MATERIALS = [
   {
     id: 'shiny',
-    name: 'Shiny Acrylic',
+    name: 'Glossy Vinyl Sticker',
     badge: 'Included on all packages',
     extraPkr: 0,
-    desc: 'High-gloss shiny acrylic finish — same premium material on every tag.'
+    desc: 'High-gloss waterproof vinyl sticker — scratch-resistant, weatherproof & UV-protected on every package.'
   }
 ];
 
 const FINISHES = [
-  { id: 'cream', name: 'Cream Acrylic', swatch: '#FBF3E4', desc: 'Warm ivory with amber eyelet' },
+  { id: 'amber', name: 'The Amber Gold', swatch: '#D19B32', desc: 'Warm golden honey vinyl' },
+  { id: 'cream', name: 'Cream Sticker', swatch: '#FBF3E4', desc: 'Warm ivory with chocolate frame' },
   { id: 'espresso', name: 'The Espresso', swatch: '#3A2318', desc: 'Matte deep dark brown' },
-  { id: 'amber', name: 'The Amber', swatch: '#F5B21F', desc: 'Translucent glowing honey' },
   { id: 'glow', name: 'The Nightlight', swatch: 'linear-gradient(150deg, #8BF7C8, #49E2D2, #B394F2)', desc: 'Mint-to-violet night glow' }
 ];
 
 const POPULAR_CITIES = ['Faisalabad', 'Lahore', 'Islamabad', 'Rawalpindi', 'Karachi', 'Peshawar', 'Multan', 'Sialkot'];
 
-const TAG_TYPES = ['Car', 'Motorcycle', 'Commercial'];
+const TAG_TYPES = ['Vehicle', 'Others'];
 
 export default function OrderPage() {
   const [searchParams] = useSearchParams();
@@ -90,7 +90,7 @@ export default function OrderPage() {
         : 'pack2';
   const [selectedPackageId, setSelectedPackageId] = useState(initialPackage);
   const [selectedMaterialId] = useState('shiny');
-  const [selectedFinish] = useState(searchParams.get('finish') || 'cream');
+  const [selectedFinish] = useState(searchParams.get('finish') || 'amber');
   const [customQuantity, setCustomQuantity] = useState(
     PACKAGES.find((p) => p.id === initialPackage)?.tagsCount || 2
   );
@@ -106,33 +106,53 @@ export default function OrderPage() {
       name: userProfile.name || 'Ali Khan',
       phone: userProfile.phone || '0300 1234567',
       emergencyPhone: '0301 9876543',
-      tagType: 'Car',
+      tagType: 'Vehicle',
+      vehicleNumber: 'LEA-24-1234',
       email: userProfile.email || 'ali@example.com',
-      bio: userProfile.bio || 'Product Designer · Faisalabad'
+      bio: userProfile.bio || 'Product Designer · Faisalabad',
+      phonePrivacy: 'private', // 'private' | 'public'
+      namePrivacy: 'public',   // 'public' | 'private'
+      emergencyPrivacy: 'private',
+      detailsPrivacy: 'public'
     },
     {
       name: 'Ayesha Khan',
       phone: '0329 2082080',
       emergencyPhone: '',
-      tagType: 'Motorcycle',
+      tagType: 'Vehicle',
+      vehicleNumber: 'ICT-2024-88',
       email: 'ayesha@tagtique.co',
-      bio: 'Architect & Traveler'
+      bio: 'Architect & Traveler',
+      phonePrivacy: 'private',
+      namePrivacy: 'public',
+      emergencyPrivacy: 'private',
+      detailsPrivacy: 'public'
     },
     {
       name: 'Hamza Khan',
       phone: '0312 3456789',
       emergencyPhone: '',
-      tagType: 'Commercial',
+      tagType: 'Others',
+      vehicleNumber: '',
       email: '',
-      bio: ''
+      bio: '',
+      phonePrivacy: 'private',
+      namePrivacy: 'public',
+      emergencyPrivacy: 'private',
+      detailsPrivacy: 'public'
     },
     {
       name: 'Family Tag',
       phone: '0300 0000000',
       emergencyPhone: '',
-      tagType: 'Car',
+      tagType: 'Vehicle',
+      vehicleNumber: 'FD-12-999',
       email: '',
-      bio: ''
+      bio: '',
+      phonePrivacy: 'private',
+      namePrivacy: 'public',
+      emergencyPrivacy: 'private',
+      detailsPrivacy: 'public'
     }
   ]);
 
@@ -161,19 +181,35 @@ export default function OrderPage() {
   };
 
   // Synchronize package selection with quantity
-  useEffect(() => {
-    const pkg = PACKAGES.find((p) => p.id === selectedPackageId);
+  const handleSelectPackage = (pkgId) => {
+    setSelectedPackageId(pkgId);
+    const pkg = PACKAGES.find((p) => p.id === pkgId);
     if (pkg) {
       setCustomQuantity(pkg.tagsCount);
     }
-  }, [selectedPackageId]);
+  };
 
-  const selectedPackage = PACKAGES.find((p) => p.id === selectedPackageId) || PACKAGES[1];
+  // Pricing calculations: 1=999, 2=1499, 3=1999, beyond 3 = 1999 + 500 per extra sticker
+  const getBasePkrPrice = (qty) => {
+    if (qty <= 1) return 999;
+    if (qty === 2) return 1499;
+    if (qty === 3) return 1999;
+    return 1999 + (qty - 3) * 500;
+  };
+
+  const selectedPackage =
+    PACKAGES.find((p) => p.id === selectedPackageId && p.tagsCount === customQuantity) || {
+      id: 'custom',
+      name: `${customQuantity} Stickers Custom Pack`,
+      tagsCount: customQuantity,
+      pkrPrice: getBasePkrPrice(customQuantity),
+      desc: `${customQuantity} glossy QR Stickers · Bulk discount applied`
+    };
+
   const selectedMaterial = MATERIALS.find((m) => m.id === selectedMaterialId) || MATERIALS[0];
   const currentFinishObj = FINISHES.find((f) => f.id === selectedFinish) || FINISHES[0];
 
-  // Pricing calculations
-  const basePkrPrice = selectedPackage.pkrPrice;
+  const basePkrPrice = getBasePkrPrice(customQuantity);
   const materialExtraPkr = 0;
   const engravingExtraPkr = isEngraved ? 400 * customQuantity : 0;
   const totalPkr = basePkrPrice + materialExtraPkr + engravingExtraPkr;
@@ -182,19 +218,71 @@ export default function OrderPage() {
     setTagsData((prev) => {
       const updated = [...prev];
       if (!updated[index]) {
-        updated[index] = { name: '', phone: '', emergencyPhone: '', tagType: 'Car', email: '', bio: '' };
+        updated[index] = {
+          name: '',
+          phone: '',
+          emergencyPhone: '',
+          tagType: 'Vehicle',
+          vehicleNumber: '',
+          email: '',
+          bio: '',
+          phonePrivacy: 'private',
+          namePrivacy: 'public',
+          emergencyPrivacy: 'private',
+          detailsPrivacy: 'public'
+        };
       }
       updated[index][field] = value;
       return updated;
     });
   };
 
+  // Unbounded quantity change — user can order as many stickers as they want!
   const handleQuantityChange = (delta) => {
-    const newQty = Math.max(1, Math.min(3, customQuantity + delta));
+    const newQty = Math.max(1, customQuantity + delta);
     setCustomQuantity(newQty);
     if (newQty === 1) setSelectedPackageId('single');
     else if (newQty === 2) setSelectedPackageId('pack2');
-    else setSelectedPackageId('pack3');
+    else if (newQty === 3) setSelectedPackageId('pack3');
+    else setSelectedPackageId('custom');
+  };
+
+  const handleSetExactQuantity = (val) => {
+    const parsed = parseInt(val, 10);
+    if (isNaN(parsed)) {
+      setCustomQuantity(1);
+      setSelectedPackageId('single');
+      return;
+    }
+    const safeQty = Math.max(1, Math.min(500, parsed));
+    setCustomQuantity(safeQty);
+    if (safeQty === 1) setSelectedPackageId('single');
+    else if (safeQty === 2) setSelectedPackageId('pack2');
+    else if (safeQty === 3) setSelectedPackageId('pack3');
+    else setSelectedPackageId('custom');
+  };
+
+  const handleCopyFirstTagToAll = () => {
+    const firstTag = tagsData[0] || {};
+    setTagsData((prev) => {
+      const updated = [...prev];
+      for (let i = 1; i < customQuantity; i++) {
+        updated[i] = {
+          name: firstTag.name ? `${firstTag.name} (${i + 1})` : '',
+          phone: firstTag.phone || '',
+          emergencyPhone: firstTag.emergencyPhone || '',
+          tagType: firstTag.tagType || 'Vehicle',
+          vehicleNumber: firstTag.vehicleNumber || '',
+          email: firstTag.email || '',
+          bio: firstTag.bio || '',
+          phonePrivacy: firstTag.phonePrivacy || 'private',
+          namePrivacy: firstTag.namePrivacy || 'public',
+          emergencyPrivacy: firstTag.emergencyPrivacy || 'private',
+          detailsPrivacy: firstTag.detailsPrivacy || 'public'
+        };
+      }
+      return updated;
+    });
   };
 
   const handlePlaceOrder = (e) => {
@@ -237,7 +325,15 @@ export default function OrderPage() {
         totalPrice: Math.round(totalPkr / customQuantity),
         displayName: tagsData[i]?.name || primaryCustomer.name,
         phone: tagsData[i]?.phone || primaryCustomer.phone,
-        tagType: tagsData[i]?.tagType || 'Bag'
+        emergencyPhone: tagsData[i]?.emergencyPhone || '',
+        tagType: tagsData[i]?.tagType || 'Vehicle',
+        vehicleNumber: tagsData[i]?.vehicleNumber || '',
+        phonePrivacy: tagsData[i]?.phonePrivacy || 'private',
+        namePrivacy: tagsData[i]?.namePrivacy || 'public',
+        emergencyPrivacy: tagsData[i]?.emergencyPrivacy || 'private',
+        detailsPrivacy: tagsData[i]?.detailsPrivacy || 'public',
+        email: tagsData[i]?.email || '',
+        bio: tagsData[i]?.bio || ''
       })),
       subtotal: totalPkr,
       finalTotal: totalPkr,
@@ -254,8 +350,8 @@ export default function OrderPage() {
           guardianNumber: primaryCustomer.emergencyPhone || ''
         },
         vehicles: tagsData.slice(0, customQuantity).map((t, idx) => ({
-          vehicleNumber: t.name || `TAG-${idx + 1}`,
-          vehicleType: t.tagType || 'Car'
+          vehicleNumber: t.vehicleNumber || t.name || `TAG-${idx + 1}`,
+          vehicleType: t.tagType || 'Vehicle'
         })),
         packageType: selectedPackage.title || 'Single Tag',
         totalAmount: totalPkr,
@@ -308,7 +404,7 @@ export default function OrderPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
         {/* Left Column: Form Structure (Cards 1 to 4) */}
         <div className="lg:col-span-7 flex flex-col gap-6">
-          {/* CARD 1: Choose Package & Tag Material */}
+          {/* CARD 1: Choose Package & Sticker Material */}
           <section className="bg-tag-card border-[1.5px] border-tag-border rounded-3xl p-6 sm:p-7 shadow-warm-sm flex flex-col gap-5">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-tag-pill border border-tag-border flex items-center justify-center text-tag-brown-light font-bold">
@@ -316,10 +412,10 @@ export default function OrderPage() {
               </div>
               <div className="flex flex-col">
                 <h2 className="font-baloo font-extrabold text-xl sm:text-2xl text-tag-brown">
-                  Choose Package & Tag Material
+                  Choose Package & Sticker Material
                 </h2>
                 <span className="text-xs text-tag-brown-muted font-medium">
-                  Select vehicle/item count and physical badge format.
+                  Select vehicle/item count and physical sticker format. Get as many as you need!
                 </span>
               </div>
             </div>
@@ -327,11 +423,11 @@ export default function OrderPage() {
             {/* Package Selection Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
               {PACKAGES.map((pkg) => {
-                const isSelected = selectedPackageId === pkg.id;
+                const isSelected = selectedPackageId === pkg.id && customQuantity === pkg.tagsCount;
                 return (
                   <div
                     key={pkg.id}
-                    onClick={() => setSelectedPackageId(pkg.id)}
+                    onClick={() => handleSelectPackage(pkg.id)}
                     className={`relative p-4 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between gap-3 ${
                       isSelected
                         ? 'bg-tag-bg border-tag-brown shadow-warm-sm ring-2 ring-tag-amber/30'
@@ -379,22 +475,44 @@ export default function OrderPage() {
               })}
             </div>
 
-            {/* Tag Material — single shiny finish for all packages */}
+            {/* If custom quantity > 3, show custom package highlight */}
+            {customQuantity > 3 && (
+              <div className="p-3.5 rounded-2xl bg-amber-500/10 border-2 border-tag-amber flex items-center justify-between gap-3 animate-fadeIn">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-8 h-8 rounded-xl bg-tag-amber text-tag-brown-deep font-mono font-black text-sm flex items-center justify-center shadow-xs">
+                    {customQuantity}
+                  </span>
+                  <div className="flex flex-col">
+                    <span className="font-baloo font-bold text-sm text-tag-brown">
+                      Custom Bulk Pack ({customQuantity} Stickers)
+                    </span>
+                    <span className="text-[11px] text-tag-brown-muted font-medium">
+                      PKR 1,999 base + PKR 500 for each extra sticker ({customQuantity - 3} extra)
+                    </span>
+                  </div>
+                </div>
+                <span className="font-mono font-extrabold text-base text-tag-brown">
+                  PKR {basePkrPrice.toLocaleString()}
+                </span>
+              </div>
+            )}
+
+            {/* Sticker Material — single glossy finish for all packages */}
             <div className="flex flex-col gap-2.5 pt-2 border-t border-tag-border/60">
               <span className="font-mono text-[11px] font-bold tracking-wider text-tag-brown-light uppercase">
-                TAG MATERIAL & SPECIFICATION
+                STICKER MATERIAL & SPECIFICATION
               </span>
               <div className="p-3.5 rounded-2xl border-2 border-tag-brown bg-tag-bg shadow-xs ring-1 ring-tag-amber/30 flex flex-col gap-1.5">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-xs sm:text-[13px] text-tag-brown">
-                    Shiny Acrylic
+                    Glossy Vinyl Sticker
                   </span>
                   <div className="w-4 h-4 rounded-full border border-tag-brown bg-tag-amber flex items-center justify-center">
                     <div className="w-1.5 h-1.5 rounded-full bg-tag-brown" />
                   </div>
                 </div>
                 <p className="text-[11px] text-tag-brown-muted leading-tight font-medium">
-                  High-gloss shiny acrylic finish — same premium material on every package.
+                  High-gloss waterproof vinyl sticker — scratch-resistant, weatherproof & UV-protected on every package.
                 </p>
                 <span className="font-mono text-[10px] font-bold text-tag-amber-deep">
                   Included on all packages
@@ -402,50 +520,92 @@ export default function OrderPage() {
               </div>
             </div>
 
-            {/* Total Tags Quantity Stepper */}
-            <div className="flex items-center justify-between pt-3 border-t border-tag-border/60 text-xs sm:text-sm font-bold text-tag-brown">
-              <span>Total Tags to Print ({customQuantity} items)</span>
-              <div className="flex items-center gap-3 bg-tag-bg border border-tag-border rounded-xl p-1">
-                <button
-                  type="button"
-                  onClick={() => handleQuantityChange(-1)}
-                  className="w-8 h-8 rounded-lg bg-tag-card hover:bg-tag-pill flex items-center justify-center text-tag-brown font-bold transition-colors"
-                >
-                  <Minus className="w-3.5 h-3.5" />
-                </button>
-                <span className="font-mono text-sm font-extrabold w-6 text-center">
-                  {customQuantity}
+            {/* Total Stickers Quantity Stepper & Quick Add */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-tag-border/60 text-xs sm:text-sm font-bold text-tag-brown">
+              <div className="flex flex-col">
+                <span>Total Stickers to Print ({customQuantity} {customQuantity > 1 ? 'items' : 'item'})</span>
+                <span className="text-[11px] text-tag-brown-muted font-normal">
+                  Add as many stickers as you want · PKR 500 per extra sticker
                 </span>
-                <button
-                  type="button"
-                  onClick={() => handleQuantityChange(1)}
-                  className="w-8 h-8 rounded-lg bg-tag-card hover:bg-tag-pill flex items-center justify-center text-tag-brown font-bold transition-colors"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                </button>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                {/* Quick Add Pills */}
+                <div className="flex items-center gap-1 mr-1">
+                  {[1, 5, 10].map((add) => (
+                    <button
+                      key={add}
+                      type="button"
+                      onClick={() => handleQuantityChange(add)}
+                      className="px-2 py-1 rounded-lg bg-tag-card hover:bg-tag-pill border border-tag-border text-[11px] font-mono font-bold text-tag-brown transition-all hover:scale-105 active:scale-95"
+                      title={`Add ${add} stickers`}
+                    >
+                      +{add}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-1.5 bg-tag-bg border border-tag-border rounded-xl p-1 shadow-xs">
+                  <button
+                    type="button"
+                    onClick={() => handleQuantityChange(-1)}
+                    disabled={customQuantity <= 1}
+                    className="w-8 h-8 rounded-lg bg-tag-card hover:bg-tag-pill disabled:opacity-40 flex items-center justify-center text-tag-brown font-bold transition-colors"
+                  >
+                    <Minus className="w-3.5 h-3.5" />
+                  </button>
+                  <input
+                    type="number"
+                    min="1"
+                    max="500"
+                    value={customQuantity}
+                    onChange={(e) => handleSetExactQuantity(e.target.value)}
+                    className="font-mono text-sm font-extrabold w-12 text-center bg-transparent border-0 focus:outline-none focus:ring-1 focus:ring-tag-amber rounded text-tag-brown"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleQuantityChange(1)}
+                    className="w-8 h-8 rounded-lg bg-tag-card hover:bg-tag-pill flex items-center justify-center text-tag-brown font-bold transition-colors"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             </div>
           </section>
 
-          {/* CARD 2: Tag & Contact Details */}
+          {/* CARD 2: Sticker & Contact Details */}
           <section className="bg-tag-card border-[1.5px] border-tag-border rounded-3xl p-6 sm:p-7 shadow-warm-sm flex flex-col gap-5">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-tag-pill border border-tag-border flex items-center justify-center text-tag-brown-light font-bold">
                   <User className="w-5 h-5 text-tag-amber-deep" />
                 </div>
                 <div className="flex flex-col">
                   <h2 className="font-baloo font-extrabold text-xl sm:text-2xl text-tag-brown">
-                    Tag & Contact Profile Details
+                    Sticker & Contact Profile Details
                   </h2>
                   <span className="text-xs text-tag-brown-muted font-medium">
-                    Owner details, contact number & emergency guardian info.
+                    Owner details, contact number & emergency guardian info for each sticker.
                   </span>
                 </div>
               </div>
-              <span className="font-mono text-xs font-extrabold text-tag-brown-light bg-tag-pill px-3 py-1 rounded-full border border-tag-border">
-                {customQuantity} {customQuantity > 1 ? 'Tags' : 'Tag'}
-              </span>
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                {customQuantity > 1 && (
+                  <button
+                    type="button"
+                    onClick={handleCopyFirstTagToAll}
+                    className="px-3 py-1.5 rounded-full bg-tag-pill hover:bg-tag-border/60 border border-tag-border text-xs font-bold text-tag-brown transition-all flex items-center gap-1.5"
+                    title="Copy details from Sticker 1 to all other stickers"
+                  >
+                    <Copy className="w-3 h-3 text-tag-amber-deep" />
+                    <span>Copy #1 to all</span>
+                  </button>
+                )}
+                <span className="font-mono text-xs font-extrabold text-tag-brown-light bg-tag-pill px-3 py-1 rounded-full border border-tag-border">
+                  {customQuantity} {customQuantity > 1 ? 'Stickers' : 'Sticker'}
+                </span>
+              </div>
             </div>
 
             {/* Accordion list for configured tags */}
@@ -480,9 +640,10 @@ export default function OrderPage() {
                         <span className="w-6 h-6 rounded-full bg-tag-brown text-tag-amber font-mono text-xs font-bold flex items-center justify-center">
                           {index + 1}
                         </span>
-                        <span>Tag {index + 1}</span>
+                        <span>Sticker {index + 1}</span>
                         <span className="text-xs font-normal text-tag-brown-muted">
                           · {tagItem.name ? tagItem.name : 'Click to configure details'}
+                          {tagItem.tagType === 'Vehicle' && tagItem.vehicleNumber ? ` (${tagItem.vehicleNumber})` : ''}
                         </span>
                       </div>
                       {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -491,20 +652,20 @@ export default function OrderPage() {
                     {/* Accordion Body */}
                     {isOpen && (
                       <div className="p-5 pt-0 flex flex-col gap-4 border-t border-tag-border/50 animate-fadeIn mt-2">
-                        {/* Tag Category / Purpose */}
+                        {/* Tag Category: Vehicle or Others */}
                         <div className="flex flex-col gap-1.5">
                           <label className="text-xs font-bold text-tag-brown">
-                            Tag Category / Usage
+                            Sticker Category / Usage
                           </label>
                           <div className="flex flex-wrap gap-2">
                             {TAG_TYPES.map((type) => {
-                              const isCatSelected = tagItem.tagType === type;
+                              const isCatSelected = (tagItem.tagType || 'Vehicle') === type;
                               return (
                                 <button
                                   key={type}
                                   type="button"
                                   onClick={() => handleUpdateTag(index, 'tagType', type)}
-                                  className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
+                                  className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
                                     isCatSelected
                                       ? 'bg-tag-brown text-[#FDF7EC] border-tag-brown shadow-xs'
                                       : 'bg-tag-card border-tag-border text-tag-brown-muted hover:text-tag-brown hover:bg-tag-pill'
@@ -517,12 +678,57 @@ export default function OrderPage() {
                           </div>
                         </div>
 
+                        {/* Number Plate (shown ONLY when Vehicle is selected) */}
+                        {tagItem.tagType === 'Vehicle' && (
+                          <div className="flex flex-col gap-1.5 animate-fadeIn">
+                            <label className="text-xs font-bold text-tag-brown flex items-center justify-between">
+                              <span>Number Plate *</span>
+                              <span className="text-[11px] text-tag-amber-deep font-semibold">Vehicle Registration</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={tagItem.vehicleNumber || ''}
+                              onChange={(e) => handleUpdateTag(index, 'vehicleNumber', e.target.value.toUpperCase())}
+                              placeholder="e.g. LEA-24-1234 or ICT-890"
+                              className="w-full px-3.5 py-2.5 rounded-xl border border-tag-border bg-tag-card text-sm text-tag-brown font-mono font-bold tracking-wider outline-none focus:border-tag-amber uppercase placeholder:font-sans placeholder:font-normal placeholder:tracking-normal"
+                            />
+                            <span className="text-[10.5px] text-tag-brown-muted font-medium">
+                              Linked to this vehicle's sticker profile for emergency contact & parking scans.
+                            </span>
+                          </div>
+                        )}
+
                         {/* Owner / Tag Name */}
                         <div className="flex flex-col gap-1.5">
-                          <label className="text-xs font-bold text-tag-brown flex items-center justify-between">
-                            <span>Owner / Display Name *</span>
-                            <span className="text-[11px] text-tag-brown-muted font-normal">Printed & Scanned Profile</span>
-                          </label>
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <label className="text-xs font-bold text-tag-brown">
+                              Owner / Display Name *
+                            </label>
+                            <div className="flex items-center gap-1 bg-tag-pill p-0.5 rounded-lg border border-tag-border text-[10.5px] font-bold">
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateTag(index, 'namePrivacy', 'public')}
+                                className={`px-2 py-0.5 rounded-md transition-all cursor-pointer ${
+                                  (tagItem.namePrivacy || 'public') === 'public'
+                                    ? 'bg-tag-brown text-[#FDF7EC] shadow-2xs'
+                                    : 'text-tag-brown-muted hover:text-tag-brown'
+                                }`}
+                              >
+                                🌐 Public Name
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateTag(index, 'namePrivacy', 'private')}
+                                className={`px-2 py-0.5 rounded-md transition-all cursor-pointer ${
+                                  tagItem.namePrivacy === 'private'
+                                    ? 'bg-tag-brown text-[#FDF7EC] shadow-2xs'
+                                    : 'text-tag-brown-muted hover:text-tag-brown'
+                                }`}
+                              >
+                                🔒 Anonymous
+                              </button>
+                            </div>
+                          </div>
                           <input
                             type="text"
                             value={tagItem.name}
@@ -530,14 +736,45 @@ export default function OrderPage() {
                             placeholder="e.g. Ali Khan"
                             className="w-full px-3.5 py-2.5 rounded-xl border border-tag-border bg-tag-card text-sm text-tag-brown font-semibold outline-none focus:border-tag-amber"
                           />
+                          <span className="text-[10.5px] text-tag-brown-muted font-medium">
+                            {tagItem.namePrivacy === 'private'
+                              ? '🔒 Private: Scanned profile displays "Tagtique Verified Owner" to keep your name private.'
+                              : '🌐 Public: Your name is displayed on the scan profile.'}
+                          </span>
                         </div>
 
-                        {/* Primary Phone Number */}
+                        {/* Primary Phone Number & Emergency Phone */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                           <div className="flex flex-col gap-1.5">
-                            <label className="text-xs font-bold text-tag-brown">
-                              Phone Number (WhatsApp Direct) *
-                            </label>
+                            <div className="flex items-center justify-between gap-1 flex-wrap">
+                              <label className="text-xs font-bold text-tag-brown">
+                                Phone Number *
+                              </label>
+                              <div className="flex items-center gap-0.5 bg-tag-pill p-0.5 rounded-lg border border-tag-border text-[10px] font-bold">
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateTag(index, 'phonePrivacy', 'private')}
+                                  className={`px-1.5 py-0.5 rounded-md transition-all cursor-pointer ${
+                                    (tagItem.phonePrivacy || 'private') === 'private'
+                                      ? 'bg-tag-brown text-[#FDF7EC] shadow-2xs'
+                                      : 'text-tag-brown-muted hover:text-tag-brown'
+                                  }`}
+                                >
+                                  🔒 Private (Proxy)
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateTag(index, 'phonePrivacy', 'public')}
+                                  className={`px-1.5 py-0.5 rounded-md transition-all cursor-pointer ${
+                                    tagItem.phonePrivacy === 'public'
+                                      ? 'bg-tag-brown text-[#FDF7EC] shadow-2xs'
+                                      : 'text-tag-brown-muted hover:text-tag-brown'
+                                  }`}
+                                >
+                                  🌐 Public
+                                </button>
+                              </div>
+                            </div>
                             <input
                               type="tel"
                               value={tagItem.phone}
@@ -545,17 +782,50 @@ export default function OrderPage() {
                               placeholder="e.g. 0329 2082080"
                               className="w-full px-3.5 py-2.5 rounded-xl border border-tag-border bg-tag-card text-sm text-tag-brown font-semibold outline-none focus:border-tag-amber"
                             />
-                            <span className="text-[10.5px] text-tag-brown-muted font-medium">
-                              Instant WhatsApp tap when someone scans your tag.
+                            <span className="text-[10.5px] font-medium leading-tight">
+                              {(tagItem.phonePrivacy || 'private') === 'private' ? (
+                                <span className="text-emerald-800 font-semibold flex items-center gap-1">
+                                  🔒 Private: Scanners reach you through Tagtique Proxy without seeing your number.
+                                </span>
+                              ) : (
+                                <span className="text-amber-800 font-semibold flex items-center gap-1">
+                                  🌐 Public: Anyone who scans can see and dial your number directly.
+                                </span>
+                              )}
                             </span>
                           </div>
 
                           {/* Emergency / Guardian Number */}
                           <div className="flex flex-col gap-1.5">
-                            <label className="text-xs font-bold text-tag-brown flex items-center justify-between">
-                              <span>Guardian / Backup Contact</span>
-                              <span className="text-[10px] text-tag-amber-deep font-bold uppercase">Optional</span>
-                            </label>
+                            <div className="flex items-center justify-between gap-1 flex-wrap">
+                              <label className="text-xs font-bold text-tag-brown">
+                                Guardian Contact
+                              </label>
+                              <div className="flex items-center gap-0.5 bg-tag-pill p-0.5 rounded-lg border border-tag-border text-[10px] font-bold">
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateTag(index, 'emergencyPrivacy', 'private')}
+                                  className={`px-1.5 py-0.5 rounded-md transition-all cursor-pointer ${
+                                    (tagItem.emergencyPrivacy || 'private') === 'private'
+                                      ? 'bg-tag-brown text-[#FDF7EC] shadow-2xs'
+                                      : 'text-tag-brown-muted hover:text-tag-brown'
+                                  }`}
+                                >
+                                  🔒 Masked
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateTag(index, 'emergencyPrivacy', 'public')}
+                                  className={`px-1.5 py-0.5 rounded-md transition-all cursor-pointer ${
+                                    tagItem.emergencyPrivacy === 'public'
+                                      ? 'bg-tag-brown text-[#FDF7EC] shadow-2xs'
+                                      : 'text-tag-brown-muted hover:text-tag-brown'
+                                  }`}
+                                >
+                                  🌐 Public
+                                </button>
+                              </div>
+                            </div>
                             <input
                               type="tel"
                               value={tagItem.emergencyPhone}
@@ -564,7 +834,7 @@ export default function OrderPage() {
                               className="w-full px-3.5 py-2.5 rounded-xl border border-tag-border bg-tag-card text-sm text-tag-brown font-medium outline-none focus:border-tag-amber"
                             />
                             <span className="text-[10.5px] text-tag-brown-muted font-medium">
-                              Emergency backup hotline if bag or item gets lost.
+                              Optional emergency backup hotline for parking alerts.
                             </span>
                           </div>
                         </div>
@@ -859,7 +1129,7 @@ export default function OrderPage() {
             {/* Drag hint */}
             <div className="absolute left-4 bottom-4 flex items-center gap-2 font-mono text-[10px] tracking-wider text-tag-brown-light pointer-events-none select-none">
               <span className="w-3 h-[1.5px] bg-tag-brown-subtle" />
-              <span>DRAG TO ROTATE 3D TAG</span>
+              <span>DRAG TO ROTATE 3D STICKER</span>
             </div>
           </div>
 
@@ -878,12 +1148,12 @@ export default function OrderPage() {
                 <span className="font-bold text-tag-brown">{selectedPackage.name}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span>Tag Material:</span>
+                <span>Sticker Material:</span>
                 <span className="font-bold text-tag-brown">{selectedMaterial.name}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span>Total Quantity:</span>
-                <span className="font-bold text-tag-brown">{customQuantity} {customQuantity > 1 ? 'Tags' : 'Tag'}</span>
+                <span className="font-bold text-tag-brown">{customQuantity} {customQuantity > 1 ? 'Stickers' : 'Sticker'}</span>
               </div>
               <div className="flex justify-between items-center text-tag-brown-light text-xs pt-1 border-t border-tag-border/60">
                 <span>Configured Profiles:</span>

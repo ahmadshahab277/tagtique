@@ -19,11 +19,11 @@ export default function Footer() {
               />
             </Link>
             <p className="text-sm text-[#C7B294] leading-relaxed max-w-md">
-              Custom tactile 3D QR tags made to be seen and kept forever. Designed in Faisalabad, shipped worldwide.
+              Custom tactile 3D QR stickers made to stick, be seen, and last forever. Designed in Faisalabad, shipped worldwide.
             </p>
             <div className="flex items-center gap-2 text-xs font-mono text-tag-amber pt-2">
               <span className="w-2 h-2 rounded-full bg-tag-amber" />
-              <span>SOLID ACRYLIC & STAINLESS STEEL</span>
+              <span>PREMIUM WATERPROOF VINYL STICKERS</span>
             </div>
           </div>
 

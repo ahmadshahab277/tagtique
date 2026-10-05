@@ -2,67 +2,117 @@ import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 
 const VARIANTS = {
+  amber: {
+    plate: 0xC4953E,
+    roughness: 0.26,
+    metalness: 0.03,
+    bgCss: '#C4953E',
+    textColor: '#FFF7E6',
+    subTextColor: 'rgba(255, 247, 230, 0.90)',
+    borderColor: '#1B0F06',
+    qrColor: '#1B0F06',
+    name: 'Amber Gold'
+  },
   cream: {
-    plate: 0xfff0d6,
-    roughness: 0.42,
+    plate: 0xFDF4E6,
+    roughness: 0.28,
     metalness: 0.02,
-    accent: 0xf5b21f,
-    rim: 0x2a1a0e,
-    name: 'Cream acrylic'
+    bgCss: '#FDF4E6',
+    textColor: '#2E1B10',
+    subTextColor: '#8A5A2B',
+    borderColor: '#2E1B10',
+    qrColor: '#2E1B10',
+    name: 'Cream Sticker'
   },
   espresso: {
-    plate: 0x3a2318,
-    roughness: 0.38,
+    plate: 0x2A180E,
+    roughness: 0.24,
     metalness: 0.05,
-    accent: 0xf5b21f,
-    rim: 0x14090a,
+    bgCss: '#2A180E',
+    textColor: '#FDF7EC',
+    subTextColor: '#EADFCB',
+    borderColor: '#F5B21F',
+    qrColor: '#FFFDF8',
     name: 'Espresso'
-  },
-  amber: {
-    plate: 0xf5b21f,
-    roughness: 0.26,
-    metalness: 0.32,
-    accent: 0x3a2318,
-    rim: 0x2a1a0e,
-    name: 'Amber'
   },
   glow: {
     plate: 0xffffff,
-    roughness: 0.34,
+    roughness: 0.22,
     metalness: 0.06,
-    accent: 0x9ff3d0,
-    rim: 0x2a1a0e,
     gradient: true,
+    textColor: '#1B0F06',
+    subTextColor: '#2E1B10',
+    borderColor: '#1B0F06',
+    qrColor: '#1B0F06',
     name: 'Nightlight'
   }
 };
 
-function createGlowCanvas() {
-  const cv = document.createElement('canvas');
-  cv.width = 256;
-  cv.height = 512;
-  const ctx = cv.getContext('2d');
-  const g = ctx.createLinearGradient(0, 0, 40, cv.height);
-  g.addColorStop(0, '#8BF7C8');
-  g.addColorStop(0.34, '#49E2D2');
-  g.addColorStop(0.66, '#6FC8F5');
-  g.addColorStop(1, '#B394F2');
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, cv.width, cv.height);
-  return cv;
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
 }
 
-function createQrCanvas(seed = 20260920) {
-  const n = 21;
+// Procedural high-resolution sticker texture fallback for color variants
+function createStickerCanvas(variant = 'amber', seed = 20260920) {
   const cv = document.createElement('canvas');
-  const q = 2;
-  const total = n + q * 2;
-  const px = 24;
-  cv.width = cv.height = total * px;
+  cv.width = 1086;
+  cv.height = 1263;
   const ctx = cv.getContext('2d');
 
-  ctx.fillStyle = '#fffdf8';
+  const v = VARIANTS[variant] || VARIANTS.amber;
+
+  if (v.gradient) {
+    const g = ctx.createLinearGradient(0, 0, cv.width, cv.height);
+    g.addColorStop(0, '#8BF7C8');
+    g.addColorStop(0.34, '#49E2D2');
+    g.addColorStop(0.66, '#6FC8F5');
+    g.addColorStop(1, '#B394F2');
+    ctx.fillStyle = g;
+  } else {
+    ctx.fillStyle = v.bgCss;
+  }
   ctx.fillRect(0, 0, cv.width, cv.height);
+
+  // Top script: "Trusted. Safer. Higher Stakes."
+  ctx.textAlign = 'center';
+  ctx.fillStyle = v.textColor;
+  ctx.font = '700 52px "Caveat", "Baloo 2", cursive, sans-serif';
+  ctx.fillText('Trusted. Safer. Higher Stakes.', cv.width / 2, 95);
+
+  // Subtitle: "Scan to Connect."
+  ctx.font = '600 28px "Manrope", sans-serif';
+  ctx.fillStyle = v.subTextColor;
+  ctx.fillText('Scan to Connect.', cv.width / 2, 155);
+
+  // Rounded outer frame around QR code matching Image 1
+  const marginX = 52;
+  const qrTop = 218;
+  const qrSize = cv.width - marginX * 2;
+  const qrBorderRadius = 24;
+
+  ctx.strokeStyle = v.borderColor;
+  ctx.lineWidth = 14;
+  roundRect(ctx, marginX, qrTop, qrSize, qrSize, qrBorderRadius);
+  ctx.stroke();
+
+  // Draw QR code
+  const padding = 44;
+  const qrInnerX = marginX + padding;
+  const qrInnerY = qrTop + padding;
+  const qrInnerSize = qrSize - padding * 2;
+
+  const n = 29;
+  const px = qrInnerSize / n;
 
   let currentSeed = seed;
   const rnd = () => {
@@ -70,128 +120,105 @@ function createQrCanvas(seed = 20260920) {
     return currentSeed / 2147483648;
   };
 
-  ctx.fillStyle = '#231409';
+  ctx.fillStyle = v.qrColor;
+
   for (let r = 0; r < n; r++) {
     for (let c = 0; c < n; c++) {
-      const finder =
-        (r < 7 && c < 7) || (r < 7 && c > n - 8) || (r > n - 8 && c < 7);
-      let on;
-      if (finder) {
-        const rr = r < 7 ? r : n - 1 - r;
-        const cc = c < 7 ? c : n - 1 - c;
+      const isTopLeft = r < 7 && c < 7;
+      const isTopRight = r < 7 && c > n - 8;
+      const isBottomLeft = r > n - 8 && c < 7;
+      const isCenter = Math.abs(r - 14) <= 2 && Math.abs(c - 14) <= 2;
+
+      let on = false;
+
+      if (isTopLeft || isTopRight || isBottomLeft) {
+        const rr = isTopLeft || isTopRight ? r : n - 1 - r;
+        const cc = isTopLeft || isBottomLeft ? c : n - 1 - c;
         on = Math.max(Math.abs(rr - 3), Math.abs(cc - 3)) !== 2;
+      } else if (isCenter) {
+        on = false;
       } else if (r === 6 || c === 6) {
         on = (r + c) % 2 === 0;
       } else {
-        on = rnd() > 0.48;
+        on = rnd() > 0.46;
       }
+
       if (on) {
-        ctx.fillRect((c + q) * px, (r + q) * px, px, px);
+        ctx.fillRect(
+          Math.round(qrInnerX + c * px),
+          Math.round(qrInnerY + r * px),
+          Math.ceil(px),
+          Math.ceil(px)
+        );
       }
     }
   }
-  return cv;
-}
 
-function createBackCanvas(engravedText = '') {
-  const cv = document.createElement('canvas');
-  cv.width = 512;
-  cv.height = 728;
-  const ctx = cv.getContext('2d');
-
-  ctx.fillStyle = 'rgba(0,0,0,0)';
-  ctx.fillRect(0, 0, cv.width, cv.height);
-  ctx.translate(cv.width / 2, cv.height / 2);
-
-  // Logo wordmark
-  ctx.fillStyle = 'rgba(46, 27, 16, 0.42)';
-  ctx.textAlign = 'center';
-  ctx.font = '800 58px "Baloo 2", sans-serif';
-  ctx.fillText('tagtique', 0, -30);
-
-  ctx.font = '600 22px "Space Mono", monospace';
-  ctx.letterSpacing = '5px';
-  ctx.fillText('SCAN TO CONNECT', 0, 16);
-
-  if (engravedText && engravedText.trim().length > 0) {
-    ctx.font = '700 28px "Baloo 2", sans-serif';
-    ctx.letterSpacing = '1px';
-    ctx.fillStyle = '#8A5A2B';
-    ctx.fillText(`“${engravedText.trim()}”`, 0, 90);
-    ctx.font = '500 16px "Space Mono", monospace';
-    ctx.fillStyle = 'rgba(46, 27, 16, 0.35)';
-    ctx.fillText('CUSTOM LASER ETCHED', 0, 126);
-  }
+  // Smile mark in center of QR
+  ctx.strokeStyle = v.qrColor;
+  ctx.lineWidth = 10;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  const centerX = qrInnerX + qrInnerSize / 2;
+  const centerY = qrInnerY + qrInnerSize / 2;
+  ctx.arc(centerX, centerY - 4, 22, 0.2 * Math.PI, 0.8 * Math.PI, false);
+  ctx.stroke();
 
   return cv;
 }
 
 export default function Tag3D({
-  variant = 'cream',
-  engravedText = '',
+  variant = 'amber',
   className = '',
   autoSpin = true,
   interactive = true,
-  cameraDistance = 3.65
+  cameraDistance = 3.3
 }) {
   const containerRef = useRef(null);
   const stateRef = useRef({
     plateMat: null,
-    accentMat: null,
+    frontMat: null,
     backMat: null,
-    glowTex: null,
     group: null,
+    stickerTexture: null,
     targetY: 0,
-    targetX: 0.06,
-    curY: -1.15,
-    curX: 0.34,
+    targetX: 0.05,
+    curY: -0.2,
+    curX: 0.08,
     vel: 0,
     dragging: false,
     lastX: 0,
     lastY: 0
   });
 
-  // Material and text updates
+  // Variant texture & material updates
   useEffect(() => {
     const s = stateRef.current;
-    if (!s.plateMat || !s.accentMat) return;
+    if (!s.plateMat || !s.frontMat) return;
 
-    const v = VARIANTS[variant] || VARIANTS.cream;
+    const v = VARIANTS[variant] || VARIANTS.amber;
     s.plateMat.roughness = v.roughness;
     s.plateMat.metalness = v.metalness;
-    s.accentMat.color.setHex(v.accent);
+    s.plateMat.color.setHex(v.plate);
 
-    if (v.gradient) {
-      if (!s.glowTex) {
-        s.glowTex = new THREE.CanvasTexture(createGlowCanvas());
-        s.glowTex.colorSpace = THREE.SRGBColorSpace;
-      }
-      s.plateMat.color.setHex(0xffffff);
-      s.plateMat.map = s.glowTex;
-      s.plateMat.emissiveMap = s.glowTex;
-      s.plateMat.emissive.setHex(0xffffff);
-      s.plateMat.emissiveIntensity = 0.42;
+    // If amber and user's clean image texture is loaded, use it directly on front & back
+    if (variant === 'amber' && s.stickerTexture) {
+      s.frontMat.map = s.stickerTexture;
+      s.backMat.map = s.stickerTexture;
     } else {
-      s.plateMat.color.setHex(v.plate);
-      s.plateMat.map = null;
-      s.plateMat.emissiveMap = null;
-      s.plateMat.emissive.setHex(0x000000);
-      s.plateMat.emissiveIntensity = 0;
+      const frontTex = new THREE.CanvasTexture(createStickerCanvas(variant));
+      frontTex.colorSpace = THREE.SRGBColorSpace;
+      frontTex.anisotropy = 4;
+      s.frontMat.map = frontTex;
+      s.backMat.map = frontTex;
     }
+
+    s.frontMat.needsUpdate = true;
+    s.backMat.needsUpdate = true;
     s.plateMat.needsUpdate = true;
   }, [variant]);
 
-  // Engraved text update
-  useEffect(() => {
-    const s = stateRef.current;
-    if (!s.backMat) return;
-    const newTex = new THREE.CanvasTexture(createBackCanvas(engravedText));
-    newTex.colorSpace = THREE.SRGBColorSpace;
-    s.backMat.map = newTex;
-    s.backMat.needsUpdate = true;
-  }, [engravedText]);
-
-  // Main Three.js setup
+  // Main Three.js Scene Setup
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -199,7 +226,11 @@ export default function Tag3D({
     const w = container.clientWidth || 500;
     const h = container.clientHeight || 500;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true,
+      preserveDrawingBuffer: true
+    });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.setSize(w, h);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -211,27 +242,29 @@ export default function Tag3D({
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(30, w / h, 0.1, 50);
-    camera.position.set(0, 0.04, cameraDistance);
+    camera.position.set(0, 0, cameraDistance);
 
-    // Lighting
-    scene.add(new THREE.HemisphereLight(0xfff6e8, 0x3a2318, 0.75));
-    const key = new THREE.DirectionalLight(0xffffff, 2.5);
-    key.position.set(2.4, 3.2, 3.6);
-    scene.add(key);
+    // Studio Lighting for glossy sticker reflections
+    scene.add(new THREE.HemisphereLight(0xfff6e8, 0x3a2318, 0.85));
 
-    const fill = new THREE.DirectionalLight(0xffe9c2, 0.9);
-    fill.position.set(-3, 0.6, 1.4);
-    scene.add(fill);
+    const keyLight = new THREE.DirectionalLight(0xffffff, 2.8);
+    keyLight.position.set(2.4, 3.2, 3.8);
+    scene.add(keyLight);
 
-    const rim = new THREE.DirectionalLight(0xfff7e8, 1.15);
-    rim.position.set(-1.2, -1.4, -3);
-    scene.add(rim);
+    const fillLight = new THREE.DirectionalLight(0xffeed6, 1.2);
+    fillLight.position.set(-3.2, 0.8, 1.8);
+    scene.add(fillLight);
 
-    // Geometry: Rounded rectangle acrylic plate with punched hole
-    const W = 0.94;
-    const H = 1.32;
-    const R = 0.2;
-    const D = 0.075;
+    const rimLight = new THREE.DirectionalLight(0xfff5e4, 1.4);
+    rimLight.position.set(-1.4, -1.8, -3.2);
+    scene.add(rimLight);
+
+    // Geometry: Realistic Rounded Square Vinyl Sticker matching Image 1
+    const W = 1.10;
+    const H = 1.28;
+    const R = 0.08; // Exact gentle rounded corner curve from Image 1
+    const D = 0.016; // Slim, realistic vinyl sticker thickness
+
     const shape = new THREE.Shape();
     const x0 = -W / 2;
     const y0 = -H / 2;
@@ -248,129 +281,120 @@ export default function Tag3D({
     shape.lineTo(x0, y0 + R);
     shape.quadraticCurveTo(x0, y0, x0 + R, y0);
 
-    const holeY = y1 - 0.17;
-    const hole = new THREE.Path();
-    hole.absarc(0, holeY, 0.075, 0, Math.PI * 2, true);
-    shape.holes.push(hole);
-
-    const plateGeo = new THREE.ExtrudeGeometry(shape, {
+    // Extruded body with soft rounded bevel
+    const stickerGeo = new THREE.ExtrudeGeometry(shape, {
       depth: D,
       bevelEnabled: true,
-      bevelThickness: 0.014,
-      bevelSize: 0.014,
-      bevelSegments: 4,
-      curveSegments: 24
+      bevelThickness: 0.003,
+      bevelSize: 0.003,
+      bevelSegments: 3,
+      curveSegments: 32
     });
-    plateGeo.center();
+    stickerGeo.center();
 
+    const initVar = VARIANTS[variant] || VARIANTS.amber;
+
+    // Body material (golden amber sticker rim)
     const plateMat = new THREE.MeshStandardMaterial({
-      color: 0xfff0d6,
-      roughness: 0.42,
-      metalness: 0.02
+      color: initVar.plate,
+      roughness: initVar.roughness,
+      metalness: initVar.metalness
     });
-    const plate = new THREE.Mesh(plateGeo, plateMat);
+    const stickerMesh = new THREE.Mesh(stickerGeo, plateMat);
 
     const group = new THREE.Group();
-    group.add(plate);
+    group.add(stickerMesh);
 
-    const front = D / 2 + 0.014 + 0.005;
+    // Initial procedural texture
+    const initTex = new THREE.CanvasTexture(createStickerCanvas(variant));
+    initTex.colorSpace = THREE.SRGBColorSpace;
+    initTex.anisotropy = 4;
 
-    // QR panel recessed background
-    const panelMat = new THREE.MeshStandardMaterial({
-      color: 0xfffdf8,
-      roughness: 0.55,
-      metalness: 0
+    // Front Material & Mesh using ShapeGeometry with EXACT same rounded corners
+    // Total half-thickness of stickerGeo with bevel is D/2 + 0.003 = 0.011.
+    // faceZ sits at 0.013 so it rests cleanly on the surface without being occluded by the body.
+    const faceZ = D / 2 + 0.003 + 0.002;
+
+    const frontMat = new THREE.MeshStandardMaterial({
+      map: initTex,
+      roughness: 0.22,
+      metalness: 0.03,
+      polygonOffset: true,
+      polygonOffsetFactor: -2,
+      polygonOffsetUnits: -2
     });
-    const panel = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.66, 0.012), panelMat);
-    panel.position.set(0, -0.09, front - 0.009);
-    group.add(panel);
+    const frontGeo = new THREE.ShapeGeometry(shape, 32);
+    // Normalize UVs to [0, 1] so texture maps edge-to-edge cleanly on the rounded shape
+    const frontPos = frontGeo.attributes.position;
+    const frontUv = frontGeo.attributes.uv;
+    for (let i = 0; i < frontPos.count; i++) {
+      frontUv.setXY(i, (frontPos.getX(i) - x0) / W, (frontPos.getY(i) - y0) / H);
+    }
+    frontUv.needsUpdate = true;
 
-    // QR code canvas plane
-    const qrTex = new THREE.CanvasTexture(createQrCanvas());
-    qrTex.colorSpace = THREE.SRGBColorSpace;
-    qrTex.anisotropy = 4;
-    const qrMat = new THREE.MeshStandardMaterial({ map: qrTex, roughness: 0.6, metalness: 0 });
-    const qr = new THREE.Mesh(new THREE.PlaneGeometry(0.615, 0.615), qrMat);
-    qr.position.set(0, -0.09, front + 0.001);
-    group.add(qr);
+    const frontMesh = new THREE.Mesh(frontGeo, frontMat);
+    frontMesh.position.set(0, 0, faceZ);
+    frontMesh.renderOrder = 2;
+    group.add(frontMesh);
 
-    // Amber accent bar below QR
-    const accentMat = new THREE.MeshStandardMaterial({
-      color: 0xf5b21f,
-      roughness: 0.28,
-      metalness: 0.5
-    });
-    const bar = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.035, 0.014), accentMat);
-    bar.position.set(0, -0.53, front - 0.007);
-    group.add(bar);
-
-    // Eyelet ring & inner sleeve
-    const sleeve = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.076, 0.076, D + 0.036, 40, 1, true),
-      accentMat
-    );
-    sleeve.rotation.x = Math.PI / 2;
-    sleeve.position.set(0, holeY, 0);
-    group.add(sleeve);
-
-    [front - 0.008, -front + 0.008].forEach((z) => {
-      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.088, 0.015, 18, 44), accentMat);
-      ring.position.set(0, holeY, z);
-      group.add(ring);
-    });
-
-    // Steel key loop
-    const steelMat = new THREE.MeshStandardMaterial({
-      color: 0xd9d4cc,
-      roughness: 0.2,
-      metalness: 0.95
-    });
-    const loop = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.022, 18, 56), steelMat);
-    loop.position.set(0, holeY + 0.14, 0);
-    loop.rotation.y = Math.PI / 2.2;
-    group.add(loop);
-
-    // Back face wordmark & custom engraving
-    const backTex = new THREE.CanvasTexture(createBackCanvas(engravedText));
-    backTex.colorSpace = THREE.SRGBColorSpace;
+    // Back Material & Mesh using ShapeGeometry with EXACT same rounded corners
     const backMat = new THREE.MeshStandardMaterial({
-      map: backTex,
-      transparent: true,
-      roughness: 0.6
+      map: initTex,
+      roughness: 0.22,
+      metalness: 0.03,
+      polygonOffset: true,
+      polygonOffsetFactor: -2,
+      polygonOffsetUnits: -2
     });
-    const back = new THREE.Mesh(new THREE.PlaneGeometry(0.72, 1.02), backMat);
-    back.position.set(0, -0.02, -front - 0.001);
-    back.rotation.y = Math.PI;
-    group.add(back);
+    const backGeo = new THREE.ShapeGeometry(shape, 32);
+    // Standard normalized UVs so text is right-reading (NOT mirrored) from both front and rear
+    const backPos = backGeo.attributes.position;
+    const backUv = backGeo.attributes.uv;
+    for (let i = 0; i < backPos.count; i++) {
+      backUv.setXY(i, (backPos.getX(i) - x0) / W, (backPos.getY(i) - y0) / H);
+    }
+    backUv.needsUpdate = true;
+
+    const backMesh = new THREE.Mesh(backGeo, backMat);
+    backMesh.position.set(0, 0, -faceZ);
+    backMesh.rotation.y = Math.PI;
+    backMesh.renderOrder = 2;
+    group.add(backMesh);
+
+    // Load the user's high-res photo texture directly onto the sticker
+    const texLoader = new THREE.TextureLoader();
+    texLoader.load(
+      '/assets/sticker-clean-transparent.png?v=clean3',
+      (texture) => {
+        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.anisotropy = 8;
+        texture.generateMipmaps = true;
+        texture.minFilter = THREE.LinearMipmapLinearFilter;
+        texture.magFilter = THREE.LinearFilter;
+        stateRef.current.stickerTexture = texture;
+        if (variant === 'amber') {
+          frontMat.map = texture;
+          backMat.map = texture;
+          frontMat.needsUpdate = true;
+          backMat.needsUpdate = true;
+        }
+      },
+      undefined,
+      (err) => console.log('Sticker photo load fallback:', err)
+    );
 
     scene.add(group);
 
-    // Save refs for reactive updates
+    // Save refs
     const s = stateRef.current;
     s.plateMat = plateMat;
-    s.accentMat = accentMat;
+    s.frontMat = frontMat;
     s.backMat = backMat;
     s.group = group;
+    s.hoverTiltX = 0;
+    s.hoverTiltY = 0;
 
-    // Apply initial variant
-    const initVar = VARIANTS[variant] || VARIANTS.cream;
-    plateMat.roughness = initVar.roughness;
-    plateMat.metalness = initVar.metalness;
-    accentMat.color.setHex(initVar.accent);
-    if (initVar.gradient) {
-      s.glowTex = new THREE.CanvasTexture(createGlowCanvas());
-      s.glowTex.colorSpace = THREE.SRGBColorSpace;
-      plateMat.color.setHex(0xffffff);
-      plateMat.map = s.glowTex;
-      plateMat.emissiveMap = s.glowTex;
-      plateMat.emissive.setHex(0xffffff);
-      plateMat.emissiveIntensity = 0.42;
-    } else {
-      plateMat.color.setHex(initVar.plate);
-    }
-    plateMat.needsUpdate = true;
-
-    // Interaction handlers
+    // Smooth & Calm Pointer Drag Handlers
     const onDown = (e) => {
       if (!interactive) return;
       s.dragging = true;
@@ -387,90 +411,98 @@ export default function Tag3D({
         const dy = e.clientY - s.lastY;
         s.lastX = e.clientX;
         s.lastY = e.clientY;
-        s.targetY += dx * 0.009;
-        s.targetX = Math.max(-0.7, Math.min(0.7, s.targetX - dy * 0.006));
-        s.vel = dx * 0.0012;
+        s.targetY += dx * 0.004; // Gentle, steady manual rotation
+        s.targetX = Math.max(-0.40, Math.min(0.40, s.targetX - dy * 0.003));
       } else {
         const b = container.getBoundingClientRect();
-        s.targetY += (((e.clientX - b.left) / b.width - 0.5) * 0.45 - s.targetY) * 0.04;
-        s.targetX += ((0.5 - (e.clientY - b.top) / b.height) * 0.28 - s.targetX) * 0.04;
+        s.hoverTiltY = (((e.clientX - b.left) / b.width - 0.5) * 0.22);
+        s.hoverTiltX = ((0.5 - (e.clientY - b.top) / b.height) * 0.16);
       }
     };
 
+    const onLeave = () => {
+      s.hoverTiltX = 0;
+      s.hoverTiltY = 0;
+    };
+
     const onUp = (e) => {
+      if (!interactive) return;
       s.dragging = false;
-      container.style.cursor = interactive ? 'grab' : 'default';
-      if (container.releasePointerCapture && e.pointerId) {
+      container.style.cursor = 'grab';
+      if (container.releasePointerCapture) {
         try {
           container.releasePointerCapture(e.pointerId);
         } catch (_) {}
       }
     };
 
+    container.style.cursor = interactive ? 'grab' : 'default';
     container.addEventListener('pointerdown', onDown);
-    container.addEventListener('pointermove', onMove);
-    container.addEventListener('pointerup', onUp);
-    container.addEventListener('pointercancel', onUp);
+    container.addEventListener('pointerleave', onLeave);
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
 
-    // ResizeObserver
-    const ro = new ResizeObserver(() => {
-      const nw = container.clientWidth;
-      const nh = container.clientHeight;
-      if (!nw || !nh) return;
-      renderer.setSize(nw, nh);
-      camera.aspect = nw / nh;
-      camera.updateProjectionMatrix();
-    });
-    ro.observe(container);
-
-    // Render loop
+    // Animation Loop: Very slow, calm, gentle rotation
     let animId;
-    const t0 = performance.now();
-    const animate = () => {
-      const t = (performance.now() - t0) / 1000;
-      if (!s.dragging) {
-        s.vel *= 0.94;
-        s.targetY += s.vel;
-      }
-      s.curY += (s.targetY - s.curY) * 0.09;
-      s.curX += (s.targetX - s.curX) * 0.09;
+    let clock = new THREE.Clock();
 
-      const idleY = autoSpin ? Math.sin(t * 0.45) * 0.15 : 0;
-      group.rotation.y = s.curY + idleY;
-      group.rotation.x = s.curX;
-      group.rotation.z = Math.sin(t * 0.6) * 0.022;
-      group.position.y = Math.sin(t * 0.8) * 0.018;
+    const animate = () => {
+      animId = requestAnimationFrame(animate);
+      const delta = clock.getDelta();
+
+      // Slow, steady rotation (calm luxury showcase speed)
+      if (autoSpin && !s.dragging) {
+        s.targetY += 0.08 * delta;
+      }
+
+      // Smooth spring damping
+      s.curY += (s.targetY - s.curY) * 0.04;
+      s.curX += (s.targetX - s.curX) * 0.04;
+
+      if (s.group) {
+        s.group.rotation.y = s.curY + s.hoverTiltY;
+        s.group.rotation.x = s.curX + s.hoverTiltX;
+        // Subtle floating hover
+        s.group.position.y = Math.sin(clock.getElapsedTime() * 0.9) * 0.01;
+      }
 
       renderer.render(scene, camera);
-      animId = requestAnimationFrame(animate);
     };
-    animId = requestAnimationFrame(animate);
+
+    animate();
+
+    const handleResize = () => {
+      if (!container) return;
+      const nw = container.clientWidth || 300;
+      const nh = container.clientHeight || 300;
+      camera.aspect = nw / nh;
+      camera.updateProjectionMatrix();
+      renderer.setSize(nw, nh);
+    };
+
+    const resizeObserver = new ResizeObserver(handleResize);
+    resizeObserver.observe(container);
 
     return () => {
       cancelAnimationFrame(animId);
-      ro.disconnect();
+      resizeObserver.disconnect();
       container.removeEventListener('pointerdown', onDown);
-      container.removeEventListener('pointermove', onMove);
-      container.removeEventListener('pointerup', onUp);
-      container.removeEventListener('pointercancel', onUp);
-      if (renderer.domElement && container.contains(renderer.domElement)) {
-        container.removeChild(renderer.domElement);
+      container.removeEventListener('pointerleave', onLeave);
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      if (renderer.domElement && renderer.domElement.parentNode) {
+        renderer.domElement.parentNode.removeChild(renderer.domElement);
       }
       renderer.dispose();
-      plateGeo.dispose();
+      stickerGeo.dispose();
+      frontGeo.dispose();
+      backGeo.dispose();
       plateMat.dispose();
-      panelMat.dispose();
-      qrMat.dispose();
-      accentMat.dispose();
-      steelMat.dispose();
+      frontMat.dispose();
       backMat.dispose();
+      initTex.dispose();
     };
-  }, [cameraDistance, autoSpin, interactive]);
+  }, [cameraDistance, interactive, autoSpin]);
 
-  return (
-    <div
-      ref={containerRef}
-      className={`w-full h-full relative select-none touch-none ${interactive ? 'cursor-grab' : ''} ${className}`}
-    />
-  );
+  return <div ref={containerRef} className={`w-full h-full relative ${className}`} />;
 }

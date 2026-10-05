@@ -4,7 +4,7 @@ import Tag3D from './Tag3D';
 import { ArrowRight, ShieldCheck, Truck } from 'lucide-react';
 
 export default function HeroSection() {
-  const selectedFinish = 'cream';
+  const selectedFinish = 'amber';
 
   return (
     <section className="relative overflow-hidden pt-6 sm:pt-10 pb-16 sm:pb-24">
@@ -19,18 +19,18 @@ export default function HeroSection() {
             {/* Kicker badge */}
             <div className="self-start">
               <span className="inline-flex items-center font-mono text-[11px] font-bold tracking-[1.6px] text-tag-brown-light bg-tag-pill px-3.5 py-1.5 rounded-full border border-tag-border shadow-xs">
-                QR TAGS FOR PEOPLE, NOT PARCELS
+                WATERPROOF QR STICKERS FOR VEHICLES & MORE
               </span>
             </div>
 
             {/* Main Headline */}
             <h1 className="font-baloo font-extrabold text-4xl sm:text-5xl lg:text-[62px] leading-[1.04] tracking-[-1px] text-tag-brown">
-              A tag worth showing off — and one scan does the talking.
+              A sticker worth showing off — and one scan does the talking.
             </h1>
 
             {/* Subhead */}
             <p className="text-base sm:text-lg text-tag-brown-muted leading-relaxed font-medium">
-              Clip it to a bag, a jacket, a laptop or your keys. Anyone who scans it gets your name, number and socials — and you can change what they see whenever you like.
+              Stick it to a car, a bike, a laptop, a helmet or a bag. Anyone who scans it gets your contact, number and socials — and you can change what they see whenever you like.
             </p>
 
             {/* CTA Buttons */}
@@ -39,7 +39,7 @@ export default function HeroSection() {
                 to={`/order?finish=${selectedFinish}`}
                 className="amber-gradient-btn px-7 py-3.5 rounded-full text-base font-extrabold text-tag-brown flex items-center gap-2.5 group"
               >
-                <span>Shop tags</span>
+                <span>Shop stickers</span>
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
               </Link>
               <a
@@ -84,7 +84,7 @@ export default function HeroSection() {
               {/* Drag indicator label */}
               <div className="absolute left-5 bottom-4 flex items-center gap-2 font-mono text-[10.5px] tracking-[1.4px] text-tag-brown-light pointer-events-none select-none">
                 <span className="w-4 h-[1.5px] bg-tag-brown-subtle" />
-                <span>DRAG TO SPIN IT</span>
+                <span>DRAG TO ROTATE 3D STICKER</span>
               </div>
             </div>
           </div>

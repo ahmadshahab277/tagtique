@@ -63,7 +63,7 @@ export default function CheckoutPage() {
       items: cartItems.length > 0 ? cartItems : [
         {
           id: 1,
-          finishName: 'Shiny acrylic',
+          finishName: 'Glossy Sticker',
           basePrice: 999,
           isEngraved: false,
           engravedText: '',
@@ -386,7 +386,7 @@ export default function CheckoutPage() {
               {(cartItems.length > 0 ? cartItems : [
                 {
                   id: 1,
-                  finishName: 'Shiny Acrylic',
+                  finishName: 'Glossy Sticker',
                   basePrice: 999,
                   isEngraved: false,
                   engravedText: '',

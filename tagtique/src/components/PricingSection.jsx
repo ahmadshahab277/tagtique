@@ -30,8 +30,8 @@ export default function PricingSection() {
             <div className="flex flex-col gap-4">
               <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="font-baloo font-bold text-2xl text-tag-brown">Single tag</h3>
-                  <span className="text-xs text-tag-brown-subtle font-medium">1 shiny acrylic tag</span>
+                  <h3 className="font-baloo font-bold text-2xl text-tag-brown">Single sticker</h3>
+                  <span className="text-xs text-tag-brown-subtle font-medium">1 glossy QR sticker</span>
                 </div>
                 <div className="w-5 h-5 rounded-full border border-tag-brown bg-[#FBF3E4]" />
               </div>
@@ -49,7 +49,7 @@ export default function PricingSection() {
                   <span className="w-5 h-5 rounded-full bg-tag-pill text-tag-brown-light flex items-center justify-center flex-shrink-0 text-xs font-bold mt-0.5">
                     <Check className="w-3 h-3" />
                   </span>
-                  <span>One shiny acrylic QR tag</span>
+                  <span>One glossy QR sticker</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <span className="w-5 h-5 rounded-full bg-tag-pill text-tag-brown-light flex items-center justify-center flex-shrink-0 text-xs font-bold mt-0.5">
@@ -89,7 +89,7 @@ export default function PricingSection() {
               <div className="flex items-start justify-between pt-1">
                 <div>
                   <h3 className="font-baloo font-bold text-2xl text-[#FDF7EC]">Pack of 2</h3>
-                  <span className="text-xs text-[#A88B64] font-medium">2 shiny acrylic tags</span>
+                  <span className="text-xs text-[#A88B64] font-medium">2 glossy QR stickers</span>
                 </div>
                 <div className="flex -space-x-1.5">
                   <span className="w-4 h-4 rounded-full border border-black bg-[#FBF3E4]" />
@@ -101,7 +101,7 @@ export default function PricingSection() {
                 <span className="font-mono text-base font-bold text-tag-amber">PKR</span>
                 <span className="font-baloo font-extrabold text-4xl sm:text-5xl text-tag-amber">1,499</span>
                 <span className="text-xs font-bold text-tag-brown-deep bg-tag-amber px-2.5 py-0.5 rounded-full">
-                  PKR 750 a tag
+                  PKR 750 a sticker
                 </span>
               </div>
 
@@ -112,7 +112,7 @@ export default function PricingSection() {
                   <span className="w-5 h-5 rounded-full bg-tag-amber/20 text-tag-amber flex items-center justify-center flex-shrink-0 text-xs font-bold mt-0.5">
                     <Check className="w-3 h-3" />
                   </span>
-                  <span>Two shiny acrylic tags</span>
+                  <span>Two glossy QR stickers</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <span className="w-5 h-5 rounded-full bg-tag-amber/20 text-tag-amber flex items-center justify-center flex-shrink-0 text-xs font-bold mt-0.5">
@@ -124,7 +124,7 @@ export default function PricingSection() {
                   <span className="w-5 h-5 rounded-full bg-tag-amber/20 text-tag-amber flex items-center justify-center flex-shrink-0 text-xs font-bold mt-0.5">
                     <Check className="w-3 h-3" />
                   </span>
-                  <span>Scan analytics across both tags</span>
+                  <span>Scan analytics across both stickers</span>
                 </li>
               </ul>
             </div>
@@ -143,7 +143,7 @@ export default function PricingSection() {
               <div className="flex items-start justify-between">
                 <div>
                   <h3 className="font-baloo font-bold text-2xl text-tag-brown">Pack of 3</h3>
-                  <span className="text-xs text-tag-brown-subtle font-medium">3 shiny acrylic tags</span>
+                  <span className="text-xs text-tag-brown-subtle font-medium">3 glossy QR stickers</span>
                 </div>
                 <div className="flex -space-x-1.5">
                   <span className="w-4 h-4 rounded-full border border-tag-border bg-[#FBF3E4]" />
@@ -157,7 +157,7 @@ export default function PricingSection() {
                 <span className="font-baloo font-extrabold text-4xl sm:text-5xl text-tag-brown">1,999</span>
                 <span className="text-xs font-semibold text-tag-brown-subtle">one-time</span>
                 <span className="text-xs font-bold text-tag-brown bg-tag-pill px-2.5 py-0.5 rounded-full border border-tag-border">
-                  PKR 666 a tag
+                  PKR 666 a sticker
                 </span>
               </div>
 
@@ -168,7 +168,7 @@ export default function PricingSection() {
                   <span className="w-5 h-5 rounded-full bg-tag-pill text-tag-brown-light flex items-center justify-center flex-shrink-0 text-xs font-bold mt-0.5">
                     <Check className="w-3 h-3" />
                   </span>
-                  <span>Three shiny acrylic tags</span>
+                  <span>Three glossy QR stickers</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <span className="w-5 h-5 rounded-full bg-tag-pill text-tag-brown-light flex items-center justify-center flex-shrink-0 text-xs font-bold mt-0.5">
@@ -180,7 +180,7 @@ export default function PricingSection() {
                   <span className="w-5 h-5 rounded-full bg-tag-pill text-tag-brown-light flex items-center justify-center flex-shrink-0 text-xs font-bold mt-0.5">
                     <Check className="w-3 h-3" />
                   </span>
-                  <span>Best value for bag, keys and vehicle</span>
+                  <span>Best value for car, bike and laptop</span>
                 </li>
               </ul>
             </div>
@@ -199,7 +199,7 @@ export default function PricingSection() {
         <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 p-4 rounded-2xl border-[1.5px] border-dashed border-tag-border text-xs sm:text-sm font-semibold text-tag-brown-muted bg-tag-card/50">
           <span>Free digital card, forever</span>
           <span className="text-tag-border">·</span>
-          <span>Same shiny acrylic material on every package</span>
+          <span>Same waterproof glossy sticker material on every package</span>
           <span className="text-tag-border">·</span>
           <span>Free Express courier delivery across Pakistan</span>
         </div>

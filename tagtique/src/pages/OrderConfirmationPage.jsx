@@ -115,15 +115,20 @@ export default function OrderConfirmationPage() {
               >
                 <div className="flex flex-col gap-1 min-w-0">
                   <span className="font-baloo font-bold text-base text-tag-brown">
-                    {item.finishName}
+                    {item.finishName} {item.displayName ? `· ${item.displayName}` : ''}
                   </span>
+                  {item.vehicleNumber && (
+                    <span className="inline-flex self-start items-center px-2 py-0.5 rounded-md bg-tag-pill border border-tag-border text-tag-amber-deep font-mono font-bold text-[11px]">
+                      Plate: {item.vehicleNumber}
+                    </span>
+                  )}
                   {item.isEngraved && item.engravedText && (
                     <span className="text-tag-amber-deep font-semibold">
                       Custom laser etching: "{item.engravedText}"
                     </span>
                   )}
                   <span className="text-tag-brown-muted">
-                    Solid optical acrylic · Stainless steel loop included
+                    High-gloss waterproof vinyl sticker · Weatherproof & UV safe
                   </span>
                 </div>
                 <span className="font-mono font-bold text-sm text-tag-brown">
