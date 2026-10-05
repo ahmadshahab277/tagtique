@@ -14,16 +14,12 @@ import {
   Check,
   Phone,
   Shield,
-  Zap,
   AlertCircle,
   RefreshCw,
   Sparkles,
   Save,
   Car,
-  ChevronRight,
-  Sliders,
-  Scan,
-  Radio
+  Scan
 } from 'lucide-react';
 import { orderBackendService } from '../services/orderBackendService';
 

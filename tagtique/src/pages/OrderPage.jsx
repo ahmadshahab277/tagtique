@@ -1,24 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Tag3D from '../components/Tag3D';
 import { useCart } from '../context/CartContext';
 import { orderBackendService } from '../services/orderBackendService';
 import {
   Truck,
   ShieldCheck,
-  Award,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
-  CreditCard,
   Building,
   Banknote,
-  Lock,
   Plus,
   Minus,
   Star,
   ArrowRight,
-  Eye,
   Layers,
   Phone,
   User,
@@ -94,14 +90,14 @@ export default function OrderPage() {
         : 'pack2';
   const [selectedPackageId, setSelectedPackageId] = useState(initialPackage);
   const [selectedMaterialId] = useState('shiny');
-  const [selectedFinish, setSelectedFinish] = useState(searchParams.get('finish') || 'cream');
+  const [selectedFinish] = useState(searchParams.get('finish') || 'cream');
   const [customQuantity, setCustomQuantity] = useState(
     PACKAGES.find((p) => p.id === initialPackage)?.tagsCount || 2
   );
 
   // Laser Engraving
-  const [isEngraved, setIsEngraved] = useState(searchParams.get('engraved') === 'true');
-  const [engravedText, setEngravedText] = useState('Ali Khan');
+  const [isEngraved] = useState(searchParams.get('engraved') === 'true');
+  const [engravedText] = useState('Ali Khan');
 
   // Contact Details per Tag
   const [activeAccordion, setActiveAccordion] = useState(0);
@@ -143,7 +139,7 @@ export default function OrderPage() {
   // Delivery Address
   const [address, setAddress] = useState('208 Chak Road, West Canal Road');
   const [city, setCity] = useState('Faisalabad');
-  const [notes, setNotes] = useState('');
+  const [notes] = useState('');
 
   // Payment Method & Interactive States
   const [paymentMethod, setPaymentMethod] = useState('cod'); // 'cod' | 'bank'

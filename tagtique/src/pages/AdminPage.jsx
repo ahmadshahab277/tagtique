@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { renderStyledQrDataUrl, renderStickerBlob, stickerFileName, triggerFileDownload } from '../utils/stickerImage';
 import { useCart } from '../context/CartContext';
 import { orderBackendService } from '../services/orderBackendService';
-import { isSupabaseConfigured } from '../services/supabaseClient';
 import {
   LayoutGrid,
   Package,
@@ -15,28 +14,21 @@ import {
   Clock,
   Printer,
   Truck,
-  DollarSign,
   TrendingUp,
   ExternalLink,
-  ChevronRight,
   ArrowRight,
   CheckCircle2,
   X,
   Plus,
   Download,
   Phone,
-  Mail,
-  MapPin,
   Shield,
-  FileText,
   Trash2,
   Filter,
-  Eye,
   RotateCcw,
   RefreshCw,
   Edit3,
   Check,
-  Share2,
   Camera,
   Menu,
   LogOut,
@@ -401,51 +393,6 @@ export default function AdminPage({ onLogout }) {
     } catch (err) {
       console.error('Save order error:', err);
       showToast('Failed to save vehicle details');
-    }
-  };
-
-  const handleQuickEditVehicle = async (order) => {
-    const currentNum = order.vehicleNumber || order.vehicle_number || '';
-    const newPlate = window.prompt(`Edit Vehicle Number for order ${order.orderId || order.order_number}:`, currentNum);
-    if (newPlate === null) return;
-    const trimmed = newPlate.trim().toUpperCase();
-    if (!trimmed) {
-      alert('Vehicle number cannot be empty.');
-      return;
-    }
-    if (trimmed === currentNum) return;
-
-    try {
-      await orderBackendService.updateTagAndOrder(order.tag_id || order.tagId, {
-        vehicle_id: order.vehicle_id || order.vehicleId,
-        vehicle_number: trimmed,
-        vehicleNumber: trimmed
-      });
-
-      setOrders((prev) => {
-        const safePrev = Array.isArray(prev) ? prev : [];
-        const updated = safePrev.map((o) => {
-          const matchTag = order.tag_id && o.tag_id === order.tag_id;
-          const matchOrder = o.orderId === order.orderId || o.order_number === order.order_number;
-          if (matchTag || matchOrder) {
-            return {
-              ...o,
-              vehicleNumber: trimmed,
-              vehicle_number: trimmed
-            };
-          }
-          return o;
-        });
-        try {
-          localStorage.setItem('tagtique_admin_v3_orders', JSON.stringify(updated));
-        } catch (_) {}
-        return updated;
-      });
-
-      showToast(`Vehicle plate updated to "${trimmed}"`);
-    } catch (err) {
-      console.error('Quick edit vehicle error:', err);
-      showToast('Failed to update vehicle plate');
     }
   };
 

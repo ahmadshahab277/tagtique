@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { CheckCircle2, Truck, ArrowRight, Eye, ShieldCheck, Mail } from 'lucide-react';
+import { CheckCircle2, Truck, Eye } from 'lucide-react';
 
 export default function OrderConfirmationPage() {
   const { lastOrder, userProfile } = useCart();
