@@ -39,8 +39,10 @@ import {
   Share2,
   Camera,
   Menu,
-  LogOut
+  LogOut,
+  Nfc
 } from 'lucide-react';
+import NfcAdminSection from '../components/admin/NfcAdminSection';
 import { endAdminSession } from '../auth/adminSession';
 import QRScannerModal from '../components/QRScannerModal';
 import { buildScanUrl } from '../utils/scanUrl';
@@ -724,6 +726,21 @@ export default function AdminPage({ onLogout }) {
               <div className="flex items-center gap-3">
                 <QrCode className={`w-4 h-4 ${activeNav === 'qrcodes' ? 'text-tag-brown' : 'text-tag-brown-subtle'}`} />
                 <span>QR Codes</span>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { setActiveNav('nfc'); setMobileNavOpen(false); }}
+              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all ${
+                activeNav === 'nfc'
+                  ? 'bg-gradient-to-r from-[#F4EADA] to-[#FCEFDA] text-tag-brown border border-tag-border shadow-warm-sm'
+                  : 'text-tag-brown-muted hover:text-tag-brown hover:bg-tag-card/60'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <Nfc className={`w-4 h-4 ${activeNav === 'nfc' ? 'text-tag-brown' : 'text-tag-brown-subtle'}`} />
+                <span>NFC Tags</span>
               </div>
             </button>
 
@@ -1771,6 +1788,8 @@ export default function AdminPage({ onLogout }) {
               </div>
             </div>
           )}
+
+          {activeNav === 'nfc' && <NfcAdminSection orders={safeOrders} />}
 
           {/* ======================================================== */}
           {/* TAB 5: WORKSHOP SETTINGS */}

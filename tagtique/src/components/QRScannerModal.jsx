@@ -33,7 +33,10 @@ export default function QRScannerModal({
   orders = [],
   onUpdateOrder,
   onPrintTag,
-  onTagSelected
+  onTagSelected,
+  closeOnSelect = false,
+  title = 'QR Scanner & Live Tag Editor',
+  subtitle = 'Scan with handheld scanner gun, type plate/serial, or pick any inventory tag to edit details'
 }) {
   // Default to 'scanner' (Hardware Scanner Gun & Direct Lookup) instead of camera!
   const [activeTab, setActiveTab] = useState('scanner'); // 'scanner' | 'file' | 'camera'
@@ -269,6 +272,11 @@ export default function QRScannerModal({
     try {
       const found = await orderBackendService.lookupTagByAny(rawInput);
       if (found) {
+        if (closeOnSelect) {
+          if (onTagSelected) onTagSelected(found);
+          onClose?.();
+          return;
+        }
         setScannedTag(found);
         if (onTagSelected) onTagSelected(found);
       } else {
@@ -290,6 +298,11 @@ export default function QRScannerModal({
         });
 
         if (local) {
+          if (closeOnSelect) {
+            if (onTagSelected) onTagSelected(local);
+            onClose?.();
+            return;
+          }
           setScannedTag(local);
           if (onTagSelected) onTagSelected(local);
         } else {
@@ -413,7 +426,8 @@ export default function QRScannerModal({
     const v = (o.vehicleNumber || o.vehicle_number || '').toLowerCase();
     const c = (o.customerName || o.customer_name || '').toLowerCase();
     const s = (o.serialNumber || o.serial_number || '').toLowerCase();
-    return v.includes(q) || c.includes(q) || s.includes(q);
+    const qr = (o.qr_code_value || o.qrId || '').toLowerCase();
+    return v.includes(q) || c.includes(q) || s.includes(q) || qr.includes(q);
   }).slice(0, 36);
 
   if (!isOpen) return null;
@@ -433,10 +447,10 @@ export default function QRScannerModal({
             </div>
             <div>
               <h3 className="font-baloo font-extrabold text-lg sm:text-xl text-tag-brown leading-tight">
-                QR Scanner & Live Tag Editor
+                {title}
               </h3>
               <p className="text-[11px] text-tag-brown-muted font-medium">
-                Scan with handheld scanner gun, type plate/serial, or pick any inventory tag to edit details
+                {subtitle}
               </p>
             </div>
           </div>
