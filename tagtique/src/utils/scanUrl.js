@@ -4,7 +4,8 @@
  * not a hardcoded domain.
  */
 export function getPublicSiteOrigin() {
-  const fromEnv = import.meta.env.VITE_PUBLIC_SITE_URL;
+  const env = import.meta.env || {};
+  const fromEnv = env.VITE_PUBLIC_SITE_URL;
   if (fromEnv && String(fromEnv).trim()) {
     return String(fromEnv).trim().replace(/\/$/, '');
   }
