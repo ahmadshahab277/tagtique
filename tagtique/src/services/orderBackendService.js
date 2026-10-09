@@ -406,6 +406,39 @@ class OrderBackendService {
           const { error: custErr } = await supabase.from('customers').update(custUpdates).eq('id', cId);
           if (custErr) console.warn('Supabase customer update warning:', custErr);
         }
+
+        // Also synchronize nfc_tags table in Supabase so NFC taps immediately get the new number
+        try {
+          const nfcUpdates = {
+            contacts_updated_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          };
+          if (cPhone !== undefined) nfcUpdates.owner_phone = cPhone;
+          if (cGuard !== undefined) nfcUpdates.guardian_phone = cGuard;
+          if (cName !== undefined) {
+            nfcUpdates.owner_name = cName;
+            nfcUpdates.customer_name = cName;
+          }
+          if (vNumber !== undefined) nfcUpdates.vehicle_label = vNumber;
+          if (status) {
+            nfcUpdates.status = status.toLowerCase() === 'delivered' || status.toLowerCase() === 'active' ? 'active' : status.toLowerCase();
+          }
+
+          const qrVal = updates.qr_code_value || (index !== -1 ? current[index]?.qr_code_value : null);
+          const rawTagCode = updates.tagCode || (index !== -1 ? current[index]?.tagCode || current[index]?.tag_id : null);
+
+          if (qrVal) {
+            await supabase.from('nfc_tags').update(nfcUpdates).eq('qr_code_value', qrVal);
+          }
+          if (rawTagCode && /^TAG-[A-Z0-9]+$/i.test(rawTagCode)) {
+            await supabase.from('nfc_tags').update(nfcUpdates).eq('tag_code', rawTagCode.toUpperCase());
+          }
+          if (vId) {
+            await supabase.from('nfc_tags').update(nfcUpdates).eq('vehicle_id', vId);
+          }
+        } catch (nfcSyncErr) {
+          console.warn('Supabase nfc_tags sync notice:', nfcSyncErr);
+        }
       } catch (err) {
         console.warn('Supabase update error:', err);
       }

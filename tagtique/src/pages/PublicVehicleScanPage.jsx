@@ -10,7 +10,14 @@ import {
   NetworkErrorScreen
 } from '../components/vehicle/StatusScreens';
 import { tagCommunicationService } from '../services/tagCommunicationService';
-import { ShieldCheck, ArrowRight, Sparkles, CheckCircle2, Lock } from 'lucide-react';
+import { isWebNfcSupported } from '../utils/nfcWriter';
+import {
+  ShieldCheck,
+  ArrowRight,
+  Sparkles,
+  CheckCircle2,
+  Lock
+} from 'lucide-react';
 
 export default function PublicVehicleScanPage() {
   const params = useParams();
@@ -32,11 +39,26 @@ export default function PublicVehicleScanPage() {
   const privacyParam = searchParams.get('privacy');
 
   const fetchVehicleProfile = async (idToFetch) => {
+    // If phone has no internet connection, route immediately to support number
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      setErrorType('NETWORK');
+      setLoading(false);
+      try {
+        window.location.href = 'tel:03292082080';
+      } catch (_) {}
+      return;
+    }
+
     setLoading(true);
     setErrorType(null);
 
     try {
-      const res = await tagCommunicationService.getVehicleByTagId(idToFetch);
+      const res = await Promise.race([
+        tagCommunicationService.getVehicleByTagId(idToFetch),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('NETWORK_TIMEOUT')), 2500)
+        )
+      ]);
 
       if (res.success && res.data) {
         const data = { ...res.data };
@@ -50,18 +72,82 @@ export default function PublicVehicleScanPage() {
     } catch (err) {
       console.error('Tag profile load error:', err);
       setErrorType('NETWORK');
+      try {
+        window.location.href = 'tel:03292082080';
+      } catch (_) {}
     } finally {
       setLoading(false);
     }
   };
 
-  const handleTogglePrivacy = (mode) => {
-    setVehicle((prev) => (prev ? { ...prev, phonePrivacy: mode } : null));
-  };
-
   useEffect(() => {
     fetchVehicleProfile(rawTagId);
+
+    const handleOffline = () => {
+      setErrorType('NETWORK');
+      setLoading(false);
+      try {
+        window.location.href = 'tel:03292082080';
+      } catch (_) {}
+    };
+
+    const handleOnline = () => {
+      fetchVehicleProfile(rawTagId);
+    };
+
+    window.addEventListener('offline', handleOffline);
+    window.addEventListener('online', handleOnline);
+
+    return () => {
+      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('online', handleOnline);
+    };
   }, [rawTagId, privacyParam]);
+
+  // Passive Background NFC Listener (if device supports Web NFC)
+  useEffect(() => {
+    if (!isWebNfcSupported()) return;
+
+    let controller = new AbortController();
+
+    const startPassiveReader = async () => {
+      try {
+        const reader = new window.NDEFReader();
+        await reader.scan({ signal: controller.signal });
+
+        reader.onreading = (event) => {
+          for (const record of event.message.records) {
+            let text = '';
+            if (record.recordType === 'text') {
+              const dec = new TextDecoder(record.encoding || 'utf-8');
+              text = dec.decode(record.data);
+            } else if (record.recordType === 'url') {
+              const dec = new TextDecoder();
+              text = typeof record.data === 'string' ? record.data : dec.decode(record.data);
+            }
+
+            if (text) {
+              const tokenMatch = text.match(/[?&](?:token|tag|qr)=([^&\s]+)/i);
+              const nfcMatch = text.match(/\/nfc\/([^/?\s]+)/i);
+              const detected = tokenMatch ? decodeURIComponent(tokenMatch[1]) : nfcMatch ? nfcMatch[1] : text.trim();
+              if (detected) {
+                fetchVehicleProfile(detected);
+                break;
+              }
+            }
+          }
+        };
+      } catch (err) {
+        console.warn('Passive NFC not auto-started:', err);
+      }
+    };
+
+    startPassiveReader();
+
+    return () => {
+      controller.abort();
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#FAF7F2] text-[#1C120C] font-manrope flex flex-col selection:bg-[#E6AF2E] selection:text-[#1C120C] relative overflow-hidden">
@@ -72,8 +158,7 @@ export default function PublicVehicleScanPage() {
       <VehicleHeader />
 
       {/* Main Container: Mobile-First Max Width */}
-      <main className="flex-1 w-full max-w-md md:max-w-lg mx-auto px-4 py-5 pb-12 flex flex-col gap-6 relative z-10">
-        
+      <main className="flex-1 w-full max-w-md md:max-w-lg mx-auto px-4 py-5 pb-12 flex flex-col gap-5 relative z-10">
         {/* State A: Loading */}
         {loading && <LoadingScreen />}
 
@@ -99,12 +184,12 @@ export default function PublicVehicleScanPage() {
         {!loading && !errorType && vehicle?.status !== 'inactive' && (
           <>
             <VehicleCard vehicle={vehicle} />
-            <ActionCards vehicle={vehicle} onTogglePrivacy={handleTogglePrivacy} />
+            <ActionCards vehicle={vehicle} />
 
-            {/* Viral Growth & Ordering Hook */}
+            {/* Viral Growth & Ordering Card */}
             <div className="rounded-3xl bg-gradient-to-br from-[#1C120C] to-[#2B1B10] p-5 text-white shadow-warm-sm border border-amber-900/30 flex flex-col gap-3 relative overflow-hidden mt-2">
               <div className="absolute top-0 right-0 w-32 h-32 bg-[#E6AF2E]/10 rounded-full blur-2xl pointer-events-none" />
-              
+
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#E6AF2E]">
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>Protect Your Own Ride</span>
@@ -115,7 +200,7 @@ export default function PublicVehicleScanPage() {
                   Want a Smart QR Sticker for your vehicle?
                 </h3>
                 <p className="text-xs text-white/70 font-medium mt-1 leading-relaxed">
-                  Never get blocked in parking again. Keep your personal phone number 100% private. Weatherproof & UV protected.
+                  Never get blocked in parking again. Connect with drivers safely without sharing your personal number. Weatherproof & UV protected.
                 </p>
               </div>
 
@@ -129,11 +214,11 @@ export default function PublicVehicleScanPage() {
             </div>
 
             {/* Bottom Trust & Privacy Badges */}
-            <div className="flex flex-col items-center text-center gap-2 pt-4 pb-2 text-xs text-[#8C7A6B]">
+            <div className="flex flex-col items-center text-center gap-2 pt-2 pb-2 text-xs text-[#8C7A6B]">
               <div className="flex items-center justify-center gap-4 flex-wrap font-semibold text-[11px]">
                 <span className="flex items-center gap-1">
                   <Lock className="w-3 h-3 text-emerald-600" />
-                  Masked Proxy Communication
+                  Secure QR Contact
                 </span>
                 <span className="flex items-center gap-1">
                   <ShieldCheck className="w-3 h-3 text-amber-700" />
@@ -144,8 +229,8 @@ export default function PublicVehicleScanPage() {
                   24/7 Availability
                 </span>
               </div>
-              <p className="text-[10px] text-[#A8988B] mt-1">
-                Powered by Tagtique Pakistan • Smart Vehicle Safety & Privacy Network
+              <p className="text-[10px] text-[#A8988B] mt-0.5">
+                Powered by Tagtique Pakistan • Smart Vehicle Safety Network
               </p>
             </div>
           </>
@@ -154,4 +239,3 @@ export default function PublicVehicleScanPage() {
     </div>
   );
 }
-

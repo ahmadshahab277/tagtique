@@ -4,13 +4,19 @@ import { toInternationalDigits } from './contactLinks.js';
  * Permanent NFC links use the production site so a tag written from
  * localhost still opens the live contact page. QR sticker links are unchanged.
  */
-const DEFAULT_ORIGIN = 'https://qr-car.netlify.app';
+const DEFAULT_ORIGIN = 'https://tagtiquefromhaider.netlify.app';
 
 export function nfcSiteOrigin() {
+  if (typeof window !== 'undefined' && window.location?.origin && !window.location.origin.includes('localhost')) {
+    return window.location.origin.replace(/\/$/, '');
+  }
   const env = import.meta.env || {};
   const fromEnv = env.VITE_PUBLIC_SITE_URL;
   if (fromEnv && String(fromEnv).trim()) {
     return String(fromEnv).trim().replace(/\/$/, '');
+  }
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return window.location.origin.replace(/\/$/, '');
   }
   return DEFAULT_ORIGIN;
 }
@@ -185,8 +191,8 @@ export function estimateNdefBytes(payload, { includeJson = false } = {}) {
  */
 export function buildNdefRecords(payload) {
   return [
-    { recordType: 'text', data: buildReadableText(payload) },
-    { recordType: 'url', data: payload.url }
+    { recordType: 'url', data: payload.url },
+    { recordType: 'text', data: buildReadableText(payload) }
   ];
 }
 

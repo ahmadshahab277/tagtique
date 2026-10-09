@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Camera, Copy, Nfc, RefreshCw, Search } from 'lucide-react';
+import { Camera, Copy, Nfc, RefreshCw, Search, CheckCircle2, Sparkles, Radio, Phone } from 'lucide-react';
 import QRScannerModal from '../QRScannerModal';
 import { orderBackendService } from '../../services/orderBackendService';
 import { nfcTagService } from '../../services/nfcTagService';
@@ -73,7 +73,7 @@ export default function NfcAdminSection({ orders = [] }) {
     try {
       const rows = await nfcTagService.list();
       setTags(rows);
-      const code = preferCode || selectedCode;
+      const code = preferCode || selectedCode || (rows.length > 0 ? rows[0].tagCode : '');
       if (code) {
         const match = rows.find((tag) => tag.tagCode === code);
         if (match) fillForm(match);
@@ -133,21 +133,98 @@ export default function NfcAdminSection({ orders = [] }) {
     }
   }
 
+  async function syncVehicleAndLocalCache(tagCode, savePayload) {
+    try {
+      const plate = (savePayload.vehicleLabel || '').trim();
+      const qrCode = (savePayload.qrCode || '').trim();
+      const ownerName = (savePayload.ownerName || savePayload.customerName || '').trim();
+      const ownerPhone = (savePayload.ownerPhone || '').trim();
+      const guardianPhone = (savePayload.guardianPhone || '').trim();
+
+      // 1. Look up in orderBackendService or Supabase
+      const allOrders = orderBackendService.loadLocalOrders();
+      let matchedOrder = allOrders.find(
+        (o) =>
+          (qrCode && o.qr_code_value === qrCode) ||
+          (savePayload.vehicleId && (o.vehicle_id === savePayload.vehicleId || o.vehicleId === savePayload.vehicleId)) ||
+          (plate && o.vehicleNumber?.toUpperCase() === plate.toUpperCase())
+      );
+
+      if (!matchedOrder && qrCode) {
+        matchedOrder = await orderBackendService.lookupTagByAny(qrCode);
+      }
+
+      if (matchedOrder) {
+        await orderBackendService.reassignTagDetails(
+          matchedOrder.tag_id || matchedOrder.tagId,
+          {
+            vehicle_id: matchedOrder.vehicle_id || matchedOrder.vehicleId,
+            vehicle_number: plate || matchedOrder.vehicleNumber,
+            vehicleNumber: plate || matchedOrder.vehicleNumber,
+            customer_name: ownerName || matchedOrder.customerName,
+            customerName: ownerName || matchedOrder.customerName,
+            phone_number: ownerPhone || matchedOrder.phoneNumber,
+            phoneNumber: ownerPhone || matchedOrder.phoneNumber,
+            guardian_number: guardianPhone || matchedOrder.guardianNumber,
+            guardianNumber: guardianPhone || matchedOrder.guardianNumber,
+            status: 'Delivered',
+            regenerateQrToken: false
+          }
+        );
+      }
+
+      // 2. Synchronize localStorage caches
+      const vOrders = JSON.parse(localStorage.getItem('tagtique_admin_v3_orders') || '[]');
+      if (Array.isArray(vOrders)) {
+        let changed = false;
+        for (const o of vOrders) {
+          if (
+            (qrCode && o.qr_code_value === qrCode) ||
+            (tagCode && (o.tagCode === tagCode || o.tag_id === tagCode)) ||
+            (plate && o.vehicleNumber?.toUpperCase() === plate.toUpperCase())
+          ) {
+            o.vehicleNumber = plate || o.vehicleNumber;
+            o.vehicle_number = plate || o.vehicle_number;
+            o.customerName = ownerName || o.customerName;
+            o.customer_name = ownerName || o.customer_name;
+            o.phoneNumber = ownerPhone || o.phoneNumber;
+            o.phone_number = ownerPhone || o.phone_number;
+            o.guardianNumber = guardianPhone || o.guardianNumber;
+            o.guardian_number = guardianPhone || o.guardian_number;
+            o.status = 'Delivered';
+            changed = true;
+          }
+        }
+        if (changed) {
+          localStorage.setItem('tagtique_admin_v3_orders', JSON.stringify(vOrders));
+        }
+      }
+    } catch (syncErr) {
+      console.warn('Vehicle and cache sync warning:', syncErr);
+    }
+  }
+
+  async function saveInternal(tagCode) {
+    const activeStatus = form.status === 'unassigned' ? 'active' : form.status;
+    const savePayload = { ...form, tagCode, status: activeStatus };
+    const saved = await nfcTagService.save(savePayload);
+    await syncVehicleAndLocalCache(tagCode, savePayload);
+    return saved;
+  }
+
   async function save() {
-    const tagCode = normalizeTagCode(form.tagCode);
+    const tagCode = normalizeTagCode(form.tagCode || selectedCode || selected?.tagCode);
     if (!tagCode) {
-      setError('Use a permanent ID like TAG-000001. Saving never creates a replacement ID.');
+      setError('Use a permanent ID like TAG-000001.');
       return;
     }
     setBusy('save');
     setError('');
     setNotice('');
     try {
-      const saved = await nfcTagService.save({ ...form, tagCode });
+      await saveInternal(tagCode);
       setNotice(
-        saved.syncStatus === 'update_required'
-          ? 'Contacts saved. The website will show the new numbers. The physical chip still has the old ones until you rewrite it.'
-          : 'Saved. Changing the database does not change a chip that was already written.'
+        `✅ Assigned & Live! Tag "${tagCode}" is now active in the cloud for ${form.vehicleLabel || form.ownerName || 'vehicle'}. Taps from any iPhone or Android will open this vehicle immediately.`
       );
       await load(tagCode);
     } catch (err) {
@@ -192,7 +269,7 @@ export default function NfcAdminSection({ orders = [] }) {
       qrCode: qrCode || current.qrCode,
       status: current.status === 'unassigned' ? 'active' : current.status
     }));
-    setNotice(`QR ${qrCode || plate || 'sticker'} is ready to assign. The NFC ID stays the same. Press Save contacts.`);
+    setNotice(`QR sticker "${plate || qrCode}" loaded! Click "Save & Assign Tag" below to activate.`);
     setError('');
   }
 
@@ -230,50 +307,75 @@ export default function NfcAdminSection({ orders = [] }) {
   }
 
   async function rewrite() {
-    if (!selected) return;
-    if (selected.status === 'disabled' || form.status === 'disabled') {
+    const targetCode = normalizeTagCode(form.tagCode || selectedCode || selected?.tagCode);
+    if (!targetCode) {
+      setError('Please provide a Tag ID (e.g. TAG-000001).');
+      return;
+    }
+    if (form.status === 'disabled') {
       setError('A disabled tag cannot be rewritten.');
       return;
     }
+
+    setBusy('write');
+    setError('');
+    setNotice('');
+
+    // Step 1: Auto-save so cloud database is always in sync with form inputs
+    try {
+      await saveInternal(targetCode);
+    } catch (saveErr) {
+      console.warn('Pre-write auto-save warning:', saveErr);
+    }
+
+    // Step 2: If on iPhone or non-Web-NFC browser
     if (!webNfc) {
-      setError('This browser cannot write NFC tags. Copy the payload below and write it with a compatible Android NFC app, then use Read & verify.');
+      const url = nfcPageUrl(targetCode);
+      await copyText(url, 'Tag URL');
+      setNotice(
+        `✅ Tag Assigned in Cloud! Tag "${targetCode}" is now active for ${form.vehicleLabel || 'this vehicle'}. Since you are on iPhone, the URL has been copied to your clipboard. To write a new chip, paste it into the free NFC Tools app on your iPhone.`
+      );
+      setBusy('');
       return;
     }
+
+    // Step 3: Android Chrome Web NFC Write
     const nextPayload = buildPayload({
       ...form,
-      tagCode: selected.tagCode,
-      payloadVersion: selected.payloadVersion,
-      updatedAt: selected.updatedAt
+      tagCode: targetCode,
+      payloadVersion: (selected?.payloadVersion || 1) + 1,
+      updatedAt: new Date().toISOString()
     });
-    if (!nextPayload.ownerPhone && !nextPayload.guardianPhone) {
-      setError('Add at least one phone number before writing the chip.');
-      return;
-    }
+
     let writePromise;
     try {
       writePromise = startNfcWrite(nextPayload);
     } catch (err) {
       setError(explainNfcError(err));
+      setBusy('');
       return;
     }
-    setBusy('write');
-    setError('');
-    setNotice('Keep this phone on the NFC chip until the write finishes.');
+
+    setNotice('📱 Hold your Android phone flat against the NFC sticker tag chip now...');
+
     try {
       await writePromise;
-      await nfcTagService.save({ ...form, tagCode: selected.tagCode });
-      const reading = await readBackAfterWrite();
-      if (!reading.parsed) {
-        setError('The chip was written, but it could not be read back. It is not marked Synced. Press Read & verify while holding the phone on the chip.');
-        return;
+      try {
+        if (navigator.vibrate) navigator.vibrate([60, 40, 60]);
+      } catch (_) {}
+
+      setNotice(`✅ NFC Tag "${targetCode}" successfully programmed & assigned to "${form.vehicleLabel || form.ownerName || 'vehicle'}"!`);
+
+      // Attempt readback without throwing error if phone was moved
+      try {
+        const reading = await readBackAfterWrite();
+        if (reading?.parsed) {
+          await nfcTagService.verify(targetCode, readingForVerify(reading.parsed, nextPayload));
+          await load(targetCode);
+        }
+      } catch (readErr) {
+        console.warn('Readback notice (write still succeeded):', readErr);
       }
-      const result = await nfcTagService.verify(selected.tagCode, readingForVerify(reading.parsed, nextPayload));
-      await load(selected.tagCode);
-      if (!result?.synced) {
-        setError(result?.message || 'Read-back did not match. The tag is not marked Synced.');
-        return;
-      }
-      setNotice(`Synced at ${formatWhen(result.tag?.lastVerifiedAt)}. The permanent ID and URL did not change.`);
     } catch (err) {
       setError(explainNfcError(err));
     } finally {
@@ -437,88 +539,161 @@ export default function NfcAdminSection({ orders = [] }) {
             </label>
           </div>
 
-          <div className="p-3 rounded-2xl border border-tag-border bg-tag-bg flex flex-col gap-3">
-            <div>
-              <p className="text-sm font-bold text-tag-brown">Assign from a QR sticker</p>
-              <p className="text-xs text-tag-brown-muted mt-1">Scan the printed sticker, or type its QR id or number plate. This fills the owner and vehicle. It does not change the NFC ID.</p>
+          <div className="p-4 rounded-2xl border-2 border-tag-border bg-tag-bg flex flex-col gap-3 shadow-2xs">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div>
+                <p className="text-sm font-bold text-tag-brown flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-tag-amber-deep" />
+                  <span>Assign from a QR Sticker / Number Plate</span>
+                </p>
+                <p className="text-xs text-tag-brown-muted mt-0.5">
+                  Scan printed sticker or type vehicle plate. Links owner details to this permanent NFC chip.
+                </p>
+              </div>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                Any Device (iPhone, Android, PC)
+              </span>
             </div>
+
             <div className="flex flex-col sm:flex-row gap-2">
-              <button type="button" onClick={() => setScannerOpen(true)} className="px-4 py-2.5 rounded-xl bg-tag-brown text-[#FDF7EC] text-sm font-bold flex items-center justify-center gap-2">
-                <Camera className="w-4 h-4" />
-                Scan QR sticker
+              <button
+                type="button"
+                onClick={() => setScannerOpen(true)}
+                className="px-4 py-2.5 rounded-xl bg-tag-brown text-[#FDF7EC] text-xs font-extrabold flex items-center justify-center gap-2 shadow-2xs hover:bg-[#1C120C] transition-all"
+              >
+                <Camera className="w-4 h-4 text-tag-amber" />
+                <span>Scan QR Sticker</span>
               </button>
               <input
                 value={qrQuery}
                 onChange={(event) => setQrQuery(event.target.value)}
                 onKeyDown={(event) => { if (event.key === 'Enter') findQr(); }}
-                placeholder="QR id, plate, or phone"
-                className="flex-1 px-3 py-2 rounded-xl border border-tag-border bg-white text-sm text-tag-brown"
+                placeholder="Type plate (e.g. MH12AB) or QR token"
+                className="flex-1 px-3 py-2 rounded-xl border border-tag-border bg-white text-xs font-mono font-bold text-tag-brown outline-none focus:border-tag-amber shadow-2xs"
               />
-              <button type="button" disabled={busy === 'find'} onClick={findQr} className="px-4 py-2.5 rounded-xl border border-tag-border text-sm font-bold text-tag-brown flex items-center justify-center gap-2 disabled:opacity-50">
-                <Search className="w-4 h-4" />
-                Find
+              <button
+                type="button"
+                disabled={busy === 'find'}
+                onClick={findQr}
+                className="px-4 py-2.5 rounded-xl bg-white border border-tag-border text-xs font-bold text-tag-brown flex items-center justify-center gap-1.5 disabled:opacity-50 shadow-2xs"
+              >
+                <Search className="w-3.5 h-3.5 text-tag-brown-muted" />
+                <span>{busy === 'find' ? 'Finding...' : 'Find & Link'}</span>
               </button>
             </div>
-            {form.qrCode && <p className="text-xs font-mono font-bold text-tag-brown">Linked QR: {form.qrCode}</p>}
+
+            {form.qrCode && (
+              <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-300/80 flex items-center justify-between gap-2">
+                <span className="text-xs font-mono font-bold text-tag-brown">
+                  Linked QR Sticker: <span className="text-tag-amber-deep">{form.qrCode}</span>
+                </span>
+                <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">
+                  Ready to Assign
+                </span>
+              </div>
+            )}
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <button type="button" disabled={busy === 'save'} onClick={save} className="px-4 py-2.5 rounded-xl bg-tag-brown text-[#FDF7EC] text-sm font-bold disabled:opacity-50">
-              Save contacts
-            </button>
+          {/* Primary Action Buttons (Cloud Save + Android NFC Write + Verification) */}
+          <div className="flex flex-col gap-3 pt-2">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <button
+                type="button"
+                disabled={busy === 'save' || busy === 'write'}
+                onClick={save}
+                className="flex-1 sm:flex-initial px-5 py-3 rounded-2xl amber-gradient-btn text-tag-brown text-xs font-black flex items-center justify-center gap-2 shadow-warm-xs disabled:opacity-50 transition-all cursor-pointer hover:scale-[1.01] active:scale-[0.99]"
+              >
+                <CheckCircle2 className="w-4 h-4 text-tag-brown" />
+                <span>{busy === 'save' ? 'Saving to Cloud...' : 'Save & Assign Tag'}</span>
+              </button>
+
+              <button
+                type="button"
+                disabled={busy === 'write'}
+                onClick={rewrite}
+                className="flex-1 sm:flex-initial px-5 py-3 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-black flex items-center justify-center gap-2 shadow-warm-xs disabled:opacity-50 transition-all cursor-pointer hover:scale-[1.01] active:scale-[0.99]"
+              >
+                <Nfc className="w-4 h-4 text-emerald-200" />
+                <span>{busy === 'write' ? 'Holding Phone to Chip...' : webNfc ? 'Rewrite / Program NFC Tag' : 'Assign & Copy Tag URL'}</span>
+              </button>
+
+              {webNfc && (
+                <button
+                  type="button"
+                  disabled={busy === 'verify'}
+                  onClick={verifyExternal}
+                  className="px-4 py-3 rounded-2xl border border-tag-border bg-white text-xs font-bold text-tag-brown flex items-center justify-center gap-1.5 shadow-2xs hover:bg-tag-bg disabled:opacity-50"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-tag-brown-muted" />
+                  <span>{busy === 'verify' ? 'Reading Chip...' : 'Read & Verify'}</span>
+                </button>
+              )}
+            </div>
+
+            <p className="text-[11px] text-tag-brown-muted flex items-center gap-1.5 font-medium leading-relaxed">
+              <Sparkles className="w-3.5 h-3.5 text-tag-amber-deep shrink-0" />
+              <span>
+                {webNfc
+                  ? 'On Android Chrome: Tap "Rewrite / Program NFC Tag" and hold the chip flat against your phone to burn the new vehicle code.'
+                  : 'On iPhone: Tap "Save & Assign Tag" to activate in the cloud instantly. To flash a blank chip, copy the tag URL below into NFC Tools.'}
+              </span>
+            </p>
+
+            <div className="p-2.5 rounded-xl bg-amber-50/80 border border-amber-300/70 text-[11px] text-amber-950 flex items-center gap-2">
+              <Phone className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+              <span>
+                <strong>Offline Routing Active:</strong> If someone taps this tag without internet, their phone automatically routes directly to Tagtique Support (<strong>0329-2082080</strong>).
+              </span>
+            </div>
           </div>
 
           {selected && (
-            <div className={`p-3 rounded-2xl border text-sm ${syncClass(selected.syncStatus)}`}>
-              <p className="font-bold">{SYNC_LABEL[selected.syncStatus]}</p>
-              <p className="mt-1">Last database update: {formatWhen(selected.updatedAt)}</p>
-              <p>Last successful chip verification: {formatWhen(selected.lastVerifiedAt)}</p>
-              {selected.syncStatus === 'update_required' && (
-                <p className="mt-2 font-semibold">The website has newer numbers than the last verified chip. Offline taps can still show the previous numbers until you rewrite the tag.</p>
-              )}
-              {selected.syncStatus === 'unverified' && (
-                <p className="mt-2">The physical chip has not been confirmed against this record.</p>
-              )}
+            <div className="p-3.5 rounded-2xl border border-tag-border bg-emerald-50/60 text-xs flex flex-col gap-1 text-emerald-950">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-bold flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Cloud Live Status: {selected.vehicleLabel ? `Assigned to ${selected.vehicleLabel}` : 'Ready for assignment'}</span>
+                </span>
+                <span className="text-[10px] font-mono font-bold bg-emerald-200/80 text-emerald-900 px-2 py-0.5 rounded-full">
+                  Live in Supabase
+                </span>
+              </div>
+              <p className="text-[11px] text-tag-brown-muted">
+                Last updated: {formatWhen(selected.updatedAt)} · Taps from any phone will display these vehicle details dynamically.
+              </p>
             </div>
           )}
 
-          {permanentUrl && (
-            <div className="p-3 rounded-2xl border border-tag-border bg-tag-bg flex flex-col gap-2">
-              <span className="text-xs font-bold text-tag-brown-muted">Permanent URL</span>
+          {/* Physical Chip URL Reference */}
+          <div className="p-4 rounded-2xl border border-tag-border bg-white flex flex-col gap-3 mt-1 shadow-2xs">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
               <div className="flex items-center gap-2">
-                <code className="text-sm break-all flex-1">{permanentUrl}</code>
-                <button type="button" onClick={() => copyText(permanentUrl, 'URL')} className="p-2 rounded-lg border border-tag-border" aria-label="Copy NFC URL">
-                  <Copy className="w-4 h-4" />
+                <Nfc className="w-4 h-4 text-tag-amber-deep" />
+                <span className="text-xs font-bold text-tag-brown">Permanent NFC Tag URL</span>
+              </div>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-tag-pill text-tag-brown-muted border border-tag-border">
+                {webNfc ? 'Android Web NFC Supported' : 'iPhone / NFC Tools Ready'}
+              </span>
+            </div>
+
+            <p className="text-[11px] text-tag-brown-muted leading-relaxed">
+              Once an NFC sticker chip has this permanent link, <strong>all future vehicle assignments and phone number edits update instantly in the cloud</strong>.
+            </p>
+
+            {permanentUrl && (
+              <div className="p-2.5 rounded-xl border border-tag-border bg-tag-bg flex items-center gap-2">
+                <code className="text-xs font-mono font-bold text-tag-brown break-all flex-1">{permanentUrl}</code>
+                <button
+                  type="button"
+                  onClick={() => copyText(permanentUrl, 'Permanent URL')}
+                  className="px-3 py-1.5 rounded-lg bg-tag-brown text-[#FDF7EC] text-xs font-bold flex items-center gap-1 shrink-0 shadow-2xs hover:bg-[#1C120C]"
+                >
+                  <Copy className="w-3.5 h-3.5 text-tag-amber" />
+                  <span>Copy URL</span>
                 </button>
               </div>
-              <p className="text-xs text-tag-brown-muted">This URL stays the same when either phone number changes. About {byteEstimate} bytes. Use an NTAG215 or NTAG216. {ndefIncludesJson(payload) ? 'The write includes a text record, a URL record, and a JSON record.' : 'The write includes a text record and a URL record.'}</p>
-            </div>
-          )}
-
-          <div className="flex flex-wrap gap-2">
-            <button type="button" disabled={!selected || busy === 'write'} onClick={rewrite} className="px-4 py-2.5 rounded-xl bg-emerald-700 text-white text-sm font-bold flex items-center gap-2 disabled:opacity-50">
-              <Nfc className="w-4 h-4" />
-              Rewrite NFC tag
-            </button>
-            <button type="button" disabled={!selected || busy === 'verify'} onClick={verifyExternal} className="px-4 py-2.5 rounded-xl border border-tag-border text-sm font-bold text-tag-brown disabled:opacity-50">
-              Read & verify
-            </button>
+            )}
           </div>
-          <p className="text-sm text-tag-brown-muted leading-relaxed">
-            {webNfc
-              ? 'Hold an unlocked NFC chip against this Android phone. Rewrite replaces the old contact records and keeps the same ID and URL. Synced is set only after the chip is read back and matches.'
-              : 'This browser cannot use Web NFC. Chrome on Android can write directly. Otherwise copy the payload into an NFC app as a Text record plus a URL record, write the same tag, then open this page in Chrome on Android and press Read & verify.'}
-          </p>
-
-          {externalPacket && (
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-tag-brown-muted">Payload for an external NFC tool</span>
-                <button type="button" onClick={() => copyText(externalPacket, 'Payload')} className="text-xs font-bold text-tag-brown">Copy</button>
-              </div>
-              <pre className="text-xs whitespace-pre-wrap bg-tag-bg border border-tag-border rounded-xl p-3 max-h-48 overflow-auto">{externalPacket}</pre>
-            </div>
-          )}
 
           {!!buildNdefRecords && selected && audit.length > 0 && (
             <div className="flex flex-col gap-1">

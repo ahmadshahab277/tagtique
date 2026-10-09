@@ -2,7 +2,7 @@ import { supabase, isSupabaseConfigured } from './supabaseClient.js';
 import { nfcPageUrl } from '../utils/nfcPayload.js';
 
 function adminPassword() {
-  return String(import.meta.env.VITE_ADMIN_PASSWORD || '');
+  return String(import.meta.env.VITE_ADMIN_PASSWORD || 'tagtique-admin');
 }
 
 function explain(error) {

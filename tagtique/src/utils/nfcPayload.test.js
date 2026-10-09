@@ -85,12 +85,14 @@ test('text record alone can recover both phone numbers', () => {
     guardianPhone: '03002222222'
   });
   const records = buildNdefRecords(payload);
-  assert.equal(records[0].recordType, 'text');
-  assert.equal(records[1].recordType, 'url');
-  assert.match(records[0].data, /OP:\+923001111111/);
-  assert.match(records[0].data, /GP:\+923002222222/);
+  const textRec = records.find((r) => r.recordType === 'text');
+  const urlRec = records.find((r) => r.recordType === 'url');
+  assert.equal(records[0].recordType, 'url');
+  assert.equal(records[1].recordType, 'text');
+  assert.match(textRec.data, /OP:\+923001111111/);
+  assert.match(textRec.data, /GP:\+923002222222/);
   assert.equal(records.some((record) => record.recordType === 'mime'), false);
-  const parsed = parseNfcReading({ text: records[0].data, url: records[1].data });
+  const parsed = parseNfcReading({ text: textRec.data, url: urlRec.data });
   assert.equal(payloadsMatch(parsed, payload), true);
 });
 
@@ -104,7 +106,9 @@ test('a normal vehicle record fits a small NFC chip', () => {
   });
   const records = buildNdefRecords(payload);
   assert.ok(estimateNdefBytes(payload, { includeJson: false }) <= 144);
-  const parsed = parseNfcReading({ text: records[0].data, url: records[1].data });
+  const textRec = records.find((r) => r.recordType === 'text');
+  const urlRec = records.find((r) => r.recordType === 'url');
+  const parsed = parseNfcReading({ text: textRec.data, url: urlRec.data });
   assert.equal(parsed.ownerPhone, '+923006625199');
   assert.equal(parsed.guardianPhone, '+923001234567');
   assert.equal(parsed.id, 'TAG-000001');

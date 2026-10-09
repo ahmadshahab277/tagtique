@@ -32,6 +32,20 @@ export const DEFAULT_DEMO_TAG = {
   created_at: new Date().toISOString()
 };
 
+function isNetworkError(err) {
+  if (!err) return false;
+  const msg = String(err?.message || err || '').toLowerCase();
+  return (
+    msg.includes('network') ||
+    msg.includes('fetch') ||
+    msg.includes('failed to fetch') ||
+    msg.includes('timeout') ||
+    msg.includes('offline') ||
+    msg.includes('aborted') ||
+    msg.includes('load failed')
+  );
+}
+
 class TagCommunicationService {
   /**
    * Resolves vehicle and dynamic tag details by tag ID, QR token, or license plate
@@ -42,11 +56,90 @@ class TagCommunicationService {
     }
 
     const clean = String(tagIdentifier).trim();
+    let networkFailed = false;
 
     // 1. Check Supabase if connected
     if (supabase && isSupabaseConfigured()) {
       try {
-        // Query tags table by qr_code_value or id
+        // 1a. Check nfc_tags table by tag_code or qr_code_value
+        try {
+          const { data: nfcRows } = await supabase
+            .from('nfc_tags')
+            .select('*')
+            .or(`tag_code.eq.${clean.toUpperCase()},qr_code_value.eq.${clean}`)
+            .limit(1);
+
+          if (nfcRows && nfcRows.length > 0 && nfcRows[0].status !== 'disabled') {
+            const n = nfcRows[0];
+            return {
+              success: true,
+              data: {
+                tagId: n.tag_code,
+                qrToken: n.qr_code_value || n.tag_code,
+                vehicleName: n.vehicle_label ? `${n.vehicle_label} (Verified)` : 'Verified Vehicle',
+                registrationNumber: n.vehicle_label || n.tag_code,
+                vehicleType: 'Car',
+                status: 'active',
+                isVerified: true,
+                ownerName: n.owner_name ? n.owner_name.split(' ')[0] : (n.customer_name || 'Owner'),
+                phoneNumber: n.owner_phone || '',
+                guardianNumber: n.guardian_phone || '',
+                maskedPhone: n.owner_phone ? this.maskPhoneNumber(n.owner_phone) : '+92 ••• ••••000',
+                maskedGuardian: n.guardian_phone ? this.maskPhoneNumber(n.guardian_phone) : null,
+                hasGuardianConfigured: Boolean(n.guardian_phone),
+                phonePrivacy: 'private',
+                namePrivacy: 'public',
+                emergencyPrivacy: 'private',
+                proxyPhone: '03292082080',
+                proxyWhatsApp: '923292082080',
+                emergencyEscalationSeconds: 180,
+                maskedCallAvailable: true,
+                maskedSmsAvailable: true,
+                city: 'Faisalabad'
+              }
+            };
+          }
+        } catch (nfcErr) {
+          console.warn('[TagCommunicationService] nfc_tags query warning:', nfcErr);
+        }
+
+        // 1b. Check RPC get_public_nfc_tag if clean looks like TAG-
+        if (/^TAG-[A-Z0-9]+$/i.test(clean)) {
+          try {
+            const { data: rpcTag } = await supabase.rpc('get_public_nfc_tag', { p_tag_code: clean.toUpperCase() });
+            if (rpcTag && rpcTag.found && rpcTag.status === 'active') {
+              return {
+                success: true,
+                data: {
+                  tagId: rpcTag.tagCode || clean.toUpperCase(),
+                  qrToken: clean.toUpperCase(),
+                  vehicleName: rpcTag.vehicleLabel ? `${rpcTag.vehicleLabel} (Verified)` : 'Verified Vehicle',
+                  registrationNumber: rpcTag.vehicleLabel || clean.toUpperCase(),
+                  vehicleType: 'Car',
+                  status: 'active',
+                  isVerified: true,
+                  ownerName: rpcTag.ownerName ? rpcTag.ownerName.split(' ')[0] : 'Owner',
+                  phoneNumber: rpcTag.ownerPhone || '',
+                  guardianNumber: rpcTag.guardianPhone || '',
+                  maskedPhone: rpcTag.ownerPhone ? this.maskPhoneNumber(rpcTag.ownerPhone) : '+92 ••• ••••000',
+                  maskedGuardian: rpcTag.guardianPhone ? this.maskPhoneNumber(rpcTag.guardianPhone) : null,
+                  hasGuardianConfigured: Boolean(rpcTag.guardianPhone),
+                  phonePrivacy: 'private',
+                  namePrivacy: 'public',
+                  emergencyPrivacy: 'private',
+                  proxyPhone: '03292082080',
+                  proxyWhatsApp: '923292082080',
+                  emergencyEscalationSeconds: 180,
+                  maskedCallAvailable: true,
+                  maskedSmsAvailable: true,
+                  city: 'Faisalabad'
+                }
+              };
+            }
+          } catch (_) {}
+        }
+
+        // 1c. Query tags table by qr_code_value or id
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(clean);
         const tagFilters = [`qr_code_value.eq.${clean}`];
         if (isUuid) tagFilters.push(`id.eq.${clean}`);
@@ -162,6 +255,9 @@ class TagCommunicationService {
         }
       } catch (err) {
         console.warn('[TagCommunicationService] Supabase lookup error:', err);
+        if (isNetworkError(err)) {
+          networkFailed = true;
+        }
       }
     }
 
@@ -211,6 +307,15 @@ class TagCommunicationService {
         }
       }
     } catch (_) {}
+
+    // If Supabase failed due to network / offline and not in local cache, report NETWORK error
+    if (networkFailed) {
+      return {
+        success: false,
+        error: 'NETWORK',
+        message: 'No internet connection. Routing directly to emergency vehicle support.'
+      };
+    }
 
     // Special test cases
     if (clean.toLowerCase() === 'inactive' || clean.toLowerCase() === 'tag-inactive') {

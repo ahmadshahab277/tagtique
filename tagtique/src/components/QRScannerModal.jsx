@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
+import jsQR from 'jsqr';
 import {
   QrCode,
   Search,
@@ -19,9 +20,12 @@ import {
   Sparkles,
   Save,
   Car,
-  Scan
+  Scan,
+  Radio,
+  Smartphone
 } from 'lucide-react';
 import { orderBackendService } from '../services/orderBackendService';
+import { isWebNfcSupported, explainNfcError } from '../utils/nfcWriter';
 
 export default function QRScannerModal({
   isOpen,
@@ -42,9 +46,21 @@ export default function QRScannerModal({
   const [scannedTag, setScannedTag] = useState(null);
   const [copiedSerial, setCopiedSerial] = useState(false);
   const [cameraError, setCameraError] = useState('');
+  const [fileError, setFileError] = useState('');
+  const [isDecodingFile, setIsDecodingFile] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [cameras, setCameras] = useState([]);
   const [selectedCameraId, setSelectedCameraId] = useState('');
   const [isCameraActive, setIsCameraActive] = useState(false);
+  const html5FileDecoderRef = useRef(null);
+
+  // NFC tap scanning & programming state
+  const [isNfcListening, setIsNfcListening] = useState(false);
+  const [nfcError, setNfcError] = useState('');
+  const [nfcSuccessMsg, setNfcSuccessMsg] = useState('');
+  const [isWritingNfc, setIsWritingNfc] = useState(false);
+  const [nfcWriteResult, setNfcWriteResult] = useState('');
+  const nfcAbortRef = useRef(null);
 
   // In-Panel Direct Edit & Reassign state
   const [editForm, setEditForm] = useState({
@@ -60,6 +76,7 @@ export default function QRScannerModal({
   const [saveSuccessMsg, setSaveSuccessMsg] = useState('');
 
   const inputRef = useRef(null);
+  const fileInputRef = useRef(null);
   const scanBufferRef = useRef('');
   const submitScanRef = useRef(() => {});
   const scanLockRef = useRef(false);
@@ -187,74 +204,423 @@ export default function QRScannerModal({
 
   // Optional Camera Handling (only if user explicitly clicks Camera tab)
   useEffect(() => {
+    let timer;
     if (isOpen && activeTab === 'camera' && !scannedTag) {
-      startCamera();
+      timer = setTimeout(() => {
+        startCamera();
+      }, 100);
     } else {
       stopCamera();
     }
     return () => {
+      clearTimeout(timer);
       stopCamera();
     };
   }, [isOpen, activeTab, scannedTag]);
 
-  const startCamera = async (forceDeviceId = null) => {
-    setCameraError('');
-    await stopCamera();
+  // NFC Scanner tab lifecycle
+  useEffect(() => {
+    if (isOpen && activeTab === 'nfc' && !scannedTag) {
+      startNfcReader();
+    } else {
+      stopNfcReader();
+    }
+    return () => {
+      stopNfcReader();
+    };
+  }, [isOpen, activeTab, scannedTag]);
 
-    const container = document.getElementById(scannerContainerId);
-    if (!container) return;
+  const startNfcReader = async () => {
+    setNfcError('');
+    setNfcSuccessMsg('');
+    if (!isWebNfcSupported()) {
+      setNfcError(
+        'Web NFC is supported in Chrome on Android. On iPhones & other devices, holding the phone near the sticker chip automatically opens the vehicle link in your browser.'
+      );
+      return;
+    }
 
     try {
-      let camDevices = cameras;
-      if (!camDevices || camDevices.length === 0) {
-        try {
-          camDevices = await Html5Qrcode.getCameras();
-          if (camDevices && camDevices.length > 0) {
-            setCameras(camDevices);
+      if (nfcAbortRef.current) {
+        nfcAbortRef.current.abort();
+      }
+      const controller = new AbortController();
+      nfcAbortRef.current = controller;
+      setIsNfcListening(true);
+
+      const reader = new window.NDEFReader();
+      await reader.scan({ signal: controller.signal });
+
+      reader.onreading = (event) => {
+        playRecognitionChime();
+        setIsNfcListening(false);
+
+        let detected = '';
+        for (const record of event.message.records) {
+          let text = '';
+          if (record.recordType === 'text') {
+            const dec = new TextDecoder(record.encoding || 'utf-8');
+            text = dec.decode(record.data);
+          } else if (record.recordType === 'url') {
+            const dec = new TextDecoder();
+            text = typeof record.data === 'string' ? record.data : dec.decode(record.data);
           }
-        } catch (_) {}
-      }
+          if (text) {
+            detected = text;
+            break;
+          }
+        }
 
-      const html5QrCode = new Html5Qrcode(scannerContainerId);
-      html5QrCodeRef.current = html5QrCode;
+        if (detected) {
+          setNfcSuccessMsg(`NFC Chip Scanned: ${detected}`);
+          handleDecodedResult(detected);
+        }
+      };
 
-      let cameraConfig;
-      const targetId = forceDeviceId || selectedCameraId;
-      if (targetId) {
-        cameraConfig = { deviceId: { exact: targetId } };
-      } else if (camDevices && camDevices.length > 0) {
-        cameraConfig = { deviceId: { exact: camDevices[0].id } };
-      } else {
-        cameraConfig = { facingMode: 'user' };
-      }
-
-      await html5QrCode.start(
-        cameraConfig,
-        { fps: 15, qrbox: { width: 220, height: 220 } },
-        (decodedText) => {
-          handleDecodedResult(decodedText);
-        },
-        () => {}
-      );
-      setIsCameraActive(true);
+      reader.onreadingerror = () => {
+        setNfcError('Could not read the NFC tag. Hold the phone flat against the sticker chip.');
+      };
     } catch (err) {
-      console.warn('Camera error:', err);
-      setIsCameraActive(false);
-      setCameraError('No webcam found or permission was denied.');
+      console.warn('NFC start error:', err);
+      setIsNfcListening(false);
+      setNfcError(explainNfcError(err));
+    }
+  };
+
+  const stopNfcReader = () => {
+    if (nfcAbortRef.current) {
+      nfcAbortRef.current.abort();
+      nfcAbortRef.current = null;
+    }
+    setIsNfcListening(false);
+  };
+
+  // Program / Write physical NFC chip behind sticker
+  const handleProgramNfc = async () => {
+    if (!scannedTag) return;
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://tagtiquefromhaider.netlify.app';
+    const qrToken = scannedTag.qr_code_value || scannedTag.qrId || `tgt-${Date.now()}`;
+    const scanUrl = `${origin}/scan?token=${encodeURIComponent(qrToken)}`;
+
+    // Automatically save form updates to Supabase and cache first
+    try {
+      await handleSaveReassign();
+    } catch (_) {}
+
+    if (!isWebNfcSupported()) {
+      try {
+        await navigator.clipboard.writeText(scanUrl);
+        setNfcWriteResult('📋 Tag URL copied! On iPhone, paste into NFC Tools app to burn a new chip. (Your vehicle is already 100% assigned in the cloud!)');
+      } catch (_) {
+        setNfcWriteResult(`Link: ${scanUrl} (Vehicle is already assigned in cloud)`);
+      }
+      return;
+    }
+
+    setIsWritingNfc(true);
+    setNfcWriteResult('📱 Hold the chip flat against the back of your phone now...');
+
+    try {
+      const reader = new window.NDEFReader();
+      await reader.write({
+        records: [
+          { recordType: 'url', data: scanUrl },
+          { recordType: 'text', data: `Tagtique PK: ${editForm.vehicleNumber || scannedTag.vehicleNumber || 'TAG'}` }
+        ]
+      });
+
+      setNfcWriteResult('✅ Physical NFC chip programmed successfully! Chip is now linked to this vehicle.');
+      playRecognitionChime();
+    } catch (err) {
+      console.error('NFC write error:', err);
+      setNfcWriteResult(explainNfcError(err));
+    } finally {
+      setIsWritingNfc(false);
     }
   };
 
   const stopCamera = async () => {
     if (html5QrCodeRef.current) {
       try {
-        if (html5QrCodeRef.current.isScanning) {
+        const state = html5QrCodeRef.current.getState?.();
+        // 2 = SCANNING, 3 = PAUSED
+        if (state === 2 || state === 3) {
           await html5QrCodeRef.current.stop();
         }
+      } catch (err) {
+        console.warn('Notice while stopping camera stream:', err);
+      }
+      try {
         html5QrCodeRef.current.clear();
       } catch (_) {}
       html5QrCodeRef.current = null;
     }
     setIsCameraActive(false);
+  };
+
+  const startCamera = async (forceDeviceId = null) => {
+    setCameraError('');
+    await stopCamera();
+
+    const container = document.getElementById(scannerContainerId);
+    if (!container) {
+      setTimeout(() => startCamera(forceDeviceId), 150);
+      return;
+    }
+
+    try {
+      // 1. Enumerate available cameras if not loaded yet
+      let camDevices = cameras;
+      if (!camDevices || camDevices.length === 0) {
+        try {
+          camDevices = await Html5Qrcode.getCameras();
+          if (camDevices && camDevices.length > 0) {
+            setCameras(camDevices);
+            if (!selectedCameraId) {
+              setSelectedCameraId(camDevices[0].id);
+            }
+          }
+        } catch (camListErr) {
+          console.warn('Could not list cameras via getCameras:', camListErr);
+        }
+      }
+
+      // Ensure viewport container is clean
+      container.innerHTML = '';
+
+      const html5QrCode = new Html5Qrcode(scannerContainerId, /* verbose */ false);
+      html5QrCodeRef.current = html5QrCode;
+
+      const qrboxFn = (viewfinderWidth, viewfinderHeight) => {
+        const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+        const edge = Math.max(60, Math.min(Math.floor(minEdge * 0.75), minEdge - 10));
+        return { width: edge, height: edge };
+      };
+
+      const qrConfig = { fps: 15, qrbox: qrboxFn, aspectRatio: 1.777778 };
+      const onScanSuccess = (decodedText) => {
+        handleDecodedResult(decodedText);
+      };
+
+      // Determine camera targets in order of preference:
+      // Priority 1: Specific camera ID as plain string (html5-qrcode expects string, NOT object!)
+      // Priority 2: User facing (standard PC / laptop webcam)
+      // Priority 3: Environment facing (phone rear camera)
+      // Priority 4: First detected camera ID
+      const targetId = forceDeviceId || selectedCameraId || (camDevices && camDevices[0]?.id);
+
+      let started = false;
+
+      // Attempt 1: Target camera by device ID string (if known)
+      if (targetId) {
+        try {
+          await html5QrCode.start(targetId, qrConfig, onScanSuccess, () => {});
+          started = true;
+          setIsCameraActive(true);
+        } catch (idErr) {
+          console.warn('Start with camera ID string failed, trying fallback:', idErr);
+        }
+      }
+
+      // Attempt 2: Try laptop/desktop front webcam { facingMode: 'user' }
+      if (!started) {
+        try {
+          await html5QrCode.start({ facingMode: 'user' }, qrConfig, onScanSuccess, () => {});
+          started = true;
+          setIsCameraActive(true);
+        } catch (userErr) {
+          console.warn('Start with facingMode: user failed:', userErr);
+        }
+      }
+
+      // Attempt 3: Try mobile rear camera { facingMode: 'environment' }
+      if (!started) {
+        try {
+          await html5QrCode.start({ facingMode: 'environment' }, qrConfig, onScanSuccess, () => {});
+          started = true;
+          setIsCameraActive(true);
+        } catch (envErr) {
+          console.warn('Start with facingMode: environment failed:', envErr);
+        }
+      }
+
+      // Attempt 4: If still not started, try any detected camera device directly
+      if (!started && camDevices && camDevices.length > 0) {
+        await html5QrCode.start(camDevices[0].id, qrConfig, onScanSuccess, () => {});
+        started = true;
+        setIsCameraActive(true);
+      }
+
+      if (!started) {
+        throw new Error('No compatible webcam stream could be started.');
+      }
+    } catch (err) {
+      console.warn('Webcam start failed:', err);
+      setIsCameraActive(false);
+      const isDenied =
+        err?.name === 'NotAllowedError' ||
+        err?.name === 'PermissionDeniedError' ||
+        String(err).includes('Permission denied') ||
+        String(err).includes('NotAllowedError');
+      const isNotFound =
+        err?.name === 'NotFoundError' ||
+        err?.name === 'DevicesNotFoundError' ||
+        String(err).includes('Requested device not found');
+      const msg = isDenied
+        ? 'Camera permission denied. Please click the lock or camera icon in your browser address bar to allow camera access.'
+        : isNotFound
+        ? 'No webcam detected on this device.'
+        : 'Could not connect to webcam. Please ensure your camera is not in use by another app and permission is allowed.';
+      setCameraError(msg);
+    }
+  };
+
+  // Multi-engine QR Decoder for uploaded image files (Native BarcodeDetector + jsQR multi-scale + Html5Qrcode fallback)
+  const decodeQrCodeFromImageFile = async (file) => {
+    // Strategy 1: Native BarcodeDetector API (fastest, hardware accelerated in Chrome/Edge)
+    if (typeof window !== 'undefined' && 'BarcodeDetector' in window) {
+      try {
+        const detector = new window.BarcodeDetector({ formats: ['qr_code'] });
+        const bitmap = await createImageBitmap(file);
+        const barcodes = await detector.detect(bitmap);
+        if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
+          return barcodes[0].rawValue;
+        }
+      } catch (err) {
+        console.warn('BarcodeDetector attempt failed:', err);
+      }
+    }
+
+    // Strategy 2: jsQR with canvas multi-scale decoding
+    try {
+      const objectUrl = URL.createObjectURL(file);
+      const img = new Image();
+      img.src = objectUrl;
+      await new Promise((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = (e) => reject(e);
+      });
+
+      const origWidth = img.naturalWidth || img.width;
+      const origHeight = img.naturalHeight || img.height;
+
+      const testCanvasWithJsQR = (canvas) => {
+        try {
+          const ctx = canvas.getContext('2d', { willReadFrequently: true });
+          if (!ctx) return null;
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const res = jsQR(imageData.data, imageData.width, imageData.height, {
+            inversionAttempts: 'attemptBoth'
+          });
+          return res ? res.data : null;
+        } catch (_) {
+          return null;
+        }
+      };
+
+      // 2a. Original dimensions
+      const c1 = document.createElement('canvas');
+      c1.width = origWidth;
+      c1.height = origHeight;
+      const ctx1 = c1.getContext('2d', { willReadFrequently: true });
+      if (ctx1) {
+        ctx1.drawImage(img, 0, 0);
+        const code1 = testCanvasWithJsQR(c1);
+        if (code1) {
+          URL.revokeObjectURL(objectUrl);
+          return code1;
+        }
+      }
+
+      // 2b. If high-resolution (> 1000px), downscale to 900px
+      const maxDim = Math.max(origWidth, origHeight);
+      if (maxDim > 1000) {
+        const scale = 900 / maxDim;
+        const c2 = document.createElement('canvas');
+        c2.width = Math.round(origWidth * scale);
+        c2.height = Math.round(origHeight * scale);
+        const ctx2 = c2.getContext('2d', { willReadFrequently: true });
+        if (ctx2) {
+          ctx2.drawImage(img, 0, 0, c2.width, c2.height);
+          const code2 = testCanvasWithJsQR(c2);
+          if (code2) {
+            URL.revokeObjectURL(objectUrl);
+            return code2;
+          }
+        }
+      }
+
+      // 2c. If small (< 400px), upscale 2x
+      if (maxDim < 400 && maxDim > 0) {
+        const c3 = document.createElement('canvas');
+        c3.width = origWidth * 2;
+        c3.height = origHeight * 2;
+        const ctx3 = c3.getContext('2d', { willReadFrequently: true });
+        if (ctx3) {
+          ctx3.imageSmoothingEnabled = false;
+          ctx3.drawImage(img, 0, 0, c3.width, c3.height);
+          const code3 = testCanvasWithJsQR(c3);
+          if (code3) {
+            URL.revokeObjectURL(objectUrl);
+            return code3;
+          }
+        }
+      }
+
+      URL.revokeObjectURL(objectUrl);
+    } catch (err) {
+      console.warn('jsQR image processing failed:', err);
+    }
+
+    // Strategy 3: Html5Qrcode.scanFile fallback
+    try {
+      const tempElId = 'tagtique-file-decoder-temp';
+      let tempEl = document.getElementById(tempElId);
+      if (!tempEl) {
+        tempEl = document.createElement('div');
+        tempEl.id = tempElId;
+        tempEl.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:300px;height:300px;visibility:hidden;pointer-events:none;z-index:-1000;';
+        document.body.appendChild(tempEl);
+      }
+      const html5Qr = new Html5Qrcode(tempElId, /* verbose */ false);
+      const decoded = await html5Qr.scanFile(file, false);
+      try {
+        html5Qr.clear();
+      } catch (_) {}
+      if (decoded) return decoded;
+    } catch (err) {
+      console.warn('Html5Qrcode scanFile fallback failed:', err);
+    }
+
+    return null;
+  };
+
+  // Process uploaded or dropped image file
+  const processFile = async (file) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setFileError('Please select a valid image file (PNG, JPG, WEBP, etc.)');
+      return;
+    }
+
+    setFileError('');
+    setCameraError('');
+    setIsDecodingFile(true);
+
+    try {
+      const decodedText = await decodeQrCodeFromImageFile(file);
+      if (decodedText) {
+        setFileError('');
+        await handleDecodedResult(decodedText);
+      } else {
+        setFileError('No QR code could be recognized in this image. Please upload a clear photo or screenshot of the QR sticker.');
+      }
+    } catch (err) {
+      console.error('File decode error:', err);
+      setFileError('Failed to read image file. Please try another image.');
+    } finally {
+      setIsDecodingFile(false);
+    }
   };
 
   // Process decoded QR or query string
@@ -264,6 +630,7 @@ export default function QRScannerModal({
     stopCamera();
     setIsSearching(true);
     setCameraError('');
+    setFileError('');
 
     try {
       const found = await orderBackendService.lookupTagByAny(rawInput);
@@ -323,26 +690,6 @@ export default function QRScannerModal({
     if (value.length < 2 || scanLockRef.current) return;
     scanLockRef.current = true;
     handleDecodedResult(value);
-  };
-
-  // File upload decode
-  const handleFileUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setCameraError('');
-    setIsSearching(true);
-    try {
-      const html5QrCode = new Html5Qrcode('tagtique-file-decoder-temp');
-      const decodedText = await html5QrCode.scanFile(file, true);
-      html5QrCode.clear();
-      await handleDecodedResult(decodedText);
-    } catch (err) {
-      console.warn('Failed to decode image file:', err);
-      setCameraError('Could not recognize any valid QR code in this image. Please upload a clearer photo.');
-    } finally {
-      setIsSearching(false);
-    }
   };
 
   // Direct In-Panel Reassign & Edit Save
@@ -690,6 +1037,43 @@ export default function QRScannerModal({
                 </div>
               </div>
 
+              {/* Physical NFC Chip Pairing Card */}
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-50 to-amber-100/60 border border-amber-300/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-tag-brown text-tag-amber flex items-center justify-center shrink-0 shadow-2xs">
+                    <Radio className="w-5 h-5 text-tag-amber animate-pulse" />
+                  </div>
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-2">
+                      <span className="font-baloo font-bold text-sm text-tag-brown">
+                        Physical NFC Chip Pairing
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-amber-200 text-amber-900 border border-amber-300/70">
+                        NTAG213/215
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-tag-brown-muted leading-tight">
+                      Program the physical chip behind this sticker with the vehicle link (<code className="font-mono text-tag-brown font-bold text-[10px]">{`/scan?token=${(scannedTag.qr_code_value || scannedTag.qrId || '').slice(0, 16)}...`}</code>)
+                    </span>
+                    {nfcWriteResult && (
+                      <span className={`text-[11px] font-bold mt-1 ${nfcWriteResult.includes('✅') ? 'text-emerald-700' : 'text-amber-950'}`}>
+                        {nfcWriteResult}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  disabled={isWritingNfc}
+                  onClick={handleProgramNfc}
+                  className="amber-gradient-btn px-4 py-2 rounded-xl text-xs font-black text-tag-brown flex items-center gap-1.5 shadow-warm-xs shrink-0 disabled:opacity-50"
+                >
+                  <Radio className="w-3.5 h-3.5" />
+                  <span>{isWritingNfc ? 'Holding Tag...' : 'Program NFC Chip'}</span>
+                </button>
+              </div>
+
               {/* Action Toolbar */}
               <div className="flex items-center justify-between pt-3 border-t border-tag-border gap-2 flex-wrap">
                 <div className="flex items-center gap-2">
@@ -735,7 +1119,7 @@ export default function QRScannerModal({
           /* ======================================================== */
           <div className="flex flex-col gap-4">
             {/* Mode Tabs */}
-            <div className="grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-tag-pill border border-tag-border text-xs font-bold">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-1 rounded-2xl bg-tag-pill border border-tag-border text-xs font-bold">
               <button
                 type="button"
                 onClick={() => {
@@ -749,7 +1133,7 @@ export default function QRScannerModal({
                 }`}
               >
                 <Scan className="w-3.5 h-3.5 text-tag-amber" />
-                <span>Scanner Gun / Plate</span>
+                <span>Scanner Gun</span>
               </button>
 
               <button
@@ -765,7 +1149,7 @@ export default function QRScannerModal({
                 }`}
               >
                 <Upload className="w-3.5 h-3.5" />
-                <span>Upload QR Image</span>
+                <span>Upload QR</span>
               </button>
 
               <button
@@ -781,7 +1165,23 @@ export default function QRScannerModal({
                 }`}
               >
                 <Camera className="w-3.5 h-3.5" />
-                <span>Webcam (Optional)</span>
+                <span>Webcam</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setCameraError('');
+                  setActiveTab('nfc');
+                }}
+                className={`py-2 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+                  activeTab === 'nfc'
+                    ? 'bg-tag-brown text-tag-bg shadow-warm-sm'
+                    : 'text-tag-brown hover:bg-white/60'
+                }`}
+              >
+                <Radio className="w-3.5 h-3.5 text-tag-amber animate-pulse" />
+                <span>NFC Tap</span>
               </button>
             </div>
 
@@ -863,25 +1263,92 @@ export default function QRScannerModal({
             {/* TAB 2: UPLOAD IMAGE */}
             {activeTab === 'file' && (
               <div className="flex flex-col gap-3">
-                <label className="flex flex-col items-center justify-center p-8 rounded-3xl border-2 border-dashed border-tag-border hover:border-tag-amber bg-tag-pill/40 hover:bg-tag-pill/70 cursor-pointer transition-all gap-3 group">
+                <div
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsDragging(true);
+                  }}
+                  onDragEnter={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsDragging(true);
+                  }}
+                  onDragLeave={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsDragging(false);
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsDragging(false);
+                    const file = e.dataTransfer.files?.[0];
+                    if (file) processFile(file);
+                  }}
+                  onClick={() => !isDecodingFile && fileInputRef.current?.click()}
+                  className={`flex flex-col items-center justify-center p-8 rounded-3xl border-2 border-dashed transition-all gap-3 cursor-pointer group select-none ${
+                    isDragging
+                      ? 'border-tag-amber bg-amber-100/60 ring-4 ring-amber-200/50 scale-[1.01]'
+                      : 'border-tag-border hover:border-tag-amber bg-tag-pill/40 hover:bg-tag-pill/70'
+                  }`}
+                >
                   <div className="w-14 h-14 rounded-2xl bg-white border border-tag-border flex items-center justify-center text-tag-amber group-hover:scale-105 transition-transform shadow-2xs">
-                    <QrCode className="w-7 h-7 text-tag-amber" />
+                    {isDecodingFile ? (
+                      <RefreshCw className="w-7 h-7 text-tag-amber animate-spin" />
+                    ) : (
+                      <QrCode className="w-7 h-7 text-tag-amber" />
+                    )}
                   </div>
+
                   <div className="text-center">
                     <span className="font-bold text-xs sm:text-sm text-tag-brown block">
-                      Click to choose or drag & drop QR image
+                      {isDecodingFile
+                        ? 'Decoding QR code from image...'
+                        : isDragging
+                        ? 'Drop your QR image here!'
+                        : 'Click to choose or drag & drop QR image'}
                     </span>
-                    <span className="text-[11px] text-tag-brown-muted">
-                      Decodes digital sticker cut-sheets, photos, or screenshots
+                    <span className="text-[11px] text-tag-brown-muted mt-0.5 block">
+                      {isDecodingFile
+                        ? 'Analyzing image with multi-engine scanner...'
+                        : 'Supports PNG, JPG, WEBP sticker cut-sheets, photos, or screenshots'}
                     </span>
                   </div>
+
+                  {!isDecodingFile && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        fileInputRef.current?.click();
+                      }}
+                      className="amber-gradient-btn px-4 py-1.5 rounded-full text-xs font-bold text-tag-brown flex items-center gap-1.5 shadow-warm-xs mt-1"
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>Browse Files</span>
+                    </button>
+                  )}
+
                   <input
+                    ref={fileInputRef}
                     type="file"
                     accept="image/*"
-                    onChange={handleFileUpload}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) processFile(file);
+                      e.target.value = '';
+                    }}
                     className="hidden"
                   />
-                </label>
+                </div>
+
+                {fileError && (
+                  <div className="p-3 rounded-2xl bg-amber-50/90 border border-amber-300 text-amber-950 text-xs flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span className="font-medium">{fileError}</span>
+                  </div>
+                )}
               </div>
             )}
 
@@ -894,24 +1361,39 @@ export default function QRScannerModal({
                     className="w-full h-full flex items-center justify-center overflow-hidden [&_video]:object-cover [&_video]:w-full [&_video]:h-full"
                   />
 
+                  {isCameraActive && (
+                    <div className="absolute top-2.5 right-2.5 z-10 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-sm border border-emerald-500/40 text-emerald-300 text-[10px] font-bold flex items-center gap-1.5 shadow-sm">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      <span>Live Camera</span>
+                    </div>
+                  )}
+
                   {!isCameraActive && (
-                    <div className="text-center text-white/90 text-xs p-4 flex flex-col items-center gap-2">
+                    <div className="text-center text-white/90 text-xs p-4 flex flex-col items-center gap-2 z-10">
                       <Camera className="w-7 h-7 text-tag-amber" />
-                      <span className="font-bold">Webcam Standby</span>
+                      <span className="font-bold">
+                        {cameraError ? 'Camera Access Needed' : 'Webcam Standby'}
+                      </span>
+                      <span className="text-[11px] text-white/70 max-w-xs">
+                        {cameraError
+                          ? cameraError
+                          : 'Point your camera directly at the Tagtique vehicle sticker QR code.'}
+                      </span>
                       <button
                         type="button"
                         onClick={() => startCamera()}
-                        className="px-4 py-1.5 rounded-full bg-tag-amber text-tag-brown font-extrabold text-xs shadow-warm-sm hover:scale-105 transition-all mt-1"
+                        className="px-5 py-2 rounded-full bg-tag-amber text-tag-brown font-extrabold text-xs shadow-warm-sm hover:scale-105 transition-all mt-1 flex items-center gap-1.5"
                       >
-                        Start Camera
+                        <RefreshCw className="w-3.5 h-3.5" />
+                        <span>{cameraError ? 'Retry Camera' : 'Start Camera'}</span>
                       </button>
                     </div>
                   )}
                 </div>
 
                 {cameras.length > 1 && (
-                  <div className="flex items-center justify-between gap-2 text-xs">
-                    <span className="text-[10px] font-bold text-tag-brown-muted">Device:</span>
+                  <div className="flex items-center justify-between gap-2 text-xs px-1">
+                    <span className="text-[10px] font-bold text-tag-brown-muted">Switch Camera:</span>
                     <select
                       value={selectedCameraId}
                       onChange={(e) => {
@@ -928,6 +1410,73 @@ export default function QRScannerModal({
                     </select>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* TAB 4: NFC TAP SCAN */}
+            {activeTab === 'nfc' && (
+              <div className="flex flex-col gap-4">
+                <div className="p-6 rounded-3xl border-2 border-dashed border-tag-amber/70 bg-amber-50/50 flex flex-col items-center text-center gap-4 relative overflow-hidden">
+                  {/* Radar Wave Graphic */}
+                  <div className="relative w-24 h-24 flex items-center justify-center my-1">
+                    <span className="absolute w-24 h-24 rounded-full bg-tag-amber/20 animate-ping opacity-60" />
+                    <span className="absolute w-16 h-16 rounded-full bg-tag-amber/30 animate-pulse" />
+                    <div className="w-12 h-12 rounded-2xl bg-tag-brown text-tag-amber flex items-center justify-center shadow-warm-sm border border-tag-amber relative z-10">
+                      <Radio className="w-6 h-6 text-tag-amber animate-pulse" />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1 max-w-sm">
+                    <h4 className="font-baloo font-extrabold text-base text-tag-brown">
+                      {isNfcListening ? 'Waiting for NFC Tag Touch...' : 'NFC Sticker Reader'}
+                    </h4>
+                    <p className="text-xs text-tag-brown-muted">
+                      Hold your phone or USB NFC reader within 3–4 cm of the physical NFC chip behind the sticker to scan it immediately.
+                    </p>
+                  </div>
+
+                  {/* Active Status Badge */}
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white border border-tag-border text-xs font-bold text-tag-brown shadow-2xs">
+                    <span className={`w-2 h-2 rounded-full ${isNfcListening ? 'bg-emerald-500 animate-ping' : 'bg-tag-amber'}`} />
+                    <span>{isNfcListening ? 'NFC Radar Active (Scanning)' : 'NFC Reader Ready'}</span>
+                  </div>
+
+                  {nfcSuccessMsg && (
+                    <div className="p-3 rounded-2xl bg-emerald-100/90 border border-emerald-300 text-emerald-950 text-xs font-bold flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>{nfcSuccessMsg}</span>
+                    </div>
+                  )}
+
+                  {nfcError && (
+                    <div className="p-3 rounded-2xl bg-amber-100/90 border border-amber-300 text-amber-950 text-xs text-left flex items-start gap-2 max-w-md">
+                      <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                      <span>{nfcError}</span>
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={isNfcListening ? stopNfcReader : startNfcReader}
+                      className="amber-gradient-btn px-6 py-2.5 rounded-full text-xs font-extrabold text-tag-brown flex items-center gap-2 shadow-warm-sm"
+                    >
+                      <Radio className="w-3.5 h-3.5" />
+                      <span>{isNfcListening ? 'Stop NFC Radar' : 'Start NFC Radar'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Device Capability Notice */}
+                <div className="p-3.5 rounded-2xl bg-white border border-tag-border text-xs text-tag-brown-muted flex items-start gap-2.5 shadow-2xs">
+                  <Smartphone className="w-4 h-4 text-tag-amber shrink-0 mt-0.5" />
+                  <div className="flex flex-col gap-0.5">
+                    <span className="font-bold text-tag-brown text-[11.5px]">How NFC Works With Tagtique Stickers:</span>
+                    <span className="text-[11px] leading-relaxed">
+                      Physical NFC chips (NTAG213/215) stuck behind vinyl stickers can be scanned directly by tapping with any modern smartphone (iOS & Android). Web NFC reading operates in Chrome on Android.
+                    </span>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -1006,6 +1555,21 @@ export default function QRScannerModal({
             Close
           </button>
         </div>
+
+        {/* Hidden scratch container for Html5Qrcode file decoding fallback */}
+        <div
+          id="tagtique-file-decoder-temp"
+          style={{
+            position: 'fixed',
+            top: '-9999px',
+            left: '-9999px',
+            width: '300px',
+            height: '300px',
+            visibility: 'hidden',
+            pointerEvents: 'none',
+            zIndex: -1000
+          }}
+        />
       </div>
     </div>
   );

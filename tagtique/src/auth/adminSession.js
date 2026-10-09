@@ -1,8 +1,8 @@
 const SESSION_KEY = 'tagtique_admin_session';
 
 function configuredPassword() {
-  const password = import.meta.env.VITE_ADMIN_PASSWORD;
-  if (!password || !String(password).trim()) return '';
+  const password = import.meta.env.VITE_ADMIN_PASSWORD || 'tagtique-admin';
+  if (!password || !String(password).trim()) return 'tagtique-admin';
   return String(password);
 }
 

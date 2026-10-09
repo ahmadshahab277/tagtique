@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Phone, MessageCircle } from 'lucide-react';
 import VehicleHeader from '../components/vehicle/VehicleHeader';
 import { nfcTagService } from '../services/nfcTagService';
+import { tagCommunicationService } from '../services/tagCommunicationService';
 import { displayPhone, normalizeTagCode } from '../utils/nfcPayload';
 import { telUrl, whatsappUrl } from '../utils/contactLinks';
 
@@ -42,43 +43,144 @@ function CallBlock({ title, name, phone }) {
   );
 }
 
+function isNetworkFailure(err) {
+  if (!err) return false;
+  const msg = String(err?.message || err || '').toLowerCase();
+  return (
+    msg.includes('network') ||
+    msg.includes('fetch') ||
+    msg.includes('timeout') ||
+    msg.includes('offline') ||
+    msg.includes('load failed') ||
+    msg.includes('aborted') ||
+    msg.includes('connection')
+  );
+}
+
+const withFastTimeout = (promise, ms = 2500) => {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('NETWORK_TIMEOUT')), ms)
+    )
+  ]);
+};
+
 export default function PublicNfcPage() {
   const { tagId } = useParams();
-  const tagCode = normalizeTagCode(tagId);
+  const tagCode = normalizeTagCode(tagId) || tagId;
   const [state, setState] = useState({ loading: true, offline: false, error: '', record: null });
+
+  // iOS Mobile Safari gesture unlock: Safari blocks programmatic tel: unless triggered by direct touch.
+  // The first touch anywhere on screen immediately triggers the call dialog when offline.
+  useEffect(() => {
+    if (!state.offline) return;
+    const triggerDial = () => {
+      try {
+        window.location.href = 'tel:03292082080';
+      } catch (_) {}
+    };
+    triggerDial();
+    window.addEventListener('touchstart', triggerDial, { once: true, passive: true });
+    window.addEventListener('click', triggerDial, { once: true });
+    return () => {
+      window.removeEventListener('touchstart', triggerDial);
+      window.removeEventListener('click', triggerDial);
+    };
+  }, [state.offline]);
 
   useEffect(() => {
     let cancelled = false;
+
+    const triggerOffline = () => {
+      if (!cancelled) {
+        setState({ loading: false, offline: true, error: '', record: null });
+        try {
+          window.location.href = 'tel:03292082080';
+        } catch (_) {}
+      }
+    };
 
     async function load() {
       if (!tagCode) {
         setState({ loading: false, offline: false, error: '', record: { found: false, status: 'missing' } });
         return;
       }
+
       if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-        setState({ loading: false, offline: true, error: '', record: null });
+        triggerOffline();
         return;
       }
+
+      let networkIssue = false;
+
       try {
-        const record = await nfcTagService.getPublic(tagCode);
-        if (!cancelled) setState({ loading: false, offline: false, error: '', record });
-      } catch (error) {
-        if (!cancelled) {
-          setState({
-            loading: false,
-            offline: typeof navigator !== 'undefined' && navigator.onLine === false,
-            error: error?.message || 'The latest contacts could not be loaded.',
-            record: null
-          });
+        const record = await withFastTimeout(nfcTagService.getPublic(tagCode, { timeoutMs: 2500 }), 2500);
+        if (record && record.found) {
+          if (!cancelled) setState({ loading: false, offline: false, error: '', record });
+          return;
         }
+      } catch (err) {
+        if (isNetworkFailure(err)) networkIssue = true;
+      }
+
+      // Fallback: Check standard vehicle lookup
+      try {
+        const alt = await withFastTimeout(tagCommunicationService.getVehicleByTagId(tagId), 2500);
+        if (alt?.success && alt?.data) {
+          const v = alt.data;
+          if (!cancelled) {
+            setState({
+              loading: false,
+              offline: false,
+              error: '',
+              record: {
+                found: true,
+                status: 'active',
+                tagCode: tagCode || v.tagId,
+                vehicleLabel: v.registrationNumber || v.vehicleName,
+                ownerName: v.ownerName,
+                ownerPhone: v.phoneNumber,
+                guardianPhone: v.guardianNumber
+              }
+            });
+            return;
+          }
+        } else if (alt?.error === 'NETWORK') {
+          networkIssue = true;
+        }
+      } catch (err) {
+        if (isNetworkFailure(err)) networkIssue = true;
+      }
+
+      if (networkIssue) {
+        triggerOffline();
+        return;
+      }
+
+      if (!cancelled) {
+        setState({ loading: false, offline: false, error: '', record: { found: false, status: 'missing' } });
       }
     }
 
     load();
+
+    const handleOffline = () => {
+      triggerOffline();
+    };
+    const handleOnline = () => {
+      load();
+    };
+
+    window.addEventListener('offline', handleOffline);
+    window.addEventListener('online', handleOnline);
+
     return () => {
       cancelled = true;
+      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('online', handleOnline);
     };
-  }, [tagCode]);
+  }, [tagCode, tagId]);
 
   const record = state.record;
   const inactive = record && record.found === false;
@@ -99,8 +201,26 @@ export default function PublicNfcPage() {
         )}
 
         {state.offline && (
-          <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-sm text-amber-950 leading-relaxed">
-            This phone is offline, so the latest contacts cannot be loaded. The NFC chip itself holds a saved copy of the numbers. Open the tag in your phone’s NFC reader to see that copy. A phone that has never opened this website cannot load this page without internet.
+          <div className="p-5 rounded-3xl bg-amber-50 border-2 border-amber-300 text-[#1C120C] flex flex-col items-center text-center gap-3 animate-fadeIn">
+            <div className="w-14 h-14 rounded-2xl bg-[#1C120C] text-[#E6AF2E] flex items-center justify-center shadow-warm-sm">
+              <Phone className="w-7 h-7 text-[#E6AF2E] animate-pulse" />
+            </div>
+            <div>
+              <p className="font-baloo font-extrabold text-xl text-[#1C120C]">No Internet Connection</p>
+              <p className="text-xs text-[#8C7A6B] mt-1 leading-relaxed">
+                Since you are offline, Tagtique connects you directly to our vehicle support line to reach the owner.
+              </p>
+            </div>
+            <a
+              href="tel:03292082080"
+              className="w-full min-h-[58px] px-5 py-3 rounded-2xl bg-[#1C120C] text-[#FDF7EC] font-extrabold text-base flex items-center justify-center gap-2.5 shadow-warm-md hover:bg-[#2B1B10] active:scale-[0.98] transition-all cursor-pointer"
+            >
+              <Phone className="w-5 h-5 text-[#E6AF2E]" />
+              <span>Call Support: 0329-2082080</span>
+            </a>
+            <p className="text-[11px] text-amber-900 font-semibold animate-pulse">
+              📞 Launching phone call... Tap above if not prompted.
+            </p>
           </div>
         )}
 
