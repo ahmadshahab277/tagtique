@@ -12,6 +12,11 @@
   </head>
   <body class="bg-tag-bg text-tag-brown font-manrope selection:bg-tag-amber selection:text-tag-brown-deep">
     <div id="root"></div>
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(function() {});
+      }
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

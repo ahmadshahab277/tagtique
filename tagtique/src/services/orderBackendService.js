@@ -1,6 +1,7 @@
 import QRCode from 'qrcode';
 import { supabase, isSupabaseConfigured } from './supabaseClient';
 import { buildScanUrl } from '../utils/scanUrl';
+import { tagRegistryService } from './tagRegistryService';
 
 const LOCAL_STORAGE_ORDERS_KEY = 'tagtique_supabase_orders_cache';
 const LOCAL_STORAGE_TAGS_MAP_KEY = 'tagtique_supabase_tags_map';
@@ -28,6 +29,9 @@ class OrderBackendService {
     try {
       this.localOrders = rows;
       localStorage.setItem(LOCAL_STORAGE_ORDERS_KEY, JSON.stringify(rows));
+      if (Array.isArray(rows)) {
+        tagRegistryService.syncFromOrders(rows);
+      }
     } catch (_) {}
   }
 
@@ -110,6 +114,12 @@ class OrderBackendService {
           const veh = vehicles[i];
           const vehicleNumber = veh.vehicleNumber || veh.name || `TAG-${i + 1}`;
           const vehicleType = veh.vehicleType || veh.tagType || 'Car';
+          const vPhone = veh.phone || customer.phone || '0300 0000000';
+          const vGuardian = veh.emergencyPhone || customer.guardianNumber || '';
+          const vName = veh.displayName || customer.name || 'Valued Customer';
+          const vPhonePrivacy = veh.phonePrivacy || customer.phonePrivacy || 'private';
+          const vNamePrivacy = veh.namePrivacy || customer.namePrivacy || 'public';
+          const vEmergencyPrivacy = veh.emergencyPrivacy || customer.emergencyPrivacy || 'private';
 
           const { data: vehRecord, error: vehErr } = await supabase
             .from('vehicles')
@@ -126,7 +136,12 @@ class OrderBackendService {
 
           // Unique QR slug / crypto token
           const qrToken = `tgt-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-          const qrDataUrl = await this.generateQRCodeDataUrl(buildScanUrl(qrToken));
+          const qrDataUrl = await this.generateQRCodeDataUrl(
+            buildScanUrl(qrToken, vPhonePrivacy === 'public' ? { phonePrivacy: 'public', phone: vPhone } : {})
+          );
+          const shortToken = qrToken.replace(/^tgt-/, '').replace(/[^a-zA-Z0-9]/g, '').slice(0, 8).toUpperCase();
+          const serialNo = `SN-${shortToken}`;
+          const rawId = generatedOrderNumber.replace('TGT-', '');
 
           const { data: tagRecord, error: tagErr } = await supabase
             .from('tags')
@@ -145,27 +160,48 @@ class OrderBackendService {
 
           createdAdminRows.push({
             order_id: orderId,
+            orderId: `#TGT-${rawId}`,
+            rawId: rawId,
             order_number: generatedOrderNumber,
+            serialNumber: serialNo,
+            serial_number: serialNo,
             customer_id: customerId,
-            customer_name: customer.name,
+            customer_name: vName,
+            customerName: vName,
             email: customer.email || '',
-            phone_number: customer.phone,
-            guardian_number: customer.guardianNumber || customer.emergencyPhone || '',
+            phone_number: vPhone,
+            phoneNumber: vPhone,
+            guardian_number: vGuardian,
+            guardianNumber: vGuardian,
+            phonePrivacy: vPhonePrivacy,
+            namePrivacy: vNamePrivacy,
+            emergencyPrivacy: vEmergencyPrivacy,
             address: shippingAddress?.address || customer.address || '',
             city: shippingAddress?.city || customer.city || 'Faisalabad',
+            location: (shippingAddress?.city || customer.city || 'Faisalabad') + ', PK',
             vehicle_id: vehicleId,
             vehicle_number: vehicleNumber,
+            vehicleNumber: vehicleNumber,
             vehicle_type: vehicleType,
+            vehicleType: vehicleType,
             tag_id: tagRecord?.id || ('tag-' + Date.now() + '-' + i),
+            tagId: tagRecord?.id || ('tag-' + Date.now() + '-' + i),
+            qrId: `QR-${rawId}-${i + 1}`,
             qr_code_value: qrToken,
             qr_image_url: qrDataUrl,
             tag_material: tagMaterial,
+            package: packageType,
+            packageSub: (tagMaterial === 'acrylic' ? 'Acrylic' : 'Vinyl') + ' Tag',
             package_type: packageType,
-            status: 'pending',
+            status: 'Pending',
+            changeStatus: 'Pending',
             total_amount: Number(totalAmount),
+            amount: Number(totalAmount),
             payment_status: paymentStatus,
             delivery_status: deliveryStatus,
-            created_at: createdDate
+            created_at: createdDate,
+            date: createdDate.slice(0, 10),
+            scans: 0
           });
         }
       } catch (err) {
@@ -177,44 +213,88 @@ class OrderBackendService {
     if (createdAdminRows.length === 0) {
       customerId = 'cust-' + Date.now();
       orderId = 'ord-' + Date.now();
+      const rawId = generatedOrderNumber.replace('TGT-', '');
 
       for (let i = 0; i < vehicles.length; i++) {
         const veh = vehicles[i];
         const vehicleNumber = veh.vehicleNumber || veh.name || `TAG-${i + 1}`;
         const vehicleType = veh.vehicleType || veh.tagType || 'Car';
+        const vPhone = veh.phone || customer.phone || '0300 0000000';
+        const vGuardian = veh.emergencyPhone || customer.guardianNumber || '';
+        const vName = veh.displayName || customer.name || 'Valued Customer';
+        const vPhonePrivacy = veh.phonePrivacy || customer.phonePrivacy || 'private';
+        const vNamePrivacy = veh.namePrivacy || customer.namePrivacy || 'public';
+        const vEmergencyPrivacy = veh.emergencyPrivacy || customer.emergencyPrivacy || 'private';
+
         const qrToken = `tgt-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-        const qrDataUrl = await this.generateQRCodeDataUrl(buildScanUrl(qrToken));
+        const qrDataUrl = await this.generateQRCodeDataUrl(
+          buildScanUrl(qrToken, vPhonePrivacy === 'public' ? { phonePrivacy: 'public', phone: vPhone } : {})
+        );
         const shortToken = qrToken.replace(/^tgt-/, '').replace(/[^a-zA-Z0-9]/g, '').slice(0, 8).toUpperCase();
         const serialNo = `SN-${shortToken}`;
 
         createdAdminRows.push({
           order_id: orderId,
+          orderId: `#TGT-${rawId}`,
+          rawId: rawId,
           order_number: generatedOrderNumber,
           serialNumber: serialNo,
           serial_number: serialNo,
           customer_id: customerId,
-          customer_name: customer.name || 'Valued Customer',
+          customer_name: vName,
+          customerName: vName,
           email: customer.email || '',
-          phone_number: customer.phone || '0300 0000000',
-          guardian_number: customer.guardianNumber || customer.emergencyPhone || '',
+          phone_number: vPhone,
+          phoneNumber: vPhone,
+          guardian_number: vGuardian,
+          guardianNumber: vGuardian,
+          phonePrivacy: vPhonePrivacy,
+          namePrivacy: vNamePrivacy,
+          emergencyPrivacy: vEmergencyPrivacy,
           address: shippingAddress?.address || customer.address || '',
           city: shippingAddress?.city || customer.city || 'Faisalabad',
+          location: (shippingAddress?.city || customer.city || 'Faisalabad') + ', PK',
           vehicle_id: 'veh-' + Date.now() + '-' + i,
           vehicle_number: vehicleNumber,
+          vehicleNumber: vehicleNumber,
           vehicle_type: vehicleType,
+          vehicleType: vehicleType,
           tag_id: 'tag-' + Date.now() + '-' + i,
+          tagId: 'tag-' + Date.now() + '-' + i,
+          qrId: `QR-${rawId}-${i + 1}`,
           qr_code_value: qrToken,
           qr_image_url: qrDataUrl,
           tag_material: tagMaterial,
+          package: packageType,
+          packageSub: (tagMaterial === 'acrylic' ? 'Acrylic' : 'Vinyl') + ' Tag',
           package_type: packageType,
-          status: 'pending',
+          status: 'Pending',
+          changeStatus: 'Pending',
           total_amount: Number(totalAmount),
+          amount: Number(totalAmount),
           payment_status: paymentStatus,
           delivery_status: deliveryStatus,
-          created_at: createdDate
+          created_at: createdDate,
+          date: createdDate.slice(0, 10),
+          scans: 0
         });
       }
     }
+
+    // Register all created tags immediately in offline registry
+    createdAdminRows.forEach((row) => {
+      tagRegistryService.registerTag({
+        qrToken: row.qr_code_value,
+        registrationNumber: row.vehicle_number,
+        vehicleName: row.vehicle_type,
+        vehicleType: row.vehicle_type,
+        ownerName: row.customer_name,
+        phoneNumber: row.phone_number,
+        guardianNumber: row.guardian_number,
+        phonePrivacy: row.phonePrivacy,
+        status: 'active'
+      });
+    });
 
     // Merge into local cache
     const updated = [...createdAdminRows, ...this.localOrders];
@@ -282,6 +362,13 @@ class OrderBackendService {
               serialNo = `SN-${rawId}`;
             }
 
+            const localMatch = (this.localOrders || []).find(
+              (lo) => lo.tag_id === t.id || lo.qr_code_value === t.qr_code_value || lo.orderId === `#TGT-${rawId}`
+            );
+            const phonePrivacy = t.phone_privacy || localMatch?.phonePrivacy || 'private';
+            const namePrivacy = t.name_privacy || localMatch?.namePrivacy || 'public';
+            const emergencyPrivacy = t.emergency_privacy || localMatch?.emergencyPrivacy || 'private';
+
             return {
               orderId: `#TGT-${rawId}`,
               rawId: rawId,
@@ -297,6 +384,9 @@ class OrderBackendService {
               phone_number: cust.phone_number || '',
               guardianNumber: cust.guardian_number || '',
               guardian_number: cust.guardian_number || '',
+              phonePrivacy,
+              namePrivacy,
+              emergencyPrivacy,
               address: cust.address || '',
               city: cust.city || 'Faisalabad',
               location: cust.city ? `${cust.city}, PK` : 'Faisalabad, PK',
@@ -327,6 +417,7 @@ class OrderBackendService {
           });
 
           this.saveLocalOrders(rows);
+          tagRegistryService.syncFromOrders(rows);
           return rows;
         }
       } catch (err) {
@@ -406,39 +497,6 @@ class OrderBackendService {
           const { error: custErr } = await supabase.from('customers').update(custUpdates).eq('id', cId);
           if (custErr) console.warn('Supabase customer update warning:', custErr);
         }
-
-        // Also synchronize nfc_tags table in Supabase so NFC taps immediately get the new number
-        try {
-          const nfcUpdates = {
-            contacts_updated_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          };
-          if (cPhone !== undefined) nfcUpdates.owner_phone = cPhone;
-          if (cGuard !== undefined) nfcUpdates.guardian_phone = cGuard;
-          if (cName !== undefined) {
-            nfcUpdates.owner_name = cName;
-            nfcUpdates.customer_name = cName;
-          }
-          if (vNumber !== undefined) nfcUpdates.vehicle_label = vNumber;
-          if (status) {
-            nfcUpdates.status = status.toLowerCase() === 'delivered' || status.toLowerCase() === 'active' ? 'active' : status.toLowerCase();
-          }
-
-          const qrVal = updates.qr_code_value || (index !== -1 ? current[index]?.qr_code_value : null);
-          const rawTagCode = updates.tagCode || (index !== -1 ? current[index]?.tagCode || current[index]?.tag_id : null);
-
-          if (qrVal) {
-            await supabase.from('nfc_tags').update(nfcUpdates).eq('qr_code_value', qrVal);
-          }
-          if (rawTagCode && /^TAG-[A-Z0-9]+$/i.test(rawTagCode)) {
-            await supabase.from('nfc_tags').update(nfcUpdates).eq('tag_code', rawTagCode.toUpperCase());
-          }
-          if (vId) {
-            await supabase.from('nfc_tags').update(nfcUpdates).eq('vehicle_id', vId);
-          }
-        } catch (nfcSyncErr) {
-          console.warn('Supabase nfc_tags sync notice:', nfcSyncErr);
-        }
       } catch (err) {
         console.warn('Supabase update error:', err);
       }
@@ -459,9 +517,24 @@ class OrderBackendService {
         phone_number: cPhone || current[index].phone_number,
         guardianNumber: cGuard || current[index].guardianNumber,
         guardian_number: cGuard || current[index].guardian_number,
+        phonePrivacy: updates.phonePrivacy !== undefined ? updates.phonePrivacy : (current[index].phonePrivacy || 'private'),
+        namePrivacy: updates.namePrivacy !== undefined ? updates.namePrivacy : (current[index].namePrivacy || 'public'),
+        emergencyPrivacy: updates.emergencyPrivacy !== undefined ? updates.emergencyPrivacy : (current[index].emergencyPrivacy || 'private'),
         status: status ? (status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()) : current[index].status
       };
       this.saveLocalOrders([...current]);
+
+      tagRegistryService.registerTag({
+        qrToken: current[index].qr_code_value,
+        registrationNumber: current[index].vehicle_number,
+        vehicleName: current[index].vehicle_type,
+        vehicleType: current[index].vehicle_type,
+        ownerName: current[index].customer_name,
+        phoneNumber: current[index].phone_number,
+        guardianNumber: current[index].guardian_number,
+        phonePrivacy: current[index].phonePrivacy,
+        status: current[index].status === 'Deactivated' ? 'inactive' : 'active'
+      });
     }
     return true;
   }

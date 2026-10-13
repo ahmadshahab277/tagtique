@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { renderStyledQrDataUrl, renderStickerBlob, stickerFileName, triggerFileDownload } from '../utils/stickerImage';
+import { renderStyledQrDataUrl, renderStickerBlob, stickerFileName, triggerFileDownload, resolveQrPayload } from '../utils/stickerImage';
+import { settingsService } from '../services/settingsService';
 import { useCart } from '../context/CartContext';
 import { orderBackendService } from '../services/orderBackendService';
 import {
@@ -31,14 +32,13 @@ import {
   Check,
   Camera,
   Menu,
-  LogOut,
-  Nfc
+  LogOut
 } from 'lucide-react';
-import NfcAdminSection from '../components/admin/NfcAdminSection';
 import { endAdminSession } from '../auth/adminSession';
 import QRScannerModal from '../components/QRScannerModal';
 import { buildScanUrl } from '../utils/scanUrl';
 import { zipStore } from '../utils/zipStore';
+import { tagRegistryService } from '../services/tagRegistryService';
 
 export default function AdminPage({ onLogout }) {
   const { lastOrder } = useCart();
@@ -55,12 +55,25 @@ export default function AdminPage({ onLogout }) {
   const [selectedAssetKeys, setSelectedAssetKeys] = useState([]);
   const [isBundling, setIsBundling] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [storeSettings, setStoreSettings] = useState(() => settingsService.getStoreSettings());
+
+  // Listen to global settings updates (e.g. from NFC manager)
+  useEffect(() => {
+    const handleSettingsUpdate = () => {
+      setStoreSettings(settingsService.getStoreSettings());
+    };
+    window.addEventListener('tagtique_settings_updated', handleSettingsUpdate);
+    return () => window.removeEventListener('tagtique_settings_updated', handleSettingsUpdate);
+  }, []);
 
   // Generate or resolve high-res QR Code data URL whenever a sticker is prepared for printing
   useEffect(() => {
     if (printModalItem) {
-      const token = printModalItem.qr_code_value || printModalItem.qrId || printModalItem.tag_id || printModalItem.rawId || 'tagtique';
-      renderStyledQrDataUrl(buildScanUrl(token)).then((url) => {
+      const payload = resolveQrPayload(printModalItem, {
+        supportPhone: storeSettings.supportPhone,
+        qrMode: storeSettings.qrMode
+      });
+      renderStyledQrDataUrl(payload).then((url) => {
         setPrintQrDataUrl(url);
       }).catch(() => {
         setPrintQrDataUrl(printModalItem.qr_image_url || '');
@@ -68,7 +81,7 @@ export default function AdminPage({ onLogout }) {
     } else {
       setPrintQrDataUrl('');
     }
-  }, [printModalItem]);
+  }, [printModalItem, storeSettings]);
 
   const orderSelectionKey = (order) => String(order.tag_id || order.tagId || order.qr_code_value || order.orderId || order.rawId);
   const assetSelectionKey = (asset) => String(asset.id || asset.qr_code_value || asset.qrId);
@@ -82,8 +95,9 @@ export default function AdminPage({ onLogout }) {
     if (!ready.length || isBundling) return;
     setIsBundling(true);
     try {
+      const options = { supportPhone: storeSettings.supportPhone, qrMode: storeSettings.qrMode };
       if (ready.length === 1) {
-        const blob = await renderStickerBlob(ready[0]);
+        const blob = await renderStickerBlob(ready[0], options);
         triggerFileDownload(blob, stickerFileName(ready[0]));
         showToast('Downloaded the full sticker');
         return;
@@ -92,7 +106,7 @@ export default function AdminPage({ onLogout }) {
       const files = [];
       const usedNames = new Set();
       for (const item of ready) {
-        const blob = await renderStickerBlob(item);
+        const blob = await renderStickerBlob(item, options);
         let name = stickerFileName(item);
         if (usedNames.has(name)) name = name.replace(/\.png$/, `-${files.length + 1}.png`);
         usedNames.add(name);
@@ -115,7 +129,10 @@ export default function AdminPage({ onLogout }) {
     customerName: '',
     phoneNumber: '',
     guardianNumber: '',
-    status: 'Pending'
+    status: 'Pending',
+    phonePrivacy: 'private',
+    namePrivacy: 'public',
+    emergencyPrivacy: 'private'
   });
 
   useEffect(() => {
@@ -126,7 +143,10 @@ export default function AdminPage({ onLogout }) {
         customerName: selectedOrder.customerName || selectedOrder.customer_name || '',
         phoneNumber: selectedOrder.phoneNumber || selectedOrder.phone_number || '',
         guardianNumber: selectedOrder.guardianNumber || selectedOrder.guardian_number || '',
-        status: selectedOrder.status || 'Pending'
+        status: selectedOrder.status || 'Pending',
+        phonePrivacy: selectedOrder.phonePrivacy || 'private',
+        namePrivacy: selectedOrder.namePrivacy || 'public',
+        emergencyPrivacy: selectedOrder.emergencyPrivacy || 'private'
       });
     }
   }, [selectedOrder]);
@@ -179,10 +199,17 @@ export default function AdminPage({ onLogout }) {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
-          // Filter out legacy demo entries if any
-          return parsed.filter(
-            (o) => o?.customerName !== 'Alex Henderson' && o?.orderId !== '#TGT-000482' && o?.rawId !== '000482'
-          );
+          const seen = new Set();
+          const clean = [];
+          for (const o of parsed) {
+            if (!o) continue;
+            if (o?.customerName === 'Alex Henderson' || o?.orderId === '#TGT-000482' || o?.rawId === '000482') continue;
+            const key = o.tag_id || o.qr_code_value || o.serialNumber || (String(o.customerName) + '_' + String(o.vehicleNumber));
+            if (seen.has(key)) continue;
+            seen.add(key);
+            clean.push(o);
+          }
+          return clean;
         }
       }
     } catch {}
@@ -208,57 +235,6 @@ export default function AdminPage({ onLogout }) {
 
     return () => unsubscribe();
   }, []);
-
-  // Sync incoming orders from storefront customizer
-  useEffect(() => {
-    if (lastOrder && lastOrder.orderId) {
-      setOrders((prev) => {
-        const safePrev = Array.isArray(prev) ? prev : [];
-        const exists = safePrev.some((o) => o?.orderId === lastOrder.orderId || o?.rawId === lastOrder.orderId);
-        if (!exists) {
-          const firstItem = lastOrder.items?.[0] || {};
-          const plateText = firstItem.engravedText || firstItem.displayName || 'NEW 001';
-          const rawId = String(Math.floor(100000 + Math.random() * 900000)).slice(0, 6);
-          const newOrder = {
-            orderId: `#TGT-${rawId}`,
-            rawId: lastOrder.orderId,
-            order_id: 'ord-' + (safePrev.length + 1),
-            order_number: `TGT-${rawId}`,
-            customerName: lastOrder.customer?.name || 'Customer',
-            customer_name: lastOrder.customer?.name || 'Customer',
-            email: lastOrder.customer?.email || 'user@example.com',
-            vehicleNumber: plateText,
-            vehicle_number: plateText,
-            vehicleType: firstItem.tagType || 'Car',
-            vehicle_type: firstItem.tagType || 'Car',
-            phoneNumber: lastOrder.customer?.phone || '0300-1234567',
-            phone_number: lastOrder.customer?.phone || '0300-1234567',
-            guardianNumber: '0300-6622175',
-            guardian_number: '0300-6622175',
-            package: lastOrder.items?.length >= 3 ? 'Pack of 3' : lastOrder.items?.length === 2 ? 'Pack of 2' : 'Single Tag',
-            packageSub: firstItem.finishName || 'Shiny Acrylic',
-            package_type: lastOrder.items?.length >= 3 ? 'Pack of 3' : lastOrder.items?.length === 2 ? 'Pack of 2' : 'Single Tag',
-            status: 'Pending',
-            changeStatus: 'Pending',
-            amount: Number(lastOrder.finalTotal || lastOrder.subtotal) || 999,
-            total_amount: Number(lastOrder.finalTotal || lastOrder.subtotal) || 999,
-            date: new Date().toISOString().slice(0, 10),
-            location: lastOrder.shippingAddress?.city ? `${lastOrder.shippingAddress.city}, PK` : 'Faisalabad, PK',
-            qrId: `QR-${rawId}-1`,
-            serialNumber: `SN-${rawId}`,
-            serial_number: `SN-${rawId}`,
-            scans: 0
-          };
-          const updated = [newOrder, ...safePrev];
-          try {
-            localStorage.setItem('tagtique_admin_v3_orders', JSON.stringify(updated));
-          } catch (_) {}
-          return updated;
-        }
-        return safePrev;
-      });
-    }
-  }, [lastOrder]);
 
   // Keyboard shortcut Ctrl+K
   useEffect(() => {
@@ -363,11 +339,26 @@ export default function AdminPage({ onLogout }) {
       phoneNumber: editForm.phoneNumber.trim(),
       guardian_number: editForm.guardianNumber.trim(),
       guardianNumber: editForm.guardianNumber.trim(),
+      phonePrivacy: editForm.phonePrivacy || 'private',
+      namePrivacy: editForm.namePrivacy || 'public',
+      emergencyPrivacy: editForm.emergencyPrivacy || 'private',
       status: editForm.status
     };
 
     try {
       await orderBackendService.updateTagAndOrder(selectedOrder.tag_id || selectedOrder.tagId, updates);
+
+      tagRegistryService.registerTag({
+        qrToken: selectedOrder.qr_code_value || selectedOrder.qrId || trimmedVehicleNumber,
+        registrationNumber: trimmedVehicleNumber,
+        vehicleName: editForm.vehicleType,
+        vehicleType: editForm.vehicleType,
+        ownerName: editForm.customerName.trim(),
+        phoneNumber: editForm.phoneNumber.trim(),
+        guardianNumber: editForm.guardianNumber.trim(),
+        phonePrivacy: editForm.phonePrivacy || 'private',
+        status: editForm.status === 'Deactivated' ? 'inactive' : 'active'
+      });
 
       setOrders((prev) => {
         const safePrev = Array.isArray(prev) ? prev : [];
@@ -389,7 +380,7 @@ export default function AdminPage({ onLogout }) {
       });
 
       setSelectedOrder(null);
-      showToast(`Updated vehicle number to "${trimmedVehicleNumber}"`);
+      showToast(`Updated vehicle details for "${trimmedVehicleNumber}"`);
     } catch (err) {
       console.error('Save order error:', err);
       showToast('Failed to save vehicle details');
@@ -503,6 +494,13 @@ export default function AdminPage({ onLogout }) {
   };
 
   const safeOrders = Array.isArray(orders) ? orders : [];
+
+  // Synchronize orders into offline tag registry
+  useEffect(() => {
+    if (safeOrders.length > 0) {
+      tagRegistryService.syncFromOrders(safeOrders);
+    }
+  }, [safeOrders]);
 
   // Dynamically derive customers from real orders
   const dynamicCustomers = useMemo(() => {
@@ -673,21 +671,6 @@ export default function AdminPage({ onLogout }) {
               <div className="flex items-center gap-3">
                 <QrCode className={`w-4 h-4 ${activeNav === 'qrcodes' ? 'text-tag-brown' : 'text-tag-brown-subtle'}`} />
                 <span>QR Codes</span>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => { setActiveNav('nfc'); setMobileNavOpen(false); }}
-              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all ${
-                activeNav === 'nfc'
-                  ? 'bg-gradient-to-r from-[#F4EADA] to-[#FCEFDA] text-tag-brown border border-tag-border shadow-warm-sm'
-                  : 'text-tag-brown-muted hover:text-tag-brown hover:bg-tag-card/60'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <Nfc className={`w-4 h-4 ${activeNav === 'nfc' ? 'text-tag-brown' : 'text-tag-brown-subtle'}`} />
-                <span>NFC Tags</span>
               </div>
             </button>
 
@@ -1000,10 +983,21 @@ export default function AdminPage({ onLogout }) {
                                 aria-label={`Select ${order.vehicleNumber || order.orderId}`}
                               />
                             </td>
-                            {/* Customer Name & Order ID & Serial */}
+                            {/* Customer Name & Order ID & Serial & Privacy */}
                             <td className="py-4">
-                              <div className="font-extrabold text-sm text-tag-brown capitalize">
-                                {order.customerName}
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-extrabold text-sm text-tag-brown capitalize">
+                                  {order.customerName}
+                                </span>
+                                {order.namePrivacy === 'anonymous' ? (
+                                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-stone-100 border border-stone-200 text-stone-700 text-[9.5px] font-bold" title="Name is anonymous on public scan">
+                                    🔒 Anonymous
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-emerald-50 border border-emerald-200 text-emerald-800 text-[9.5px] font-bold" title="Name is public on profile">
+                                    🌐 Public Name
+                                  </span>
+                                )}
                               </div>
                               <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                                 <span className="text-[11px] font-mono text-tag-brown-muted">
@@ -1038,14 +1032,42 @@ export default function AdminPage({ onLogout }) {
                               </div>
                             </td>
 
-                            {/* Phone Number */}
-                            <td className="py-4 font-mono font-semibold text-tag-brown">
-                              {order.phoneNumber}
+                            {/* Phone Number & Privacy */}
+                            <td className="py-4">
+                              <div className="font-mono font-semibold text-tag-brown">
+                                {order.phoneNumber || '—'}
+                              </div>
+                              <div className="mt-1">
+                                {order.phonePrivacy === 'public' ? (
+                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-sky-50 border border-sky-300 text-sky-800 text-[10px] font-extrabold shadow-2xs" title="Public: Caller connects directly to owner online & offline">
+                                    🌐 Public
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-50 border border-amber-300 text-amber-900 text-[10px] font-extrabold shadow-2xs" title="Private (Proxy): Calls route via Tagtique proxy / helpline">
+                                    🔒 Private (Proxy)
+                                  </span>
+                                )}
+                              </div>
                             </td>
 
-                            {/* Guardian Number */}
-                            <td className="py-4 font-mono font-medium text-tag-brown-muted">
-                              {order.guardianNumber}
+                            {/* Guardian Number & Privacy */}
+                            <td className="py-4">
+                              <div className="font-mono font-medium text-tag-brown-muted">
+                                {order.guardianNumber || '—'}
+                              </div>
+                              {order.guardianNumber && (
+                                <div className="mt-1">
+                                  {order.emergencyPrivacy === 'public' ? (
+                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-sky-50 border border-sky-300 text-sky-800 text-[10px] font-extrabold" title="Emergency number is public">
+                                      🌐 Public
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-stone-100 border border-stone-200 text-stone-700 text-[10px] font-extrabold" title="Emergency number is masked">
+                                      🔒 Masked
+                                    </span>
+                                  )}
+                                </div>
+                              )}
                             </td>
 
                             {/* Package */}
@@ -1736,54 +1758,112 @@ export default function AdminPage({ onLogout }) {
             </div>
           )}
 
-          {activeNav === 'nfc' && <NfcAdminSection orders={safeOrders} />}
-
           {/* ======================================================== */}
           {/* TAB 5: WORKSHOP SETTINGS */}
           {/* ======================================================== */}
           {activeNav === 'settings' && (
             <div className="flex flex-col gap-6 max-w-2xl animate-fadeIn">
-              <h1 className="font-baloo font-extrabold text-2xl sm:text-3xl text-tag-brown tracking-tight">
-                Workshop & Store Settings
-              </h1>
-              <div className="bg-tag-card rounded-2xl border border-tag-border p-6 shadow-warm-sm flex flex-col gap-4">
-                <div>
-                  <label className="text-xs font-bold text-tag-brown-muted block mb-1">Workshop Location</label>
-                  <input
-                    type="text"
-                    readOnly
-                    defaultValue="208 Chak Road, West Canal Road, Faisalabad, Pakistan"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-tag-border bg-tag-bg text-xs font-semibold text-tag-brown"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-tag-brown-muted block mb-1">Raast ID (Direct Pay)</label>
-                  <input
-                    type="text"
-                    readOnly
-                    defaultValue="tagtique@mcb"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-tag-border bg-tag-bg text-xs font-mono font-bold text-tag-brown"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-tag-brown-muted block mb-1">Meezan IBAN</label>
-                  <input
-                    type="text"
-                    readOnly
-                    defaultValue="PK36MEZN0001234567890123"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-tag-border bg-tag-bg text-xs font-mono font-bold text-tag-brown"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-tag-brown-muted block mb-1">Official WhatsApp Hotline</label>
-                  <input
-                    type="text"
-                    readOnly
-                    defaultValue="0329-2082080"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-tag-border bg-tag-bg text-xs font-mono font-bold text-tag-brown"
-                  />
-                </div>
+              <div className="flex flex-col">
+                <h1 className="font-baloo font-extrabold text-2xl sm:text-3xl text-tag-brown tracking-tight">
+                  Workshop & Store Settings
+                </h1>
+                <p className="text-xs text-tag-brown-muted font-medium mt-1">
+                  Manage official customer support helpline, payment credentials, and QR sticker encoding modes.
+                </p>
               </div>
+
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  settingsService.saveStoreSettings(storeSettings);
+                  showToast('✅ Workshop settings & Helpline saved successfully!');
+                }}
+                className="bg-tag-card rounded-2xl border border-tag-border p-6 shadow-warm-sm flex flex-col gap-5"
+              >
+                <div>
+                  <label className="text-xs font-bold text-tag-brown-muted block mb-1.5">Workshop Location</label>
+                  <input
+                    type="text"
+                    value={storeSettings.workshopLocation}
+                    onChange={(e) => setStoreSettings({ ...storeSettings, workshopLocation: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-tag-border bg-tag-bg text-xs font-semibold text-tag-brown outline-none focus:border-tag-amber"
+                  />
+                </div>
+
+                <div className="p-4 rounded-xl bg-amber-50/70 border border-tag-amber/80 flex flex-col gap-2">
+                  <label className="text-xs font-black text-tag-brown flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <Phone className="w-3.5 h-3.5 text-tag-amber-deep" />
+                      <span>Official Helpline & Offline Proxy Number (Editable)</span>
+                    </span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-tag-amber text-tag-brown">
+                      Applies Everywhere
+                    </span>
+                  </label>
+                  <p className="text-[11px] text-tag-brown-muted">
+                    This phone number is embedded into QR vCards and dialed when offline.
+                  </p>
+                  <input
+                    type="text"
+                    value={storeSettings.supportPhone}
+                    onChange={(e) => setStoreSettings({ ...storeSettings, supportPhone: e.target.value })}
+                    placeholder="03292082080"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-tag-amber bg-white text-sm font-mono font-bold text-tag-brown outline-none shadow-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-tag-brown-muted block mb-1.5">
+                    QR Encoding Mode (Offline Call + Online Web)
+                  </label>
+                  <select
+                    value={storeSettings.qrMode}
+                    onChange={(e) => setStoreSettings({ ...storeSettings, qrMode: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-tag-border bg-tag-bg text-xs font-bold text-tag-brown outline-none focus:border-tag-amber"
+                  >
+                    <option value="url">
+                      Direct Web Link (URL) — Opens Digital Vehicle Profile Online & Smart Offline Dialer (Recommended)
+                    </option>
+                    <option value="vcard">
+                      Contact Card (vCard) — Opens Phone Contact Directly into Address Book
+                    </option>
+                  </select>
+                  <p className="text-[11px] text-tag-brown-muted mt-1">
+                    Web Link mode ensures mobile cameras open the live digital profile page in Safari/Chrome when online, with automatic offline dialer routing when disconnected.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-bold text-tag-brown-muted block mb-1.5">Raast ID (Direct Pay)</label>
+                    <input
+                      type="text"
+                      value={storeSettings.raastId}
+                      onChange={(e) => setStoreSettings({ ...storeSettings, raastId: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-tag-border bg-tag-bg text-xs font-mono font-bold text-tag-brown outline-none focus:border-tag-amber"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-tag-brown-muted block mb-1.5">Meezan IBAN</label>
+                    <input
+                      type="text"
+                      value={storeSettings.meezanIban}
+                      onChange={(e) => setStoreSettings({ ...storeSettings, meezanIban: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-tag-border bg-tag-bg text-xs font-mono font-bold text-tag-brown outline-none focus:border-tag-amber"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    className="amber-gradient-btn px-6 py-2.5 rounded-xl text-xs font-black text-tag-brown flex items-center justify-center gap-2 shadow-warm-xs hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer"
+                  >
+                    <CheckCircle2 className="w-4 h-4 text-tag-brown" />
+                    <span>Save Settings & Helpline</span>
+                  </button>
+                </div>
+              </form>
             </div>
           )}
         </main>
@@ -2084,9 +2164,35 @@ export default function AdminPage({ onLogout }) {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[11px] font-bold text-tag-brown-muted block mb-1">
-                      Customer Name
-                    </label>
+                    <div className="flex items-center justify-between mb-1 flex-wrap gap-1">
+                      <label className="text-[11px] font-bold text-tag-brown-muted">
+                        Customer Name
+                      </label>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setEditForm((prev) => ({ ...prev, namePrivacy: 'public' }))}
+                          className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition-colors ${
+                            editForm.namePrivacy !== 'anonymous'
+                              ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                              : 'bg-white text-tag-brown-muted border border-tag-border'
+                          }`}
+                        >
+                          🌐 Public
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditForm((prev) => ({ ...prev, namePrivacy: 'anonymous' }))}
+                          className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition-colors ${
+                            editForm.namePrivacy === 'anonymous'
+                              ? 'bg-stone-200 text-stone-800 border border-stone-400'
+                              : 'bg-white text-tag-brown-muted border border-tag-border'
+                          }`}
+                        >
+                          🔒 Anonymous
+                        </button>
+                      </div>
+                    </div>
                     <input
                       type="text"
                       value={editForm.customerName}
@@ -2096,9 +2202,35 @@ export default function AdminPage({ onLogout }) {
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-bold text-tag-brown-muted block mb-1">
-                      Phone Number
-                    </label>
+                    <div className="flex items-center justify-between mb-1 flex-wrap gap-1">
+                      <label className="text-[11px] font-bold text-tag-brown-muted">
+                        Phone Number
+                      </label>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setEditForm((prev) => ({ ...prev, phonePrivacy: 'private' }))}
+                          className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition-colors ${
+                            editForm.phonePrivacy !== 'public'
+                              ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                              : 'bg-white text-tag-brown-muted border border-tag-border'
+                          }`}
+                        >
+                          🔒 Private
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditForm((prev) => ({ ...prev, phonePrivacy: 'public' }))}
+                          className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition-colors ${
+                            editForm.phonePrivacy === 'public'
+                              ? 'bg-sky-100 text-sky-900 border border-sky-300'
+                              : 'bg-white text-tag-brown-muted border border-tag-border'
+                          }`}
+                        >
+                          🌐 Public
+                        </button>
+                      </div>
+                    </div>
                     <input
                       type="text"
                       value={editForm.phoneNumber}
@@ -2108,9 +2240,35 @@ export default function AdminPage({ onLogout }) {
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-bold text-tag-brown-muted block mb-1">
-                      Guardian / Emergency #
-                    </label>
+                    <div className="flex items-center justify-between mb-1 flex-wrap gap-1">
+                      <label className="text-[11px] font-bold text-tag-brown-muted">
+                        Guardian / Emergency #
+                      </label>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setEditForm((prev) => ({ ...prev, emergencyPrivacy: 'private' }))}
+                          className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition-colors ${
+                            editForm.emergencyPrivacy !== 'public'
+                              ? 'bg-stone-200 text-stone-800 border border-stone-300'
+                              : 'bg-white text-tag-brown-muted border border-tag-border'
+                          }`}
+                        >
+                          🔒 Masked
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditForm((prev) => ({ ...prev, emergencyPrivacy: 'public' }))}
+                          className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition-colors ${
+                            editForm.emergencyPrivacy === 'public'
+                              ? 'bg-sky-100 text-sky-900 border border-sky-300'
+                              : 'bg-white text-tag-brown-muted border border-tag-border'
+                          }`}
+                        >
+                          🌐 Public
+                        </button>
+                      </div>
+                    </div>
                     <input
                       type="text"
                       value={editForm.guardianNumber}

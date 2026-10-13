@@ -89,11 +89,18 @@ export function NotFoundScreen({ tagId, onRetry }) {
   );
 }
 
-export function NetworkErrorScreen({ onRetry, supportPhone = '03292082080' }) {
+export function NetworkErrorScreen({
+  onRetry,
+  targetPhone = '03292082080',
+  isPrivate = true,
+  vehicleNumber = ''
+}) {
+  const cleanPhone = String(targetPhone || '03292082080').trim();
+
   React.useEffect(() => {
     const triggerDial = () => {
       try {
-        window.location.href = `tel:${supportPhone}`;
+        window.location.href = `tel:${cleanPhone}`;
       } catch (_) {}
     };
 
@@ -112,7 +119,7 @@ export function NetworkErrorScreen({ onRetry, supportPhone = '03292082080' }) {
       window.removeEventListener('touchstart', triggerDial);
       window.removeEventListener('click', triggerDial);
     };
-  }, [supportPhone]);
+  }, [cleanPhone]);
 
   return (
     <div className="min-h-[70vh] flex flex-col items-center justify-center p-5 text-center gap-4 max-w-sm mx-auto animate-fadeIn">
@@ -129,33 +136,41 @@ export function NetworkErrorScreen({ onRetry, supportPhone = '03292082080' }) {
         <span>No Internet Connection</span>
       </div>
 
+      {vehicleNumber && (
+        <span className="px-3 py-1 rounded-xl bg-white border border-[#EAE3D6] text-xs font-mono font-black text-[#1C120C] shadow-2xs">
+          Vehicle: {vehicleNumber}
+        </span>
+      )}
+
       <div className="flex flex-col gap-1">
         <h2 className="font-baloo font-extrabold text-2xl text-[#1C120C] leading-tight">
-          Routing to Vehicle Support
+          {isPrivate ? 'Routing to Vehicle Support' : 'Calling Vehicle Owner'}
         </h2>
         <p className="text-xs text-[#8C7A6B] leading-relaxed">
-          You scanned this tag without internet. Connecting you directly to Tagtique Support so you can reach the vehicle owner immediately.
+          {isPrivate
+            ? "This vehicle owner's number is kept private for security. Connecting you directly to Tagtique Support to reach the owner."
+            : 'Direct contact is enabled for this vehicle. Connecting you directly to the vehicle owner.'}
         </p>
       </div>
 
       {/* Instant 1-Tap Dial Button */}
       <a
-        href={`tel:${supportPhone}`}
+        href={`tel:${cleanPhone}`}
         className="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-[#1C120C] to-[#2E1F16] text-[#FDF7EC] font-extrabold text-sm flex items-center justify-center gap-3 shadow-warm-md hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer border border-amber-400/40"
       >
         <Phone className="w-5 h-5 text-[#E6AF2E] shrink-0" />
         <div className="flex flex-col text-left">
           <span className="text-[10px] text-amber-300 uppercase tracking-widest font-black leading-none">
-            Call Support Directly
+            {isPrivate ? 'Call Support Helpline Directly' : 'Call Vehicle Owner Directly'}
           </span>
           <span className="text-base font-black font-mono text-[#FDF7EC] leading-tight">
-            {supportPhone}
+            {cleanPhone}
           </span>
         </div>
       </a>
 
       <p className="text-[11px] text-amber-900 font-semibold animate-pulse">
-        📞 Dialing support line... Tap above if your phone doesn't open.
+        📞 Launching call... Tap above if your phone dialer doesn't open.
       </p>
 
       {onRetry && (

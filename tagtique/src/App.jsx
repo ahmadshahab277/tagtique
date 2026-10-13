@@ -14,7 +14,6 @@ import CheckoutPage from './pages/CheckoutPage';
 import OrderConfirmationPage from './pages/OrderConfirmationPage';
 import PublicProfilePage from './pages/PublicProfilePage';
 import PublicVehicleScanPage from './pages/PublicVehicleScanPage';
-import PublicNfcPage from './pages/PublicNfcPage';
 import AdminRoute from './components/AdminRoute';
 
 // Scroll to top on every route change
@@ -133,7 +132,7 @@ function AppContent() {
             {/* Dedicated Smart Vehicle QR Communication Page */}
             <Route path="/scan" element={<PublicVehicleScanPage />} />
             <Route path="/tag/:tagId" element={<PublicVehicleScanPage />} />
-            <Route path="/nfc/:tagId" element={<PublicNfcPage />} />
+            <Route path="/nfc/:tagId" element={<PublicVehicleScanPage />} />
             <Route path="/u/:username" element={<PublicVehicleScanPage />} />
 
             {/* Legacy Profile Card Route */}

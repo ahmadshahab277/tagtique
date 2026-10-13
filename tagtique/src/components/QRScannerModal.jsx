@@ -20,12 +20,9 @@ import {
   Sparkles,
   Save,
   Car,
-  Scan,
-  Radio,
-  Smartphone
+  Scan
 } from 'lucide-react';
 import { orderBackendService } from '../services/orderBackendService';
-import { isWebNfcSupported, explainNfcError } from '../utils/nfcWriter';
 
 export default function QRScannerModal({
   isOpen,
@@ -53,14 +50,6 @@ export default function QRScannerModal({
   const [selectedCameraId, setSelectedCameraId] = useState('');
   const [isCameraActive, setIsCameraActive] = useState(false);
   const html5FileDecoderRef = useRef(null);
-
-  // NFC tap scanning & programming state
-  const [isNfcListening, setIsNfcListening] = useState(false);
-  const [nfcError, setNfcError] = useState('');
-  const [nfcSuccessMsg, setNfcSuccessMsg] = useState('');
-  const [isWritingNfc, setIsWritingNfc] = useState(false);
-  const [nfcWriteResult, setNfcWriteResult] = useState('');
-  const nfcAbortRef = useRef(null);
 
   // In-Panel Direct Edit & Reassign state
   const [editForm, setEditForm] = useState({
@@ -217,127 +206,6 @@ export default function QRScannerModal({
       stopCamera();
     };
   }, [isOpen, activeTab, scannedTag]);
-
-  // NFC Scanner tab lifecycle
-  useEffect(() => {
-    if (isOpen && activeTab === 'nfc' && !scannedTag) {
-      startNfcReader();
-    } else {
-      stopNfcReader();
-    }
-    return () => {
-      stopNfcReader();
-    };
-  }, [isOpen, activeTab, scannedTag]);
-
-  const startNfcReader = async () => {
-    setNfcError('');
-    setNfcSuccessMsg('');
-    if (!isWebNfcSupported()) {
-      setNfcError(
-        'Web NFC is supported in Chrome on Android. On iPhones & other devices, holding the phone near the sticker chip automatically opens the vehicle link in your browser.'
-      );
-      return;
-    }
-
-    try {
-      if (nfcAbortRef.current) {
-        nfcAbortRef.current.abort();
-      }
-      const controller = new AbortController();
-      nfcAbortRef.current = controller;
-      setIsNfcListening(true);
-
-      const reader = new window.NDEFReader();
-      await reader.scan({ signal: controller.signal });
-
-      reader.onreading = (event) => {
-        playRecognitionChime();
-        setIsNfcListening(false);
-
-        let detected = '';
-        for (const record of event.message.records) {
-          let text = '';
-          if (record.recordType === 'text') {
-            const dec = new TextDecoder(record.encoding || 'utf-8');
-            text = dec.decode(record.data);
-          } else if (record.recordType === 'url') {
-            const dec = new TextDecoder();
-            text = typeof record.data === 'string' ? record.data : dec.decode(record.data);
-          }
-          if (text) {
-            detected = text;
-            break;
-          }
-        }
-
-        if (detected) {
-          setNfcSuccessMsg(`NFC Chip Scanned: ${detected}`);
-          handleDecodedResult(detected);
-        }
-      };
-
-      reader.onreadingerror = () => {
-        setNfcError('Could not read the NFC tag. Hold the phone flat against the sticker chip.');
-      };
-    } catch (err) {
-      console.warn('NFC start error:', err);
-      setIsNfcListening(false);
-      setNfcError(explainNfcError(err));
-    }
-  };
-
-  const stopNfcReader = () => {
-    if (nfcAbortRef.current) {
-      nfcAbortRef.current.abort();
-      nfcAbortRef.current = null;
-    }
-    setIsNfcListening(false);
-  };
-
-  // Program / Write physical NFC chip behind sticker
-  const handleProgramNfc = async () => {
-    if (!scannedTag) return;
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://tagtiquefromhaider.netlify.app';
-    const qrToken = scannedTag.qr_code_value || scannedTag.qrId || `tgt-${Date.now()}`;
-    const scanUrl = `${origin}/scan?token=${encodeURIComponent(qrToken)}`;
-
-    // Automatically save form updates to Supabase and cache first
-    try {
-      await handleSaveReassign();
-    } catch (_) {}
-
-    if (!isWebNfcSupported()) {
-      try {
-        await navigator.clipboard.writeText(scanUrl);
-        setNfcWriteResult('📋 Tag URL copied! On iPhone, paste into NFC Tools app to burn a new chip. (Your vehicle is already 100% assigned in the cloud!)');
-      } catch (_) {
-        setNfcWriteResult(`Link: ${scanUrl} (Vehicle is already assigned in cloud)`);
-      }
-      return;
-    }
-
-    setIsWritingNfc(true);
-    setNfcWriteResult('📱 Hold the chip flat against the back of your phone now...');
-
-    try {
-      const reader = new window.NDEFReader();
-      await reader.write({
-        records: [
-          { recordType: 'url', data: scanUrl },
-          { recordType: 'text', data: `Tagtique PK: ${editForm.vehicleNumber || scannedTag.vehicleNumber || 'TAG'}` }
-        ]
-      });
-
-      setNfcWriteResult('✅ Physical NFC chip programmed successfully! Chip is now linked to this vehicle.');
-      playRecognitionChime();
-    } catch (err) {
-      console.error('NFC write error:', err);
-      setNfcWriteResult(explainNfcError(err));
-    } finally {
-      setIsWritingNfc(false);
-    }
-  };
 
   const stopCamera = async () => {
     if (html5QrCodeRef.current) {
@@ -1037,43 +905,6 @@ export default function QRScannerModal({
                 </div>
               </div>
 
-              {/* Physical NFC Chip Pairing Card */}
-              <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-50 to-amber-100/60 border border-amber-300/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-tag-brown text-tag-amber flex items-center justify-center shrink-0 shadow-2xs">
-                    <Radio className="w-5 h-5 text-tag-amber animate-pulse" />
-                  </div>
-                  <div className="flex flex-col">
-                    <div className="flex items-center gap-2">
-                      <span className="font-baloo font-bold text-sm text-tag-brown">
-                        Physical NFC Chip Pairing
-                      </span>
-                      <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-amber-200 text-amber-900 border border-amber-300/70">
-                        NTAG213/215
-                      </span>
-                    </div>
-                    <span className="text-[11px] text-tag-brown-muted leading-tight">
-                      Program the physical chip behind this sticker with the vehicle link (<code className="font-mono text-tag-brown font-bold text-[10px]">{`/scan?token=${(scannedTag.qr_code_value || scannedTag.qrId || '').slice(0, 16)}...`}</code>)
-                    </span>
-                    {nfcWriteResult && (
-                      <span className={`text-[11px] font-bold mt-1 ${nfcWriteResult.includes('✅') ? 'text-emerald-700' : 'text-amber-950'}`}>
-                        {nfcWriteResult}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  disabled={isWritingNfc}
-                  onClick={handleProgramNfc}
-                  className="amber-gradient-btn px-4 py-2 rounded-xl text-xs font-black text-tag-brown flex items-center gap-1.5 shadow-warm-xs shrink-0 disabled:opacity-50"
-                >
-                  <Radio className="w-3.5 h-3.5" />
-                  <span>{isWritingNfc ? 'Holding Tag...' : 'Program NFC Chip'}</span>
-                </button>
-              </div>
-
               {/* Action Toolbar */}
               <div className="flex items-center justify-between pt-3 border-t border-tag-border gap-2 flex-wrap">
                 <div className="flex items-center gap-2">
@@ -1119,7 +950,7 @@ export default function QRScannerModal({
           /* ======================================================== */
           <div className="flex flex-col gap-4">
             {/* Mode Tabs */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-1 rounded-2xl bg-tag-pill border border-tag-border text-xs font-bold">
+            <div className="grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-tag-pill border border-tag-border text-xs font-bold">
               <button
                 type="button"
                 onClick={() => {
@@ -1166,22 +997,6 @@ export default function QRScannerModal({
               >
                 <Camera className="w-3.5 h-3.5" />
                 <span>Webcam</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setCameraError('');
-                  setActiveTab('nfc');
-                }}
-                className={`py-2 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 ${
-                  activeTab === 'nfc'
-                    ? 'bg-tag-brown text-tag-bg shadow-warm-sm'
-                    : 'text-tag-brown hover:bg-white/60'
-                }`}
-              >
-                <Radio className="w-3.5 h-3.5 text-tag-amber animate-pulse" />
-                <span>NFC Tap</span>
               </button>
             </div>
 
@@ -1410,73 +1225,6 @@ export default function QRScannerModal({
                     </select>
                   </div>
                 )}
-              </div>
-            )}
-
-            {/* TAB 4: NFC TAP SCAN */}
-            {activeTab === 'nfc' && (
-              <div className="flex flex-col gap-4">
-                <div className="p-6 rounded-3xl border-2 border-dashed border-tag-amber/70 bg-amber-50/50 flex flex-col items-center text-center gap-4 relative overflow-hidden">
-                  {/* Radar Wave Graphic */}
-                  <div className="relative w-24 h-24 flex items-center justify-center my-1">
-                    <span className="absolute w-24 h-24 rounded-full bg-tag-amber/20 animate-ping opacity-60" />
-                    <span className="absolute w-16 h-16 rounded-full bg-tag-amber/30 animate-pulse" />
-                    <div className="w-12 h-12 rounded-2xl bg-tag-brown text-tag-amber flex items-center justify-center shadow-warm-sm border border-tag-amber relative z-10">
-                      <Radio className="w-6 h-6 text-tag-amber animate-pulse" />
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-1 max-w-sm">
-                    <h4 className="font-baloo font-extrabold text-base text-tag-brown">
-                      {isNfcListening ? 'Waiting for NFC Tag Touch...' : 'NFC Sticker Reader'}
-                    </h4>
-                    <p className="text-xs text-tag-brown-muted">
-                      Hold your phone or USB NFC reader within 3–4 cm of the physical NFC chip behind the sticker to scan it immediately.
-                    </p>
-                  </div>
-
-                  {/* Active Status Badge */}
-                  <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white border border-tag-border text-xs font-bold text-tag-brown shadow-2xs">
-                    <span className={`w-2 h-2 rounded-full ${isNfcListening ? 'bg-emerald-500 animate-ping' : 'bg-tag-amber'}`} />
-                    <span>{isNfcListening ? 'NFC Radar Active (Scanning)' : 'NFC Reader Ready'}</span>
-                  </div>
-
-                  {nfcSuccessMsg && (
-                    <div className="p-3 rounded-2xl bg-emerald-100/90 border border-emerald-300 text-emerald-950 text-xs font-bold flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span>{nfcSuccessMsg}</span>
-                    </div>
-                  )}
-
-                  {nfcError && (
-                    <div className="p-3 rounded-2xl bg-amber-100/90 border border-amber-300 text-amber-950 text-xs text-left flex items-start gap-2 max-w-md">
-                      <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                      <span>{nfcError}</span>
-                    </div>
-                  )}
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={isNfcListening ? stopNfcReader : startNfcReader}
-                      className="amber-gradient-btn px-6 py-2.5 rounded-full text-xs font-extrabold text-tag-brown flex items-center gap-2 shadow-warm-sm"
-                    >
-                      <Radio className="w-3.5 h-3.5" />
-                      <span>{isNfcListening ? 'Stop NFC Radar' : 'Start NFC Radar'}</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Device Capability Notice */}
-                <div className="p-3.5 rounded-2xl bg-white border border-tag-border text-xs text-tag-brown-muted flex items-start gap-2.5 shadow-2xs">
-                  <Smartphone className="w-4 h-4 text-tag-amber shrink-0 mt-0.5" />
-                  <div className="flex flex-col gap-0.5">
-                    <span className="font-bold text-tag-brown text-[11.5px]">How NFC Works With Tagtique Stickers:</span>
-                    <span className="text-[11px] leading-relaxed">
-                      Physical NFC chips (NTAG213/215) stuck behind vinyl stickers can be scanned directly by tapping with any modern smartphone (iOS & Android). Web NFC reading operates in Chrome on Android.
-                    </span>
-                  </div>
-                </div>
               </div>
             )}
 

@@ -5,6 +5,20 @@
  */
 
 import { supabase, isSupabaseConfigured } from './supabaseClient';
+import { settingsService } from './settingsService';
+import { tagRegistryService } from './tagRegistryService';
+import { checkIsOnline, isLikelyNetworkError } from './networkService';
+
+export function getActiveProxyPhone() {
+  return settingsService.getSupportPhone();
+}
+
+export function getActiveProxyWhatsApp() {
+  const digits = String(settingsService.getSupportPhone() || '').replace(/\D/g, '');
+  if (digits.startsWith('0')) return `92${digits.slice(1)}`;
+  if (!digits.startsWith('92')) return `92${digits}`;
+  return digits;
+}
 
 // Fallback demo profile as specified in Tagtique architecture requirements
 export const DEFAULT_DEMO_TAG = {
@@ -20,8 +34,8 @@ export const DEFAULT_DEMO_TAG = {
   phonePrivacy: 'private', // 'private' (routed via Tagtique proxy) | 'public' (direct contact)
   namePrivacy: 'public',   // 'public' | 'private'
   emergencyPrivacy: 'private',
-  proxyPhone: '03292082080', // Tagtique Official Masked Proxy Line
-  proxyWhatsApp: '923292082080',
+  get proxyPhone() { return getActiveProxyPhone(); },
+  get proxyWhatsApp() { return getActiveProxyWhatsApp(); },
   maskedPhone: '+92 ••• ••••567',
   maskedGuardian: '+92 ••• ••••543',
   emergencyEscalationSeconds: 180, // 3 minutes escalation window
@@ -56,92 +70,24 @@ class TagCommunicationService {
     }
 
     const clean = String(tagIdentifier).trim();
-    let networkFailed = false;
+
+    // Fast check: if device is already offline, report network error immediately
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      return {
+        success: false,
+        error: 'NETWORK_ERROR',
+        isOffline: true,
+        message: 'Device has no internet connection'
+      };
+    }
 
     // 1. Check Supabase if connected
     if (supabase && isSupabaseConfigured()) {
       try {
-        // 1a. Check nfc_tags table by tag_code or qr_code_value
-        try {
-          const { data: nfcRows } = await supabase
-            .from('nfc_tags')
-            .select('*')
-            .or(`tag_code.eq.${clean.toUpperCase()},qr_code_value.eq.${clean}`)
-            .limit(1);
-
-          if (nfcRows && nfcRows.length > 0 && nfcRows[0].status !== 'disabled') {
-            const n = nfcRows[0];
-            return {
-              success: true,
-              data: {
-                tagId: n.tag_code,
-                qrToken: n.qr_code_value || n.tag_code,
-                vehicleName: n.vehicle_label ? `${n.vehicle_label} (Verified)` : 'Verified Vehicle',
-                registrationNumber: n.vehicle_label || n.tag_code,
-                vehicleType: 'Car',
-                status: 'active',
-                isVerified: true,
-                ownerName: n.owner_name ? n.owner_name.split(' ')[0] : (n.customer_name || 'Owner'),
-                phoneNumber: n.owner_phone || '',
-                guardianNumber: n.guardian_phone || '',
-                maskedPhone: n.owner_phone ? this.maskPhoneNumber(n.owner_phone) : '+92 ••• ••••000',
-                maskedGuardian: n.guardian_phone ? this.maskPhoneNumber(n.guardian_phone) : null,
-                hasGuardianConfigured: Boolean(n.guardian_phone),
-                phonePrivacy: 'private',
-                namePrivacy: 'public',
-                emergencyPrivacy: 'private',
-                proxyPhone: '03292082080',
-                proxyWhatsApp: '923292082080',
-                emergencyEscalationSeconds: 180,
-                maskedCallAvailable: true,
-                maskedSmsAvailable: true,
-                city: 'Faisalabad'
-              }
-            };
-          }
-        } catch (nfcErr) {
-          console.warn('[TagCommunicationService] nfc_tags query warning:', nfcErr);
-        }
-
-        // 1b. Check RPC get_public_nfc_tag if clean looks like TAG-
-        if (/^TAG-[A-Z0-9]+$/i.test(clean)) {
-          try {
-            const { data: rpcTag } = await supabase.rpc('get_public_nfc_tag', { p_tag_code: clean.toUpperCase() });
-            if (rpcTag && rpcTag.found && rpcTag.status === 'active') {
-              return {
-                success: true,
-                data: {
-                  tagId: rpcTag.tagCode || clean.toUpperCase(),
-                  qrToken: clean.toUpperCase(),
-                  vehicleName: rpcTag.vehicleLabel ? `${rpcTag.vehicleLabel} (Verified)` : 'Verified Vehicle',
-                  registrationNumber: rpcTag.vehicleLabel || clean.toUpperCase(),
-                  vehicleType: 'Car',
-                  status: 'active',
-                  isVerified: true,
-                  ownerName: rpcTag.ownerName ? rpcTag.ownerName.split(' ')[0] : 'Owner',
-                  phoneNumber: rpcTag.ownerPhone || '',
-                  guardianNumber: rpcTag.guardianPhone || '',
-                  maskedPhone: rpcTag.ownerPhone ? this.maskPhoneNumber(rpcTag.ownerPhone) : '+92 ••• ••••000',
-                  maskedGuardian: rpcTag.guardianPhone ? this.maskPhoneNumber(rpcTag.guardianPhone) : null,
-                  hasGuardianConfigured: Boolean(rpcTag.guardianPhone),
-                  phonePrivacy: 'private',
-                  namePrivacy: 'public',
-                  emergencyPrivacy: 'private',
-                  proxyPhone: '03292082080',
-                  proxyWhatsApp: '923292082080',
-                  emergencyEscalationSeconds: 180,
-                  maskedCallAvailable: true,
-                  maskedSmsAvailable: true,
-                  city: 'Faisalabad'
-                }
-              };
-            }
-          } catch (_) {}
-        }
-
-        // 1c. Query tags table by qr_code_value or id
+        // 1a. Query tags table by qr_code_value, id, or partial token
+        const unprefix = clean.replace(/^SN-|^#TGT-|^TGT-/i, '').trim();
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(clean);
-        const tagFilters = [`qr_code_value.eq.${clean}`];
+        const tagFilters = [`qr_code_value.eq.${clean}`, `qr_code_value.ilike.%${unprefix}%`];
         if (isUuid) tagFilters.push(`id.eq.${clean}`);
 
         const { data: tagData, error: tagErr } = await supabase
@@ -201,6 +147,46 @@ class TagCommunicationService {
           };
         }
 
+        // 1b. Check nfc_tags table by tag_code or qr_code_value
+        try {
+          const { data: nfcRows } = await supabase
+            .from('nfc_tags')
+            .select('*')
+            .or(`tag_code.eq.${clean.toUpperCase()},qr_code_value.eq.${clean}`)
+            .limit(1);
+
+          if (nfcRows && nfcRows.length > 0 && nfcRows[0].status !== 'disabled') {
+            const n = nfcRows[0];
+            return {
+              success: true,
+              data: {
+                tagId: n.tag_code || clean,
+                qrToken: n.qr_code_value || n.tag_code || clean,
+                vehicleName: n.vehicle_label ? `${n.vehicle_label} (Verified)` : 'Verified Vehicle',
+                registrationNumber: n.vehicle_label || n.tag_code || clean,
+                vehicleType: 'Car',
+                status: 'active',
+                isVerified: true,
+                ownerName: n.owner_name ? n.owner_name.split(' ')[0] : (n.customer_name || 'Owner'),
+                phoneNumber: n.owner_phone || '',
+                guardianNumber: n.guardian_phone || '',
+                maskedPhone: n.owner_phone ? this.maskPhoneNumber(n.owner_phone) : '+92 ••• ••••000',
+                maskedGuardian: n.guardian_phone ? this.maskPhoneNumber(n.guardian_phone) : null,
+                hasGuardianConfigured: Boolean(n.guardian_phone),
+                phonePrivacy: 'private',
+                namePrivacy: 'public',
+                emergencyPrivacy: 'private',
+                proxyPhone: getActiveProxyPhone(),
+                proxyWhatsApp: getActiveProxyWhatsApp(),
+                emergencyEscalationSeconds: 180,
+                maskedCallAvailable: true,
+                maskedSmsAvailable: true,
+                city: 'Faisalabad'
+              }
+            };
+          }
+        } catch (_) {}
+
         // Query by vehicle license plate
         const { data: vData } = await supabase
           .from('vehicles')
@@ -255,13 +241,53 @@ class TagCommunicationService {
         }
       } catch (err) {
         console.warn('[TagCommunicationService] Supabase lookup error:', err);
-        if (isNetworkError(err)) {
-          networkFailed = true;
+        if (isLikelyNetworkError(err)) {
+          const isOnline = await checkIsOnline();
+          if (!isOnline) {
+            return {
+              success: false,
+              error: 'NETWORK_ERROR',
+              isOffline: true,
+              message: 'Live lookup failed - device appears offline'
+            };
+          }
         }
       }
     }
 
-    // 2. Fallback to Local Cached Inventory or standard Demo Data
+    // 2. Check offline tag registry
+    const registryMatch = tagRegistryService.getTag(clean);
+    if (registryMatch) {
+      return {
+        success: true,
+        data: {
+          tagId: registryMatch.token || clean,
+          qrToken: registryMatch.token || clean,
+          vehicleName: `${registryMatch.vehicleName || 'Vehicle'}`,
+          registrationNumber: registryMatch.vehicleNumber || clean,
+          vehicleType: registryMatch.vehicleType || 'Car',
+          status: registryMatch.status || 'active',
+          isVerified: true,
+          ownerName: registryMatch.ownerName || 'Owner',
+          phoneNumber: registryMatch.phoneNumber || '',
+          guardianNumber: registryMatch.guardianNumber || '',
+          phonePrivacy: registryMatch.phonePrivacy || 'private',
+          namePrivacy: 'public',
+          emergencyPrivacy: 'private',
+          proxyPhone: getActiveProxyPhone(),
+          proxyWhatsApp: getActiveProxyWhatsApp(),
+          maskedPhone: this.maskPhoneNumber(registryMatch.phoneNumber || '03001234567'),
+          maskedGuardian: registryMatch.guardianNumber ? this.maskPhoneNumber(registryMatch.guardianNumber) : null,
+          hasGuardianConfigured: Boolean(registryMatch.guardianNumber),
+          emergencyEscalationSeconds: 180,
+          maskedCallAvailable: true,
+          maskedSmsAvailable: true,
+          city: 'Faisalabad'
+        }
+      };
+    }
+
+    // 3. Fallback to Local Cached Inventory or standard Demo Data
     try {
       const saved =
         localStorage.getItem('tagtique_admin_v3_orders') ||
@@ -292,8 +318,8 @@ class TagCommunicationService {
                 phonePrivacy: match.phonePrivacy || 'private',
                 namePrivacy: match.namePrivacy || 'public',
                 emergencyPrivacy: match.emergencyPrivacy || 'private',
-                proxyPhone: '03292082080',
-                proxyWhatsApp: '923292082080',
+                proxyPhone: getActiveProxyPhone(),
+                proxyWhatsApp: getActiveProxyWhatsApp(),
                 maskedPhone: this.maskPhoneNumber(match.phoneNumber || match.phone || '03001234567'),
                 maskedGuardian: match.guardianNumber ? this.maskPhoneNumber(match.guardianNumber) : null,
                 hasGuardianConfigured: Boolean(match.guardianNumber || match.emergencyPhone),
@@ -307,15 +333,6 @@ class TagCommunicationService {
         }
       }
     } catch (_) {}
-
-    // If Supabase failed due to network / offline and not in local cache, report NETWORK error
-    if (networkFailed) {
-      return {
-        success: false,
-        error: 'NETWORK',
-        message: 'No internet connection. Routing directly to emergency vehicle support.'
-      };
-    }
 
     // Special test cases
     if (clean.toLowerCase() === 'inactive' || clean.toLowerCase() === 'tag-inactive') {

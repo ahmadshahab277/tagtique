@@ -10,7 +10,9 @@ import {
   NetworkErrorScreen
 } from '../components/vehicle/StatusScreens';
 import { tagCommunicationService } from '../services/tagCommunicationService';
-import { isWebNfcSupported } from '../utils/nfcWriter';
+import { settingsService } from '../services/settingsService';
+import { tagRegistryService } from '../services/tagRegistryService';
+import { checkIsOnline, isLikelyNetworkError } from '../services/networkService';
 import {
   ShieldCheck,
   ArrowRight,
@@ -35,17 +37,49 @@ export default function PublicVehicleScanPage() {
   const [vehicle, setVehicle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [errorType, setErrorType] = useState(null); // 'NOT_FOUND' | 'NETWORK' | null
+  const [offlineTarget, setOfflineTarget] = useState({
+    phoneNumber: settingsService.getSupportPhone(),
+    isPrivate: true,
+    vehicleNumber: ''
+  });
 
   const privacyParam = searchParams.get('privacy');
+  const urlPhone = searchParams.get('phone');
+  const urlPlate = searchParams.get('plate');
+  const isUrlPublic = privacyParam === 'public' && Boolean(urlPhone);
+
+  const handleOfflineRouting = (idToFetch) => {
+    const offlineRoute = tagRegistryService.resolveOfflineDialTarget(idToFetch);
+    const effectiveOfflinePhone = isUrlPublic ? urlPhone : offlineRoute.phoneNumber;
+    const effectiveIsPrivate = isUrlPublic ? false : offlineRoute.isPrivate;
+    const effectivePlate = urlPlate || offlineRoute.tag?.vehicleNumber || idToFetch;
+
+    setOfflineTarget({
+      phoneNumber: effectiveOfflinePhone,
+      isPrivate: effectiveIsPrivate,
+      vehicleNumber: effectivePlate
+    });
+
+    if (offlineRoute.tag) {
+      setVehicle(offlineRoute.tag);
+    }
+    setErrorType('NETWORK');
+    setLoading(false);
+
+    try {
+      window.location.href = `tel:${effectiveOfflinePhone}`;
+    } catch (_) {}
+  };
 
   const fetchVehicleProfile = async (idToFetch) => {
-    // If phone has no internet connection, route immediately to support number
+    const offlineRoute = tagRegistryService.resolveOfflineDialTarget(idToFetch);
+    const effectiveOfflinePhone = isUrlPublic ? urlPhone : offlineRoute.phoneNumber;
+    const effectiveIsPrivate = isUrlPublic ? false : offlineRoute.isPrivate;
+    const effectivePlate = urlPlate || offlineRoute.tag?.vehicleNumber || idToFetch;
+
+    // 1. FAST OFFLINE PATH: If device has no internet connection, route immediately to offline dialer
     if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-      setErrorType('NETWORK');
-      setLoading(false);
-      try {
-        window.location.href = 'tel:03292082080';
-      } catch (_) {}
+      handleOfflineRouting(idToFetch);
       return;
     }
 
@@ -56,39 +90,100 @@ export default function PublicVehicleScanPage() {
       const res = await Promise.race([
         tagCommunicationService.getVehicleByTagId(idToFetch),
         new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('NETWORK_TIMEOUT')), 2500)
+          setTimeout(() => reject(new Error('NETWORK_TIMEOUT')), 4000)
         )
       ]);
 
-      if (res.success && res.data) {
+      // If backend service detected offline status
+      if (res && (res.error === 'NETWORK_ERROR' || res.isOffline)) {
+        handleOfflineRouting(idToFetch);
+        return;
+      }
+
+      if (res && res.success && res.data) {
+        // ONLINE SUCCESS: Show the full digital vehicle profile without dialing
         const data = { ...res.data };
         if (privacyParam === 'public' || privacyParam === 'private') {
           data.phonePrivacy = privacyParam;
         }
+        if (isUrlPublic) {
+          data.phoneNumber = urlPhone;
+          data.phonePrivacy = 'public';
+        }
+        if (urlPlate) {
+          data.registrationNumber = urlPlate;
+        }
         setVehicle(data);
-      } else {
-        setErrorType(res.error === 'TAG_NOT_FOUND' ? 'NOT_FOUND' : 'NETWORK');
+        setErrorType(null);
+        setLoading(false);
+        // Persist to offline registry so future offline scans of this tag work
+        tagRegistryService.registerTag(data);
+        return;
+      } else if (res && res.error === 'TAG_NOT_FOUND') {
+        const isOnline = await checkIsOnline();
+        if (!isOnline) {
+          handleOfflineRouting(idToFetch);
+          return;
+        }
+        setErrorType('NOT_FOUND');
+        setLoading(false);
+        return;
       }
     } catch (err) {
-      console.error('Tag profile load error:', err);
-      setErrorType('NETWORK');
-      try {
-        window.location.href = 'tel:03292082080';
-      } catch (_) {}
-    } finally {
-      setLoading(false);
+      console.warn('Tag profile live fetch notice:', err);
+      // Check if this error was caused by the device being OFFLINE
+      if (isLikelyNetworkError(err) || (typeof navigator !== 'undefined' && navigator.onLine === false)) {
+        const isOnline = await checkIsOnline();
+        if (!isOnline) {
+          handleOfflineRouting(idToFetch);
+          return;
+        }
+      }
     }
+
+    // ONLINE PATH: Device has internet, but tag wasn't in Supabase DB (e.g. unseeded demo tag).
+    // Verify connectivity once more before presenting the online interactive profile
+    const isOnline = await checkIsOnline();
+    if (!isOnline) {
+      handleOfflineRouting(idToFetch);
+      return;
+    }
+
+    const activeProfile = offlineRoute.tag || {
+      tagId: idToFetch,
+      qrToken: idToFetch,
+      vehicleName: 'Verified Vehicle',
+      registrationNumber: effectivePlate,
+      vehicleType: 'Car',
+      status: 'active',
+      isVerified: true,
+      ownerName: 'Owner',
+      phoneNumber: effectiveOfflinePhone,
+      guardianNumber: '',
+      phonePrivacy: effectiveIsPrivate ? 'private' : 'public',
+      namePrivacy: 'public',
+      emergencyPrivacy: 'private',
+      proxyPhone: settingsService.getSupportPhone(),
+      proxyWhatsApp: settingsService.getSupportPhone(),
+      maskedPhone: effectiveOfflinePhone ? '+92 ••• ••••' + effectiveOfflinePhone.slice(-3) : '+92 ••• ••••000',
+      maskedGuardian: null,
+      hasGuardianConfigured: false,
+      emergencyEscalationSeconds: 180,
+      maskedCallAvailable: true,
+      maskedSmsAvailable: true,
+      city: 'Faisalabad'
+    };
+
+    setVehicle(activeProfile);
+    setErrorType(null);
+    setLoading(false);
   };
 
   useEffect(() => {
     fetchVehicleProfile(rawTagId);
 
     const handleOffline = () => {
-      setErrorType('NETWORK');
-      setLoading(false);
-      try {
-        window.location.href = 'tel:03292082080';
-      } catch (_) {}
+      handleOfflineRouting(rawTagId);
     };
 
     const handleOnline = () => {
@@ -103,51 +198,6 @@ export default function PublicVehicleScanPage() {
       window.removeEventListener('online', handleOnline);
     };
   }, [rawTagId, privacyParam]);
-
-  // Passive Background NFC Listener (if device supports Web NFC)
-  useEffect(() => {
-    if (!isWebNfcSupported()) return;
-
-    let controller = new AbortController();
-
-    const startPassiveReader = async () => {
-      try {
-        const reader = new window.NDEFReader();
-        await reader.scan({ signal: controller.signal });
-
-        reader.onreading = (event) => {
-          for (const record of event.message.records) {
-            let text = '';
-            if (record.recordType === 'text') {
-              const dec = new TextDecoder(record.encoding || 'utf-8');
-              text = dec.decode(record.data);
-            } else if (record.recordType === 'url') {
-              const dec = new TextDecoder();
-              text = typeof record.data === 'string' ? record.data : dec.decode(record.data);
-            }
-
-            if (text) {
-              const tokenMatch = text.match(/[?&](?:token|tag|qr)=([^&\s]+)/i);
-              const nfcMatch = text.match(/\/nfc\/([^/?\s]+)/i);
-              const detected = tokenMatch ? decodeURIComponent(tokenMatch[1]) : nfcMatch ? nfcMatch[1] : text.trim();
-              if (detected) {
-                fetchVehicleProfile(detected);
-                break;
-              }
-            }
-          }
-        };
-      } catch (err) {
-        console.warn('Passive NFC not auto-started:', err);
-      }
-    };
-
-    startPassiveReader();
-
-    return () => {
-      controller.abort();
-    };
-  }, []);
 
   return (
     <div className="min-h-screen bg-[#FAF7F2] text-[#1C120C] font-manrope flex flex-col selection:bg-[#E6AF2E] selection:text-[#1C120C] relative overflow-hidden">
@@ -164,7 +214,12 @@ export default function PublicVehicleScanPage() {
 
         {/* State B: Network Error */}
         {!loading && errorType === 'NETWORK' && (
-          <NetworkErrorScreen onRetry={() => fetchVehicleProfile(rawTagId)} />
+          <NetworkErrorScreen
+            onRetry={() => fetchVehicleProfile(rawTagId)}
+            targetPhone={offlineTarget.phoneNumber}
+            isPrivate={offlineTarget.isPrivate}
+            vehicleNumber={offlineTarget.vehicleNumber}
+          />
         )}
 
         {/* State C: Not Found */}
@@ -206,7 +261,7 @@ export default function PublicVehicleScanPage() {
 
               <Link
                 to="/order"
-                className="mt-1 w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#E6AF2E] to-[#F59E0B] hover:from-[#F59E0B] hover:to-[#D97706] active:scale-[0.98] text-[#1C120C] font-extrabold text-sm flex items-center justify-center gap-2 shadow-sm transition-all"
+                className="mt-1 w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#E6AF2E] to-[#F59E0B] hover:from-[#F59E0B] hover:to-[#D97706] active:scale-[0.99] text-[#1C120C] font-extrabold text-sm flex items-center justify-center gap-2 shadow-sm transition-all"
               >
                 <span>Get Your Smart Sticker</span>
                 <ArrowRight className="w-4 h-4" />

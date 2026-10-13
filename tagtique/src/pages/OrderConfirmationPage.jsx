@@ -82,7 +82,12 @@ export default function OrderConfirmationPage() {
         {/* Primary Action Buttons */}
         <div className="flex flex-wrap items-center justify-center gap-3.5 pt-2 w-full max-w-md">
           <Link
-            to="/scan"
+            to={`/scan?token=${encodeURIComponent(
+              order.targetToken ||
+              order.items?.[0]?.qrToken ||
+              order.items?.[0]?.vehicleNumber ||
+              order.orderId
+            )}`}
             className="amber-gradient-btn w-full sm:w-auto flex-1 py-3.5 px-6 rounded-full text-sm font-extrabold text-tag-brown flex items-center justify-center gap-2 shadow-sm"
           >
             <Eye className="w-4 h-4" />
@@ -118,9 +123,19 @@ export default function OrderConfirmationPage() {
                     {item.finishName} {item.displayName ? `· ${item.displayName}` : ''}
                   </span>
                   {item.vehicleNumber && (
-                    <span className="inline-flex self-start items-center px-2 py-0.5 rounded-md bg-tag-pill border border-tag-border text-tag-amber-deep font-mono font-bold text-[11px]">
-                      Plate: {item.vehicleNumber}
-                    </span>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-tag-pill border border-tag-border text-tag-amber-deep font-mono font-bold text-[11px]">
+                        Plate: {item.vehicleNumber}
+                      </span>
+                      <Link
+                        to={`/scan?token=${encodeURIComponent(item.qrToken || item.vehicleNumber)}`}
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-tag-amber-deep hover:underline"
+                        title="Preview live card for this sticker"
+                      >
+                        <Eye className="w-3 h-3" />
+                        <span>View Card</span>
+                      </Link>
+                    </div>
                   )}
                   {item.isEngraved && item.engravedText && (
                     <span className="text-tag-amber-deep font-semibold">

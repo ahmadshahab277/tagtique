@@ -285,7 +285,7 @@ export default function OrderPage() {
     });
   };
 
-  const handlePlaceOrder = (e) => {
+  const handlePlaceOrder = async (e) => {
     if (e) e.preventDefault();
     setIsSubmitting(true);
 
@@ -340,18 +340,28 @@ export default function OrderPage() {
       currency: 'PKR'
     };
 
-    // Asynchronously sync to Supabase backend service
+    // Sync to Supabase backend service
+    let created = null;
     try {
-      orderBackendService.createOrder({
+      created = await orderBackendService.createOrder({
         customer: {
           name: primaryCustomer.name || 'Ali Khan',
           email: primaryCustomer.email || 'ataitsolution09@gmail.com',
           phone: primaryCustomer.phone || '0329-2082080',
-          guardianNumber: primaryCustomer.emergencyPhone || ''
+          guardianNumber: primaryCustomer.emergencyPhone || '',
+          phonePrivacy: primaryCustomer.phonePrivacy || 'private',
+          namePrivacy: primaryCustomer.namePrivacy || 'public',
+          emergencyPrivacy: primaryCustomer.emergencyPrivacy || 'private'
         },
         vehicles: tagsData.slice(0, customQuantity).map((t, idx) => ({
           vehicleNumber: t.vehicleNumber || t.name || `TAG-${idx + 1}`,
-          vehicleType: t.tagType || 'Vehicle'
+          vehicleType: t.tagType || 'Vehicle',
+          phone: t.phone || primaryCustomer.phone || '0300 1234567',
+          emergencyPhone: t.emergencyPhone || primaryCustomer.emergencyPhone || '',
+          phonePrivacy: t.phonePrivacy || 'private',
+          namePrivacy: t.namePrivacy || 'public',
+          emergencyPrivacy: t.emergencyPrivacy || 'private',
+          displayName: t.name || primaryCustomer.name || 'Owner'
         })),
         packageType: selectedPackage.title || 'Single Tag',
         totalAmount: totalPkr,
@@ -367,26 +377,37 @@ export default function OrderPage() {
       console.warn('Backend order sync:', err);
     }
 
-    setTimeout(() => {
-      completeOrder(orderData);
-      setUserProfile((prev) => ({
-        ...prev,
-        name: primaryCustomer.name,
-        phone: primaryCustomer.phone,
-        email: primaryCustomer.email
+    if (created && created.orderNumber) {
+      orderData.orderId = created.orderNumber;
+    }
+    const firstRow = created?.rows?.[0];
+    orderData.targetToken = firstRow?.qr_code_value || tagsData[0]?.vehicleNumber || orderData.orderId;
+    if (created?.rows?.length) {
+      orderData.items = orderData.items.map((item, idx) => ({
+        ...item,
+        qrToken: created.rows[idx]?.qr_code_value || item.vehicleNumber,
+        tagId: created.rows[idx]?.tag_id || item.vehicleNumber
       }));
+    }
 
-      try {
-        confetti({
-          particleCount: 90,
-          spread: 80,
-          origin: { y: 0.5 },
-          colors: ['#F5B21F', '#2E1B10', '#25D366', '#FFFDF8']
-        });
-      } catch (_) {}
+    completeOrder(orderData);
+    setUserProfile((prev) => ({
+      ...prev,
+      name: primaryCustomer.name,
+      phone: primaryCustomer.phone,
+      email: primaryCustomer.email
+    }));
 
-      navigate('/order-confirmation');
-    }, 850);
+    try {
+      confetti({
+        particleCount: 90,
+        spread: 80,
+        origin: { y: 0.5 },
+        colors: ['#F5B21F', '#2E1B10', '#25D366', '#FFFDF8']
+      });
+    } catch (_) {}
+
+    navigate('/order-confirmation');
   };
 
   return (

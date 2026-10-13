@@ -1,5 +1,7 @@
 import QRCode from 'qrcode';
-import { buildScanUrl } from './scanUrl';
+import { buildScanUrl } from './scanUrl.js';
+import { buildVCardQrPayload } from './qrPayload.js';
+import { settingsService } from '../services/settingsService.js';
 
 const YELLOW = '#F5B21F';
 const WHITE = '#FFFFFF';
@@ -20,8 +22,36 @@ export async function renderStyledQrDataUrl(text) {
   return canvas.toDataURL('image/png');
 }
 
-export async function renderStickerBlob(item) {
-  const qrDataUrl = await renderStyledQrDataUrl(buildScanUrl(stickerToken(item)));
+export function resolveQrPayload(item, options = {}) {
+  const token = stickerToken(item);
+  const qrMode = options?.qrMode || settingsService.getQrMode();
+  const supportPhone = options?.supportPhone || settingsService.getSupportPhone();
+
+  const isPrivate = (item?.phonePrivacy || 'private') === 'private';
+  const ownerPhone = item?.phoneNumber || item?.owner_phone || item?.customerPhone || '';
+  const vehicleNumber = item?.vehicleNumber || item?.vehicle_number || item?.plate || '';
+
+  if (qrMode !== 'vcard') {
+    return buildScanUrl(token, {
+      phonePrivacy: isPrivate ? 'private' : 'public',
+      phone: ownerPhone,
+      plate: vehicleNumber
+    });
+  }
+
+  // Fallback if explicitly configured: vCard Contact Card
+  return buildVCardQrPayload({
+    vehicleNumber,
+    supportPhone,
+    ownerPhone,
+    isPrivate,
+    token
+  });
+}
+
+export async function renderStickerBlob(item, options = {}) {
+  const qrPayload = resolveQrPayload(item, options);
+  const qrDataUrl = await renderStyledQrDataUrl(qrPayload);
 
   const canvas = document.createElement('canvas');
   canvas.width = 900;
@@ -43,14 +73,14 @@ export async function renderStickerBlob(item) {
   const urdu = 'اسکین کریں، رابطہ کریں';
   const english = 'Scan to Contact Driver';
   fitFont(ctx, urdu, 52, '"Noto Sans Arabic", "Segoe UI", Tahoma, sans-serif', canvas.width - 90);
-  ctx.fillText(urdu, canvas.width / 2, 78);
-  fitFont(ctx, english, 40, 'Manrope, "Segoe UI", sans-serif', canvas.width - 90);
-  ctx.fillText(english, canvas.width / 2, 142);
+  ctx.fillText(urdu, canvas.width / 2, 70);
+  fitFont(ctx, english, 38, 'Manrope, "Segoe UI", sans-serif', canvas.width - 90);
+  ctx.fillText(english, canvas.width / 2, 130);
 
   const image = await loadImage(qrDataUrl);
   const qrSize = 820;
   const qrX = (canvas.width - qrSize) / 2;
-  const qrY = 190;
+  const qrY = 175;
   ctx.drawImage(image, qrX, qrY, qrSize, qrSize * (image.height / image.width));
 
   const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
@@ -58,7 +88,7 @@ export async function renderStickerBlob(item) {
 }
 
 function drawStyledQr(text) {
-  const qr = QRCode.create(text, { errorCorrectionLevel: 'H' });
+  const qr = QRCode.create(text, { errorCorrectionLevel: text.length > 120 ? 'M' : 'H' });
   const count = qr.modules.size;
   const margin = 4;
   const cell = 16;
