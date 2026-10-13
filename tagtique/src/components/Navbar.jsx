@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { ShoppingBag, Menu, X, MessageCircle } from 'lucide-react';
+import { ShoppingBag, Menu, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
 export default function Navbar() {
@@ -60,33 +60,14 @@ export default function Navbar() {
             onClick={() => scrollToSection('pricing')}
             className="px-3.5 py-1.5 rounded-full hover:text-[#2E1B10] hover:bg-[#F4EADA]/70 transition-all duration-150"
           >
-            Stickers
+            Pricing
           </button>
           <button
             onClick={() => scrollToSection('faq')}
             className="px-3.5 py-1.5 rounded-full hover:text-[#2E1B10] hover:bg-[#F4EADA]/70 transition-all duration-150"
           >
-            How it works
+            FAQ
           </button>
-          <button
-            onClick={() => scrollToSection('pricing')}
-            className="px-3.5 py-1.5 rounded-full hover:text-[#2E1B10] hover:bg-[#F4EADA]/70 transition-all duration-150"
-          >
-            Pricing
-          </button>
-
-          {/* Friendly Human WhatsApp Button */}
-          <a
-            href="https://wa.me/923292082080"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 ml-1 px-3 py-1.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-800 border border-emerald-500/20 text-xs font-bold transition-all hover:scale-105 active:scale-95"
-            title="Chat with real humans on WhatsApp: 0329-2082080"
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Chat with us</span>
-          </a>
         </nav>
 
         {/* Action Controls */}
@@ -100,7 +81,7 @@ export default function Navbar() {
           >
             <ShoppingBag className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
             {cartItems.length > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#F5B21F] text-[#1B0F06] font-mono text-[11px] font-black flex items-center justify-center border-[1.5px] border-[#2E1B10] shadow-xs animate-bounce">
+              <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#F5B21F] text-[#1B0F06] font-mono text-[11px] font-black flex items-center justify-center border-[1.5px] border-[#2E1B10] shadow-xs">
                 {cartItems.length}
               </span>
             )}
@@ -133,19 +114,13 @@ export default function Navbar() {
             onClick={() => scrollToSection('pricing')}
             className="text-left px-4 py-2.5 rounded-2xl font-bold text-[#2E1B10] hover:bg-[#F4EADA] transition-colors"
           >
-            Stickers
+            Pricing
           </button>
           <button
             onClick={() => scrollToSection('faq')}
             className="text-left px-4 py-2.5 rounded-2xl font-bold text-[#2E1B10] hover:bg-[#F4EADA] transition-colors"
           >
-            How it works & FAQ
-          </button>
-          <button
-            onClick={() => scrollToSection('pricing')}
-            className="text-left px-4 py-2.5 rounded-2xl font-bold text-[#2E1B10] hover:bg-[#F4EADA] transition-colors"
-          >
-            Pricing & Packages
+            FAQ
           </button>
           <a
             href="https://wa.me/923292082080"
@@ -154,13 +129,8 @@ export default function Navbar() {
             onClick={() => setMobileMenuOpen(false)}
             className="flex items-center justify-between px-4 py-3 rounded-2xl font-bold text-emerald-900 bg-emerald-500/10 border border-emerald-500/20"
           >
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Chat with us on WhatsApp</span>
-            </div>
-            <span className="text-[11px] font-mono font-bold bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full">
-              0329-2082080
-            </span>
+            <span>WhatsApp</span>
+            <span className="text-[11px] font-mono font-bold">0329-2082080</span>
           </a>
           <div className="pt-2 border-t border-[#2E1B10]/10 flex flex-col">
             <Link
@@ -168,7 +138,7 @@ export default function Navbar() {
               onClick={() => setMobileMenuOpen(false)}
               className="text-center py-3 rounded-full bg-gradient-to-b from-[#FFD56B] to-[#F5B21F] border-[2px] border-[#2E1B10] text-[#2E1B10] font-baloo font-extrabold text-base shadow-[0_3px_0_#2E1B10]"
             >
-              Order Custom Stickers ✨
+              Order stickers
             </Link>
           </div>
         </div>

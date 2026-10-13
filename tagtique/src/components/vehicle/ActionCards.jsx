@@ -63,9 +63,9 @@ function openLink(url) {
 }
 
 export default function ActionCards({ vehicle }) {
-  const plate = vehicle?.registrationNumber || 'ABC-123';
-  const tagId = vehicle?.tagId || 'TAG-001';
-  const ownerName = vehicle?.ownerName || 'Vehicle Owner';
+  const plate = vehicle?.registrationNumber || 'this vehicle';
+  const tagId = vehicle?.tagId || '';
+  const ownerName = vehicle?.ownerName || 'the owner';
 
   const defaultText = `Assalam-o-Alaikum! Your vehicle (${plate}) is currently blocking the path. Could you please move it when convenient? Thank you!`;
 
@@ -74,14 +74,14 @@ export default function ActionCards({ vehicle }) {
   const [showCustomInput, setShowCustomInput] = useState(false);
 
   const isPhonePrivate = (vehicle?.phonePrivacy || 'private') === 'private';
-  const rawOwnerPhone = vehicle?.phoneNumber || '03001234567';
+  const rawOwnerPhone = vehicle?.phoneNumber || '';
   const rawGuardianPhone =
     vehicle?.guardianNumber ||
     vehicle?.guardian_phone ||
     vehicle?.guardian_number ||
     vehicle?.emergencyPhone ||
-    '03019876543';
-  const guardianName = vehicle?.guardianName || vehicle?.guardian_name || 'Emergency Guardian';
+    '';
+  const guardianName = vehicle?.guardianName || vehicle?.guardian_name || 'Guardian';
 
   const proxyPhone = vehicle?.proxyPhone || '03292082080';
   const proxyWhatsApp = vehicle?.proxyWhatsApp || '923292082080';
@@ -112,12 +112,9 @@ export default function ActionCards({ vehicle }) {
       {/* 1. Main Action Card: Contact Vehicle Owner */}
       <div className="w-full bg-white rounded-3xl border border-[#EAE3D6] p-5 sm:p-6 shadow-sm flex flex-col gap-4">
         <div className="flex flex-col text-left">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-            <h2 className="font-baloo font-extrabold text-2xl sm:text-3xl text-[#1C120C] leading-none">
-              Contact Vehicle Owner
-            </h2>
-          </div>
+          <h2 className="font-baloo font-extrabold text-2xl sm:text-3xl text-[#1C120C] leading-none">
+            Contact the owner
+          </h2>
           <p className="text-xs text-[#8C7A6B] font-medium mt-1.5 leading-relaxed">
             Choose a quick reason below, then tap WhatsApp or Call to alert the driver.
           </p>
@@ -185,38 +182,26 @@ export default function ActionCards({ vehicle }) {
           <button
             type="button"
             onClick={() => openLink(whatsappUrl(targetOwnerWhatsApp, ownerWhatsAppText))}
-            className="w-full min-h-[58px] py-3.5 px-5 rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 active:scale-[0.99] text-white font-extrabold text-base flex items-center justify-center gap-3 shadow-warm-md transition-all cursor-pointer"
+            disabled={!whatsappUrl(targetOwnerWhatsApp, ownerWhatsAppText)}
+            className="w-full min-h-[58px] py-3.5 px-5 rounded-2xl bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white font-extrabold text-base flex items-center justify-center gap-3 shadow-sm transition-colors cursor-pointer"
           >
             <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
               <MessageCircle className="w-5 h-5 text-white" />
             </div>
-            <div className="flex flex-col text-left">
-              <span className="text-[10px] uppercase tracking-wider text-emerald-200 font-bold leading-none">
-                Fastest Response
-              </span>
-              <span className="text-base font-black leading-tight">
-                WhatsApp Vehicle Owner
-              </span>
-            </div>
+            <span className="text-base font-black leading-tight">WhatsApp</span>
           </button>
 
           {/* Call Owner Button */}
           <button
             type="button"
             onClick={() => openLink(telUrl(targetOwnerCall))}
-            className="w-full min-h-[58px] py-3.5 px-5 rounded-2xl bg-gradient-to-r from-[#1C120C] to-[#2B1B10] hover:from-[#2B1B10] hover:to-[#1C120C] active:scale-[0.99] text-[#FDF7EC] font-extrabold text-base flex items-center justify-center gap-3 shadow-warm-md transition-all cursor-pointer border border-amber-900/30"
+            disabled={!telUrl(targetOwnerCall)}
+            className="w-full min-h-[58px] py-3.5 px-5 rounded-2xl bg-[#1C120C] hover:bg-[#2B1B10] disabled:opacity-50 text-[#FDF7EC] font-extrabold text-base flex items-center justify-center gap-3 shadow-sm transition-colors cursor-pointer"
           >
             <div className="w-8 h-8 rounded-xl bg-amber-400/20 flex items-center justify-center shrink-0">
               <Phone className="w-5 h-5 text-[#E6AF2E]" />
             </div>
-            <div className="flex flex-col text-left">
-              <span className="text-[10px] uppercase tracking-wider text-amber-300 font-bold leading-none">
-                Direct Voice Call
-              </span>
-              <span className="text-base font-black leading-tight">
-                Call Vehicle Owner
-              </span>
-            </div>
+            <span className="text-base font-black leading-tight">Call</span>
           </button>
 
           {/* Discreet SMS fallback */}
@@ -232,27 +217,14 @@ export default function ActionCards({ vehicle }) {
         </div>
       </div>
 
-      {/* 2. DEDICATED EMERGENCY CONTACT (GUARDIAN) SECTION */}
-      <div className="w-full bg-gradient-to-br from-amber-500/10 via-orange-500/10 to-amber-500/5 rounded-3xl border-2 border-amber-400/90 p-5 sm:p-6 shadow-sm flex flex-col gap-3.5 relative overflow-hidden">
-        {/* Ambient glow */}
-        <div className="absolute -top-12 -right-12 w-28 h-28 bg-amber-400/20 rounded-full blur-2xl pointer-events-none" />
-
-        <div className="flex items-center justify-between gap-2 flex-wrap">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-100 border border-red-300 text-red-900 text-[11px] font-black uppercase tracking-wider shadow-2xs">
-            <span className="w-2 h-2 rounded-full bg-red-600 animate-ping" />
-            <span>Emergency Contact (Guardian)</span>
-          </div>
-          <span className="text-[11px] font-bold text-amber-900 bg-amber-200/60 px-2 py-0.5 rounded-full">
-            24/7 Safety Line
-          </span>
-        </div>
-
+      {rawGuardianPhone ? (
+      <div className="w-full bg-white rounded-3xl border border-[#EAE3D6] p-5 sm:p-6 shadow-sm flex flex-col gap-3.5">
         <div className="flex flex-col text-left">
-          <h3 className="font-baloo font-extrabold text-xl sm:text-2xl text-[#1C120C] leading-tight">
-            Emergency or Owner Not Responding?
+          <h3 className="font-baloo font-extrabold text-xl text-[#1C120C] leading-tight">
+            Guardian
           </h3>
           <p className="text-xs text-[#705540] font-medium mt-1 leading-relaxed">
-            In case of an urgent emergency, accident, or if the driver does not answer, contact the registered guardian directly.
+            Call or message this person if the owner does not answer.
           </p>
         </div>
 
@@ -299,6 +271,7 @@ export default function ActionCards({ vehicle }) {
           </button>
         </div>
       </div>
+      ) : null}
 
       {/* 3. Official Tagtique Helpline */}
       <div className="p-3 rounded-2xl bg-[#FAF7F2] border border-[#EAE3D6] text-center text-xs text-[#8C7A6B] flex items-center justify-center gap-2">

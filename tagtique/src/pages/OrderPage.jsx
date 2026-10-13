@@ -22,7 +22,6 @@ import {
   Copy,
   Check
 } from 'lucide-react';
-import confetti from 'canvas-confetti';
 
 const PACKAGES = [
   {
@@ -97,40 +96,40 @@ export default function OrderPage() {
 
   // Laser Engraving
   const [isEngraved] = useState(searchParams.get('engraved') === 'true');
-  const [engravedText] = useState('Ali Khan');
+  const [engravedText] = useState('');
 
   // Contact Details per Tag
   const [activeAccordion, setActiveAccordion] = useState(0);
   const [tagsData, setTagsData] = useState([
     {
-      name: userProfile.name || 'Ali Khan',
-      phone: userProfile.phone || '0300 1234567',
-      emergencyPhone: '0301 9876543',
+      name: userProfile.name || '',
+      phone: userProfile.phone || '',
+      emergencyPhone: '',
       tagType: 'Vehicle',
-      vehicleNumber: 'LEA-24-1234',
-      email: userProfile.email || 'ali@example.com',
-      bio: userProfile.bio || 'Product Designer · Faisalabad',
+      vehicleNumber: '',
+      email: userProfile.email || '',
+      bio: userProfile.bio || '',
       phonePrivacy: 'private', // 'private' | 'public'
       namePrivacy: 'public',   // 'public' | 'private'
       emergencyPrivacy: 'private',
       detailsPrivacy: 'public'
     },
     {
-      name: 'Ayesha Khan',
-      phone: '0329 2082080',
+      name: '',
+      phone: '',
       emergencyPhone: '',
       tagType: 'Vehicle',
-      vehicleNumber: 'ICT-2024-88',
-      email: 'ayesha@tagtique.co',
-      bio: 'Architect & Traveler',
+      vehicleNumber: '',
+      email: '',
+      bio: '',
       phonePrivacy: 'private',
       namePrivacy: 'public',
       emergencyPrivacy: 'private',
       detailsPrivacy: 'public'
     },
     {
-      name: 'Hamza Khan',
-      phone: '0312 3456789',
+      name: '',
+      phone: '',
       emergencyPhone: '',
       tagType: 'Others',
       vehicleNumber: '',
@@ -290,7 +289,7 @@ export default function OrderPage() {
     setIsSubmitting(true);
 
     const generatedOrderId = 'TQ-' + Math.floor(10000 + Math.random() * 90000);
-    const primaryCustomer = tagsData[0] || { name: 'Ali Khan', phone: '03292082080', email: 'ataitsolution09@gmail.com' };
+    const primaryCustomer = tagsData[0] || { name: '', phone: '', email: '' };
 
     const orderData = {
       orderId: generatedOrderId,
@@ -300,7 +299,7 @@ export default function OrderPage() {
         year: 'numeric'
       }),
       customer: {
-        name: primaryCustomer.name || 'Ali Khan',
+        name: primaryCustomer.name || '',
         email: primaryCustomer.email || 'ataitsolution09@gmail.com',
         phone: primaryCustomer.phone || '0329-2082080'
       },
@@ -344,7 +343,7 @@ export default function OrderPage() {
     try {
       orderBackendService.createOrder({
         customer: {
-          name: primaryCustomer.name || 'Ali Khan',
+          name: primaryCustomer.name || '',
           email: primaryCustomer.email || 'ataitsolution09@gmail.com',
           phone: primaryCustomer.phone || '0329-2082080',
           guardianNumber: primaryCustomer.emergencyPhone || ''
@@ -375,15 +374,6 @@ export default function OrderPage() {
         phone: primaryCustomer.phone,
         email: primaryCustomer.email
       }));
-
-      try {
-        confetti({
-          particleCount: 90,
-          spread: 80,
-          origin: { y: 0.5 },
-          colors: ['#F5B21F', '#2E1B10', '#25D366', '#FFFDF8']
-        });
-      } catch (_) {}
 
       navigate('/order-confirmation');
     }, 850);
@@ -733,7 +723,7 @@ export default function OrderPage() {
                             type="text"
                             value={tagItem.name}
                             onChange={(e) => handleUpdateTag(index, 'name', e.target.value)}
-                            placeholder="e.g. Ali Khan"
+                            placeholder="Full name"
                             className="w-full px-3.5 py-2.5 rounded-xl border border-tag-border bg-tag-card text-sm text-tag-brown font-semibold outline-none focus:border-tag-amber"
                           />
                           <span className="text-[10.5px] text-tag-brown-muted font-medium">
@@ -1109,7 +1099,7 @@ export default function OrderPage() {
             <div className="absolute inset-0">
               <Tag3D
                 variant={selectedFinish}
-                engravedText={tagsData[0]?.name || 'Ali Khan'}
+                engravedText={tagsData[0]?.name || ''}
                 interactive={true}
                 autoSpin={true}
                 cameraDistance={3.6}

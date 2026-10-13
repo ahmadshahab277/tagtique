@@ -4,45 +4,21 @@ import { useCart } from '../context/CartContext';
 import { CheckCircle2, Truck, Eye } from 'lucide-react';
 
 export default function OrderConfirmationPage() {
-  const { lastOrder, userProfile } = useCart();
+  const { lastOrder } = useCart();
 
-  // Fallback if accessed directly
-  const order = lastOrder || {
-    orderId: 'TQ-84920',
-    date: new Date().toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    }),
-    customer: {
-      name: userProfile.name || 'Ayesha Khan',
-      email: userProfile.email || 'ayesha@tagtique.co',
-      phone: userProfile.phone || '+92 300 114 2288'
-    },
-    shippingAddress: {
-      address: 'House 42, Street 7, Block G, Phase 5, DHA',
-      apartment: 'Apartment 3B',
-      city: 'Lahore',
-      stateProvince: 'Punjab',
-      postalCode: '54792',
-      country: 'Pakistan'
-    },
-    shippingMethod: 'standard',
-    shippingFee: 0,
-    paymentMethod: 'cod',
-    items: [
-      {
-        id: 1,
-        finishName: 'Cream acrylic',
-        basePrice: 1499,
-        isEngraved: true,
-        engravedText: 'Ayesha Khan',
-        totalPrice: 1499
-      }
-    ],
-    subtotal: 1499,
-    finalTotal: 1499
-  };
+  if (!lastOrder) {
+    return (
+      <div className="max-w-lg mx-auto px-4 py-16 text-center font-manrope flex flex-col items-center gap-4">
+        <h1 className="font-baloo font-extrabold text-3xl text-tag-brown">No order yet</h1>
+        <p className="text-sm text-tag-brown-muted">Place an order and the receipt will show up here.</p>
+        <Link to="/order" className="amber-gradient-btn px-6 py-3 rounded-full text-sm font-extrabold text-tag-brown">
+          Order stickers
+        </Link>
+      </div>
+    );
+  }
+
+  const order = lastOrder;
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 font-manrope">

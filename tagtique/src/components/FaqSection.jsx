@@ -15,12 +15,12 @@ const FAQS = [
     a: 'Yes. Each sticker is printed on high-grade waterproof vinyl with a scratch-resistant gloss protective laminate. Rain, pressure washes, outdoor sunlight, and daily weather will not degrade or affect readability.'
   },
   {
-    q: 'What happens if my keys or bag get lost?',
-    a: 'You can immediately toggle "Lost & Found Mode" from your phone. When someone scans the tag, instead of your full contact sheet, they see an emergency return notice with your direct reward offer and contact hotline.'
+    q: 'Can someone call the owner from the sticker?',
+    a: 'Yes. A scan opens the vehicle page with call and WhatsApp actions for the owner, and for a guardian when one is saved. The printed sticker does not need to change when the number does.'
   },
   {
     q: 'How long does shipping take?',
-    a: 'Standard orders ship within 3 business days worldwide from our workshop in Lahore. Laser-engraved custom tags require 5–7 days for etching and quality inspection.'
+    a: 'Orders are prepared in Faisalabad and delivered across Pakistan. Checkout shows free standard delivery. Express delivery is a paid option at checkout.'
   }
 ];
 

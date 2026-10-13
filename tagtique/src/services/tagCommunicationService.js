@@ -6,31 +6,6 @@
 
 import { supabase, isSupabaseConfigured } from './supabaseClient';
 
-// Fallback demo profile as specified in Tagtique architecture requirements
-export const DEFAULT_DEMO_TAG = {
-  tagId: 'TAG-001',
-  vehicleName: 'Toyota Corolla',
-  registrationNumber: 'ABC-123',
-  vehicleType: 'Car',
-  status: 'active', // 'active' | 'inactive' | 'suspended'
-  isVerified: true,
-  ownerName: 'Ali Khan',
-  phoneNumber: '03001234567',
-  guardianNumber: '03019876543',
-  phonePrivacy: 'private', // 'private' (routed via Tagtique proxy) | 'public' (direct contact)
-  namePrivacy: 'public',   // 'public' | 'private'
-  emergencyPrivacy: 'private',
-  proxyPhone: '03292082080', // Tagtique Official Masked Proxy Line
-  proxyWhatsApp: '923292082080',
-  maskedPhone: '+92 ••• ••••567',
-  maskedGuardian: '+92 ••• ••••543',
-  emergencyEscalationSeconds: 180, // 3 minutes escalation window
-  hasGuardianConfigured: true,
-  maskedCallAvailable: true,
-  maskedSmsAvailable: true,
-  city: 'Faisalabad',
-  created_at: new Date().toISOString()
-};
 
 function isNetworkError(err) {
   if (!err) return false;
@@ -52,7 +27,7 @@ class TagCommunicationService {
    */
   async getVehicleByTagId(tagIdentifier) {
     if (!tagIdentifier) {
-      return { success: true, data: DEFAULT_DEMO_TAG };
+      return { success: false, error: 'TAG_NOT_FOUND', message: 'Vehicle tag could not be found.' };
     }
 
     const clean = String(tagIdentifier).trim();
@@ -76,7 +51,7 @@ class TagCommunicationService {
               data: {
                 tagId: n.tag_code,
                 qrToken: n.qr_code_value || n.tag_code,
-                vehicleName: n.vehicle_label ? `${n.vehicle_label} (Verified)` : 'Verified Vehicle',
+                vehicleName: n.vehicle_label || 'Vehicle',
                 registrationNumber: n.vehicle_label || n.tag_code,
                 vehicleType: 'Car',
                 status: 'active',
@@ -113,7 +88,7 @@ class TagCommunicationService {
                 data: {
                   tagId: rpcTag.tagCode || clean.toUpperCase(),
                   qrToken: clean.toUpperCase(),
-                  vehicleName: rpcTag.vehicleLabel ? `${rpcTag.vehicleLabel} (Verified)` : 'Verified Vehicle',
+                  vehicleName: rpcTag.vehicleLabel || 'Vehicle',
                   registrationNumber: rpcTag.vehicleLabel || clean.toUpperCase(),
                   vehicleType: 'Car',
                   status: 'active',
@@ -282,19 +257,19 @@ class TagCommunicationService {
               data: {
                 tagId: match.tag_id || match.rawId || clean,
                 vehicleName: `${match.vehicleType || 'Car'}`,
-                registrationNumber: match.vehicleNumber || 'ABC-123',
+                registrationNumber: match.vehicleNumber || '',
                 vehicleType: match.vehicleType || 'Car',
                 status: match.status === 'Deactivated' ? 'inactive' : 'active',
                 isVerified: true,
-                ownerName: match.customerName ? match.customerName.split(' ')[0] : (match.displayName || 'Ali Khan'),
-                phoneNumber: match.phoneNumber || match.phone_number || match.phone || '03001234567',
+                ownerName: match.customerName ? match.customerName.split(' ')[0] : (match.displayName || 'Owner'),
+                phoneNumber: match.phoneNumber || match.phone_number || match.phone || '',
                 guardianNumber: match.guardianNumber || match.guardian_number || match.emergencyPhone || '',
                 phonePrivacy: match.phonePrivacy || 'private',
                 namePrivacy: match.namePrivacy || 'public',
                 emergencyPrivacy: match.emergencyPrivacy || 'private',
                 proxyPhone: '03292082080',
                 proxyWhatsApp: '923292082080',
-                maskedPhone: this.maskPhoneNumber(match.phoneNumber || match.phone || '03001234567'),
+                maskedPhone: this.maskPhoneNumber(match.phoneNumber || match.phone || ''),
                 maskedGuardian: match.guardianNumber ? this.maskPhoneNumber(match.guardianNumber) : null,
                 hasGuardianConfigured: Boolean(match.guardianNumber || match.emergencyPhone),
                 emergencyEscalationSeconds: 180,
@@ -317,34 +292,10 @@ class TagCommunicationService {
       };
     }
 
-    // Special test cases
-    if (clean.toLowerCase() === 'inactive' || clean.toLowerCase() === 'tag-inactive') {
-      return {
-        success: true,
-        data: {
-          ...DEFAULT_DEMO_TAG,
-          tagId: 'TAG-INACTIVE',
-          status: 'inactive'
-        }
-      };
-    }
-
-    if (clean.toLowerCase() === 'notfound' || clean.toLowerCase() === 'tag-404') {
-      return {
-        success: false,
-        error: 'TAG_NOT_FOUND',
-        message: 'Vehicle tag could not be found or has expired.'
-      };
-    }
-
-    // If identifier is provided, adapt default demo model to that tag ID
     return {
-      success: true,
-      data: {
-        ...DEFAULT_DEMO_TAG,
-        tagId: clean.toUpperCase(),
-        registrationNumber: clean.startsWith('STOCK') || clean.length <= 8 ? clean.toUpperCase() : 'ABC-123'
-      }
+      success: false,
+      error: 'TAG_NOT_FOUND',
+      message: 'Vehicle tag could not be found.'
     };
   }
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useSearchParams, useParams } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { downloadVCard } from '../utils/vcard';
@@ -7,10 +7,8 @@ import {
   Phone,
   Mail,
   Download,
-  CheckCircle2,
   ExternalLink,
   MessageCircle,
-  AlertTriangle,
   ArrowRight
 } from 'lucide-react';
 
@@ -28,7 +26,6 @@ export default function PublicProfilePage() {
   const { userProfile } = useCart();
   const [searchParams] = useSearchParams();
   const params = useParams();
-  const [activeMode, setActiveMode] = useState('public'); // 'public' | 'work' | 'lost'
   const [scannedTag, setScannedTag] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -41,9 +38,6 @@ export default function PublicProfilePage() {
         setIsLoading(false);
         if (data && data.isValid) {
           setScannedTag(data);
-          if (data.status === 'inactive') {
-            setActiveMode('lost');
-          }
           orderBackendService.logTagScan(token, data.tagId);
         }
       });
@@ -54,7 +48,7 @@ export default function PublicProfilePage() {
     ? {
         name: scannedTag.ownerName || 'Vehicle Owner',
         title: `${scannedTag.vehicleType} • Plate ${scannedTag.vehicleNumber}`,
-        organization: 'Verified Vehicle Owner',
+        organization: scannedTag.vehicleType || '',
         phone: scannedTag.phoneNumber,
         email: userProfile.email || '',
         instagram: userProfile.instagram || '',
@@ -65,8 +59,8 @@ export default function PublicProfilePage() {
 
   const handleSaveContact = () => {
     downloadVCard({
-      name: activeProfile.name || 'Ayesha Khan',
-      title: activeMode === 'work' ? 'Founder & Creative Lead' : activeProfile.title,
+      name: activeProfile.name || 'Contact',
+      title: activeProfile.title,
       organization: activeProfile.organization,
       phone: activeProfile.phone,
       email: activeProfile.email,
@@ -78,29 +72,7 @@ export default function PublicProfilePage() {
   return (
     <div className="min-h-[calc(100vh-80px)] flex flex-col items-center justify-center p-4 sm:p-8 bg-tag-bg bg-dot-pattern [background-size:22px_22px] font-manrope">
       
-      {/* Simulation Info Banner */}
-      <div className="mb-6 max-w-sm w-full flex items-center justify-between p-2.5 rounded-full bg-tag-card border border-tag-border shadow-xs text-xs">
-        <span className="font-mono text-[10px] tracking-wider text-tag-brown-light font-bold pl-2">
-          SCANNER VIEW SIMULATION
-        </span>
-        <div className="flex gap-1">
-          {['public', 'work', 'lost'].map((m) => (
-            <button
-              key={m}
-              onClick={() => setActiveMode(m)}
-              className={`px-2.5 py-1 rounded-full text-[11px] font-bold capitalize transition-all ${
-                activeMode === m
-                  ? 'bg-tag-brown text-[#FDF7EC]'
-                  : 'text-tag-brown-muted hover:text-tag-brown'
-              }`}
-            >
-              {m === 'lost' ? 'Lost' : m}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Realistic Mobile View Card */}
+      {/* Profile card */}
       <div className="w-full max-w-sm rounded-[36px] bg-tag-card border-[2.5px] border-tag-brown-deep shadow-warm-lg overflow-hidden flex flex-col">
         
         {/* Card Header Chrome */}
@@ -111,59 +83,42 @@ export default function PublicProfilePage() {
               TAGTIQUE CONNECT
             </span>
           </div>
-          <span className="font-mono text-[10px] text-[#A88B64]">0.8s load</span>
+          <span className="font-mono text-[10px] text-[#A88B64]">Contact card</span>
         </div>
 
         {/* Card Body */}
         <div className="p-6 flex flex-col gap-5">
           
-          {/* Lost & Found Alert Mode */}
-          {activeMode === 'lost' ? (
-            <div className="p-4 rounded-2xl bg-rose-50 border border-rose-300 flex flex-col gap-2.5 text-rose-900 animate-fadeIn">
-              <div className="flex items-center gap-2 font-bold text-sm text-rose-700">
-                <AlertTriangle className="w-4 h-4 text-rose-600" />
-                <span>Lost Item Notification</span>
-              </div>
-              <p className="text-xs leading-relaxed font-medium">
-                This item belongs to <strong>{userProfile.name}</strong>. If found, please call or WhatsApp the owner directly. A cash reward of <strong>PKR 5,000</strong> is offered upon return.
-              </p>
-              <a
-                href={`tel:${userProfile.phone}`}
-                className="mt-1 w-full text-center py-3 rounded-full bg-rose-600 text-white font-bold text-xs shadow-sm hover:bg-rose-700 transition-colors"
-              >
-                Call Owner: {userProfile.phone}
-              </a>
-            </div>
+          {!activeProfile.name && !activeProfile.phone ? (
+            <p className="text-sm text-tag-brown-muted">This link does not have a public contact card yet.</p>
           ) : (
             <>
               {/* Profile Header */}
               <div className="flex items-center gap-4">
                 <div className="relative">
                   <div className="w-16 h-16 rounded-full border-2 border-tag-brown-deep bg-gradient-to-tr from-tag-amber to-amber-200 flex items-center justify-center font-baloo font-extrabold text-2xl text-tag-brown-deep shadow-md">
-                    {userProfile.name.split(' ').map((n) => n[0]).join('')}
+                    {(activeProfile.name || '?').split(' ').map((n) => n[0]).join('')}
                   </div>
-                  <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center text-white">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                  </span>
                 </div>
 
                 <div className="flex flex-col min-w-0">
                   <h2 className="font-baloo font-extrabold text-2xl text-tag-brown leading-tight truncate">
-                    {userProfile.name}
+                    {activeProfile.name || 'Contact'}
                   </h2>
                   <span className="text-xs font-semibold text-tag-brown-light truncate">
-                    {activeMode === 'work' ? userProfile.organization : userProfile.title}
+                    {activeProfile.title}
                   </span>
                   <span className="font-mono text-[9.5px] text-tag-brown-subtle tracking-wider mt-0.5">
-                    VERIFIED TAGTIQUE ID
+                    Tagtique
                   </span>
                 </div>
               </div>
 
-              {/* Bio */}
-              <p className="text-xs sm:text-sm text-tag-brown-muted leading-relaxed font-medium bg-tag-bg p-3.5 rounded-2xl border border-tag-border/70">
-                {userProfile.bio}
-              </p>
+              {activeProfile.bio ? (
+                <p className="text-xs sm:text-sm text-tag-brown-muted leading-relaxed font-medium bg-tag-bg p-3.5 rounded-2xl border border-tag-border/70">
+                  {activeProfile.bio}
+                </p>
+              ) : null}
 
               {/* Primary 1-Tap Save Button */}
               <button
@@ -185,7 +140,7 @@ export default function PublicProfilePage() {
                   <span className="text-[10px] font-bold">Call</span>
                 </a>
                 <a
-                  href={`mailto:${activeProfile.email || 'contact@tagtique.co'}`}
+                  href={activeProfile.email ? `mailto:${activeProfile.email}` : undefined}
                   className="p-2.5 rounded-2xl border border-tag-border bg-tag-bg hover:bg-tag-pill transition-colors flex flex-col items-center gap-1 text-tag-brown"
                 >
                   <Mail className="w-4 h-4 text-tag-brown-light" />
@@ -202,7 +157,7 @@ export default function PublicProfilePage() {
                 </a>
               </div>
 
-              {/* Social Link */}
+              {userProfile.instagram ? (
               <a
                 href={`https://instagram.com/${userProfile.instagram.replace('@', '')}`}
                 target="_blank"
@@ -218,6 +173,7 @@ export default function PublicProfilePage() {
                   <ExternalLink className="w-3 h-3" />
                 </span>
               </a>
+              ) : null}
             </>
           )}
 

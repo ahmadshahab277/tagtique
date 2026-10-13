@@ -8,9 +8,6 @@ export default function HeroSection() {
 
   return (
     <section className="relative overflow-hidden pt-6 sm:pt-10 pb-16 sm:pb-24">
-      {/* Background ambient lighting */}
-      <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-radial-gradient from-tag-amber/10 via-tag-amber/5 to-transparent rounded-full blur-3xl pointer-events-none" />
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
           
