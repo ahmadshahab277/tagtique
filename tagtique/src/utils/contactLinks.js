@@ -29,8 +29,3 @@ export function whatsappUrl(raw, text) {
   const base = `https://wa.me/${digits}`;
   return text ? `${base}?text=${encodeURIComponent(text)}` : base;
 }
-
-export function whatsappCallUrl(raw) {
-  const digits = toInternationalDigits(raw);
-  return digits ? `https://wa.me/call/${digits}` : '';
-}

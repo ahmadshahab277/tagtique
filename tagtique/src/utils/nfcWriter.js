@@ -1,4 +1,4 @@
-import { buildNdefRecords, parseCompactJson, parseReadableText, parseNfcReading } from './nfcPayload.js';
+import { buildNdefRecords, parseNfcReading } from './nfcPayload.js';
 
 export function isWebNfcSupported() {
   return typeof window !== 'undefined' && 'NDEFReader' in window && window.isSecureContext !== false;
@@ -133,5 +133,3 @@ export async function readBackAfterWrite() {
     return readNfcTag(20000);
   }
 }
-
-export { parseCompactJson, parseReadableText };
