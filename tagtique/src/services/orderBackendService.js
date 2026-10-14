@@ -29,6 +29,7 @@ class OrderBackendService {
     try {
       this.localOrders = rows;
       localStorage.setItem(LOCAL_STORAGE_ORDERS_KEY, JSON.stringify(rows));
+      localStorage.setItem('tagtique_admin_v3_orders', JSON.stringify(rows));
       if (Array.isArray(rows)) {
         tagRegistryService.syncFromOrders(rows);
       }
@@ -77,14 +78,21 @@ class OrderBackendService {
     // 1. Supabase Insertion
     if (supabase && isSupabaseConfigured()) {
       try {
-        // A. Insert Customer
+        // A. Insert Customer with privacy metadata encoded in address
+        const primaryVeh = vehicles[0] || {};
+        const pPhone = primaryVeh.phonePrivacy || customer.phonePrivacy || 'private';
+        const pName = primaryVeh.namePrivacy || customer.namePrivacy || 'public';
+        const pEmerg = primaryVeh.emergencyPrivacy || customer.emergencyPrivacy || 'private';
+        const baseAddr = shippingAddress?.address || customer.address || '';
+        const encodedAddr = `${baseAddr} [privacy:phone=${pPhone};name=${pName};emergency=${pEmerg}]`.trim();
+
         const { data: customerRecord, error: custErr } = await supabase
           .from('customers')
           .insert({
             full_name: customer.name || 'Valued Customer',
             phone_number: customer.phone || '0300 0000000',
             guardian_number: customer.guardianNumber || customer.emergencyPhone || null,
-            address: shippingAddress?.address || customer.address || '',
+            address: encodedAddr,
             city: shippingAddress?.city || customer.city || 'Faisalabad'
           })
           .select()
@@ -134,10 +142,11 @@ class OrderBackendService {
           if (vehErr) throw vehErr;
           const vehicleId = vehRecord.id;
 
-          // Unique QR slug / crypto token
-          const qrToken = `tgt-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+          // Unique QR slug / crypto token (prefixed with pub- if public for direct identification)
+          const isPub = vPhonePrivacy === 'public';
+          const qrToken = `tgt-${isPub ? 'pub-' : ''}${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
           const qrDataUrl = await this.generateQRCodeDataUrl(
-            buildScanUrl(qrToken, vPhonePrivacy === 'public' ? { phonePrivacy: 'public', phone: vPhone } : {})
+            buildScanUrl(qrToken, isPub ? { phonePrivacy: 'public', phone: vPhone } : {})
           );
           const shortToken = qrToken.replace(/^tgt-/, '').replace(/[^a-zA-Z0-9]/g, '').slice(0, 8).toUpperCase();
           const serialNo = `SN-${shortToken}`;
@@ -362,12 +371,23 @@ class OrderBackendService {
               serialNo = `SN-${rawId}`;
             }
 
+            // Extract embedded privacy metadata from customer address if present
+            const rawAddr = cust.address || '';
+            const privacyMatch = rawAddr.match(/\[privacy:([^\]]+)\]/);
+            const cleanAddr = rawAddr.replace(/\s*\[privacy:[^\]]+\]\s*/g, '').trim();
+            const privacyParams = new URLSearchParams(privacyMatch ? privacyMatch[1].replace(/;/g, '&') : '');
+
+            const addrPhonePrivacy = privacyParams.get('phone');
+            const addrNamePrivacy = privacyParams.get('name');
+            const addrEmergPrivacy = privacyParams.get('emergency');
+            const isTokenPublic = t.qr_code_value && t.qr_code_value.includes('-pub-');
+
             const localMatch = (this.localOrders || []).find(
               (lo) => lo.tag_id === t.id || lo.qr_code_value === t.qr_code_value || lo.orderId === `#TGT-${rawId}`
             );
-            const phonePrivacy = t.phone_privacy || localMatch?.phonePrivacy || 'private';
-            const namePrivacy = t.name_privacy || localMatch?.namePrivacy || 'public';
-            const emergencyPrivacy = t.emergency_privacy || localMatch?.emergencyPrivacy || 'private';
+            const phonePrivacy = t.phone_privacy || addrPhonePrivacy || (isTokenPublic ? 'public' : '') || localMatch?.phonePrivacy || 'private';
+            const namePrivacy = t.name_privacy || addrNamePrivacy || localMatch?.namePrivacy || 'public';
+            const emergencyPrivacy = t.emergency_privacy || addrEmergPrivacy || localMatch?.emergencyPrivacy || 'private';
 
             return {
               orderId: `#TGT-${rawId}`,
@@ -387,7 +407,7 @@ class OrderBackendService {
               phonePrivacy,
               namePrivacy,
               emergencyPrivacy,
-              address: cust.address || '',
+              address: cleanAddr,
               city: cust.city || 'Faisalabad',
               location: cust.city ? `${cust.city}, PK` : 'Faisalabad, PK',
               vehicle_id: veh.id || '',
@@ -482,18 +502,24 @@ class OrderBackendService {
           if (vehErr) console.warn('Supabase vehicle update warning:', vehErr);
         }
 
-        if (!cId && vId && (cName || cPhone || cGuard)) {
+        if (!cId && vId) {
           const { data: vehRow } = await supabase.from('vehicles').select('customer_id').eq('id', vId).single();
           if (vehRow?.customer_id) cId = vehRow.customer_id;
         }
 
-        if (cId && (cName || cPhone || cGuard)) {
+        if (cId && (cName || cPhone || cGuard || updates.phonePrivacy || updates.namePrivacy || updates.emergencyPrivacy || updates.address)) {
           const custUpdates = {};
           if (cName !== undefined) custUpdates.full_name = cName;
           if (cPhone !== undefined) custUpdates.phone_number = cPhone;
           if (cGuard !== undefined) custUpdates.guardian_number = cGuard;
-          if (updates.address) custUpdates.address = updates.address;
           if (updates.city) custUpdates.city = updates.city;
+
+          const baseAddr = (updates.address || (index !== -1 ? current[index]?.address : '') || '').replace(/\s*\[privacy:[^\]]+\]\s*/g, '').trim();
+          const pPhone = updates.phonePrivacy || (index !== -1 ? current[index]?.phonePrivacy : 'private') || 'private';
+          const pName = updates.namePrivacy || (index !== -1 ? current[index]?.namePrivacy : 'public') || 'public';
+          const pEmerg = updates.emergencyPrivacy || (index !== -1 ? current[index]?.emergencyPrivacy : 'private') || 'private';
+          custUpdates.address = `${baseAddr} [privacy:phone=${pPhone};name=${pName};emergency=${pEmerg}]`.trim();
+
           const { error: custErr } = await supabase.from('customers').update(custUpdates).eq('id', cId);
           if (custErr) console.warn('Supabase customer update warning:', custErr);
         }
