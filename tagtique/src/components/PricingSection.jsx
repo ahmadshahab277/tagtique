@@ -33,7 +33,6 @@ export default function PricingSection() {
                   <h3 className="font-baloo font-bold text-2xl text-tag-brown">Single sticker</h3>
                   <span className="text-xs text-tag-brown-subtle font-medium">1 glossy QR sticker</span>
                 </div>
-                <div className="w-5 h-5 rounded-full border border-tag-brown bg-[#FBF3E4]" />
               </div>
 
               <div className="flex items-baseline gap-2">
@@ -55,13 +54,13 @@ export default function PricingSection() {
                   <span className="w-5 h-5 rounded-full bg-tag-pill text-tag-brown-light flex items-center justify-center flex-shrink-0 text-xs font-bold mt-0.5">
                     <Check className="w-3 h-3" />
                   </span>
-                  <span>Unlimited live edits to your profile card</span>
+                  <span>Change the number later without reprinting</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <span className="w-5 h-5 rounded-full bg-tag-pill text-tag-brown-light flex items-center justify-center flex-shrink-0 text-xs font-bold mt-0.5">
                     <Check className="w-3 h-3" />
                   </span>
-                  <span>Lost-and-found emergency mode included</span>
+                  <span>Free delivery across Pakistan</span>
                 </li>
               </ul>
             </div>
@@ -76,24 +75,16 @@ export default function PricingSection() {
 
           {/* 2. Pack of 2 — PKR 1,499 (Featured) */}
           <div
-            className="relative border-[2.5px] border-tag-brown-deep rounded-3xl p-6 sm:p-8 flex flex-col justify-between gap-6 shadow-warm-lg transition-all duration-300 hover:-translate-y-2 text-[#FDF7EC]"
+            className="relative border-[2.5px] border-tag-brown-deep rounded-3xl p-6 sm:p-8 flex flex-col justify-between gap-6 shadow-warm-lg text-[#FDF7EC]"
             style={{
               background: 'linear-gradient(168deg, #3A2318 0%, #2E1B10 58%, #221208 100%)'
             }}
           >
-            <span className="absolute -top-3.5 left-6 bg-tag-amber text-tag-brown-deep border-2 border-tag-brown-deep rounded-full font-mono text-[10px] font-bold tracking-wider px-3.5 py-1 flex items-center gap-1 shadow-sm">
-              MOST BOUGHT
-            </span>
-
             <div className="flex flex-col gap-4">
               <div className="flex items-start justify-between pt-1">
                 <div>
                   <h3 className="font-baloo font-bold text-2xl text-[#FDF7EC]">Pack of 2</h3>
                   <span className="text-xs text-[#A88B64] font-medium">2 glossy QR stickers</span>
-                </div>
-                <div className="flex -space-x-1.5">
-                  <span className="w-4 h-4 rounded-full border border-black bg-[#FBF3E4]" />
-                  <span className="w-4 h-4 rounded-full border border-black bg-[#F5B21F]" />
                 </div>
               </div>
 
@@ -118,13 +109,13 @@ export default function PricingSection() {
                   <span className="w-5 h-5 rounded-full bg-tag-amber/20 text-tag-amber flex items-center justify-center flex-shrink-0 text-xs font-bold mt-0.5">
                     <Check className="w-3 h-3" />
                   </span>
-                  <span>Both synced to your live profile card</span>
+                  <span>Each sticker can carry its own contact details</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <span className="w-5 h-5 rounded-full bg-tag-amber/20 text-tag-amber flex items-center justify-center flex-shrink-0 text-xs font-bold mt-0.5">
                     <Check className="w-3 h-3" />
                   </span>
-                  <span>Scan analytics across both stickers</span>
+                  <span>Free delivery across Pakistan</span>
                 </li>
               </ul>
             </div>
@@ -144,11 +135,6 @@ export default function PricingSection() {
                 <div>
                   <h3 className="font-baloo font-bold text-2xl text-tag-brown">Pack of 3</h3>
                   <span className="text-xs text-tag-brown-subtle font-medium">3 glossy QR stickers</span>
-                </div>
-                <div className="flex -space-x-1.5">
-                  <span className="w-4 h-4 rounded-full border border-tag-border bg-[#FBF3E4]" />
-                  <span className="w-4 h-4 rounded-full border border-tag-border bg-[#3A2318]" />
-                  <span className="w-4 h-4 rounded-full border border-tag-border bg-[#F5B21F]" />
                 </div>
               </div>
 
@@ -174,7 +160,7 @@ export default function PricingSection() {
                   <span className="w-5 h-5 rounded-full bg-tag-pill text-tag-brown-light flex items-center justify-center flex-shrink-0 text-xs font-bold mt-0.5">
                     <Check className="w-3 h-3" />
                   </span>
-                  <span>All pointing to your single synced card</span>
+                  <span>A separate contact card for each sticker</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <span className="w-5 h-5 rounded-full bg-tag-pill text-tag-brown-light flex items-center justify-center flex-shrink-0 text-xs font-bold mt-0.5">

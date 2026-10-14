@@ -43,7 +43,6 @@ export default function LoginPage() {
       >
         {/* Subtle dot pattern & ambient glow */}
         <div className="absolute inset-0 bg-dot-pattern-dark [background-size:22px_22px] opacity-40 pointer-events-none" />
-        <div className="absolute top-0 right-0 w-80 h-80 bg-tag-amber/15 rounded-full blur-3xl pointer-events-none" />
 
         {/* Top: Logo & Headline */}
         <div className="relative z-10 flex flex-col gap-6">
@@ -165,7 +164,7 @@ export default function LoginPage() {
           </div>
           <div className="flex items-center gap-2.5">
             <span className="w-2 h-2 rounded-xs bg-tag-amber flex-shrink-0" />
-            <span>Decide what shows: work details, or everything.</span>
+            <span>Update the number later. The sticker stays the same.</span>
           </div>
         </div>
       </div>
@@ -204,7 +203,7 @@ export default function LoginPage() {
               Welcome back
             </h2>
             <p className="text-xs sm:text-sm text-tag-brown-muted font-medium">
-              Sign in to edit your profile, track scans and order new tags.
+              Sign in to edit your details and order stickers.
             </p>
           </div>
 
@@ -246,20 +245,15 @@ export default function LoginPage() {
             </div>
 
             {/* Remember Me & Forgot Password */}
-            <div className="flex items-center justify-between text-xs pt-1">
-              <label className="flex items-center gap-2 cursor-pointer font-semibold text-tag-brown">
-                <input
-                  type="checkbox"
-                  checked={remember}
-                  onChange={(e) => setRemember(e.target.checked)}
-                  className="rounded accent-tag-amber"
-                />
-                <span>Keep me signed in</span>
-              </label>
-              <a href="#forgot" className="font-bold text-tag-brown-light hover:text-tag-amber-deep">
-                Forgot password?
-              </a>
-            </div>
+            <label className="flex items-center gap-2 cursor-pointer font-semibold text-tag-brown text-xs pt-1">
+              <input
+                type="checkbox"
+                checked={remember}
+                onChange={(e) => setRemember(e.target.checked)}
+                className="rounded accent-tag-amber"
+              />
+              <span>Keep me signed in</span>
+            </label>
 
             {/* Sign in button */}
             <button
@@ -270,42 +264,6 @@ export default function LoginPage() {
               <span>{loading ? 'Signing in...' : 'Sign in'}</span>
             </button>
           </form>
-
-          {/* Social Divider */}
-          <div className="relative flex items-center justify-center">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-tag-border" />
-            </div>
-            <span className="relative bg-tag-card px-3 font-mono text-[10px] font-bold text-tag-brown-subtle uppercase">
-              OR
-            </span>
-          </div>
-
-          {/* Social Sign-in Buttons */}
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => {
-                setUserProfile((prev) => ({ ...prev, email: 'google.user@gmail.com' }));
-                setMessage('Signed in with Google');
-                setTimeout(() => navigate('/order'), 700);
-              }}
-              className="py-2.5 px-3 rounded-xl border border-tag-border bg-tag-bg hover:bg-tag-pill font-bold text-xs text-tag-brown transition-colors flex items-center justify-center gap-2"
-            >
-              <span>Google</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setUserProfile((prev) => ({ ...prev, email: 'apple.user@icloud.com' }));
-                setMessage('Signed in with Apple');
-                setTimeout(() => navigate('/order'), 700);
-              }}
-              className="py-2.5 px-3 rounded-xl border border-tag-border bg-tag-bg hover:bg-tag-pill font-bold text-xs text-tag-brown transition-colors flex items-center justify-center gap-2"
-            >
-              <span>Apple</span>
-            </button>
-          </div>
 
           {/* Free Shipping Footer Note */}
           <div className="text-center font-medium text-[11px] text-tag-brown-subtle flex items-center justify-center gap-1.5 pt-1">

@@ -6,7 +6,7 @@ import { Check } from 'lucide-react';
 export default function SignupPage() {
   const [tagFlipped, setTagFlipped] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [name, setName] = useState('Ayesha Khan');
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [agree, setAgree] = useState(true);
@@ -57,7 +57,6 @@ export default function SignupPage() {
       >
         {/* Subtle dot pattern & ambient glow */}
         <div className="absolute inset-0 bg-dot-pattern-dark [background-size:22px_22px] opacity-40 pointer-events-none" />
-        <div className="absolute top-0 right-0 w-80 h-80 bg-tag-amber/15 rounded-full blur-3xl pointer-events-none" />
 
         {/* Top: Logo & Headline */}
         <div className="relative z-10 flex flex-col gap-6">
@@ -113,7 +112,7 @@ export default function SignupPage() {
                     SCAN TO CONNECT
                   </span>
                   <span className="font-baloo font-bold text-lg text-tag-brown leading-tight">
-                    {name || 'Ayesha K.'}
+                    {name || 'Your name'}
                   </span>
                 </div>
               </div>
@@ -135,7 +134,7 @@ export default function SignupPage() {
 
                 <div className="flex flex-col">
                   <span className="font-baloo font-bold text-xl text-tag-brown">
-                    {name || 'Ayesha Khan'}
+                    {name || 'Your name'}
                   </span>
                   <span className="text-xs text-tag-brown-muted">
                     Profile Linked & Verified
@@ -233,7 +232,7 @@ export default function SignupPage() {
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Ayesha Khan"
+                placeholder="Your name"
                 className="w-full px-3.5 py-3 rounded-xl border border-tag-border bg-tag-card text-sm text-tag-brown font-medium outline-none focus:border-tag-amber"
               />
             </div>
@@ -305,17 +304,7 @@ export default function SignupPage() {
                 required
                 className="rounded accent-tag-amber mt-0.5"
               />
-              <span>
-                I agree to the{' '}
-                <a href="#terms" className="font-bold text-tag-brown underline">
-                  Terms
-                </a>{' '}
-                and{' '}
-                <a href="#privacy" className="font-bold text-tag-brown underline">
-                  Privacy Policy
-                </a>
-                .
-              </span>
+              <span>I agree to use this account for my Tagtique orders.</span>
             </label>
 
             {/* Create account button */}
@@ -327,42 +316,6 @@ export default function SignupPage() {
               <span>{loading ? 'Setting up...' : 'Create my account'}</span>
             </button>
           </form>
-
-          {/* Social Divider */}
-          <div className="relative flex items-center justify-center">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-tag-border" />
-            </div>
-            <span className="relative bg-tag-card px-3 font-mono text-[10px] font-bold text-tag-brown-subtle uppercase">
-              OR
-            </span>
-          </div>
-
-          {/* Social Buttons */}
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => {
-                setUserProfile((prev) => ({ ...prev, email: 'google.user@gmail.com' }));
-                setMessage('Registered via Google');
-                setTimeout(() => navigate('/order'), 700);
-              }}
-              className="py-2.5 px-3 rounded-xl border border-tag-border bg-tag-bg hover:bg-tag-pill font-bold text-xs text-tag-brown transition-colors flex items-center justify-center gap-2"
-            >
-              <span>Google</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setUserProfile((prev) => ({ ...prev, email: 'apple.user@icloud.com' }));
-                setMessage('Registered via Apple');
-                setTimeout(() => navigate('/order'), 700);
-              }}
-              className="py-2.5 px-3 rounded-xl border border-tag-border bg-tag-bg hover:bg-tag-pill font-bold text-xs text-tag-brown transition-colors flex items-center justify-center gap-2"
-            >
-              <span>Apple</span>
-            </button>
-          </div>
 
           {/* Free Shipping Footer Note */}
           <div className="text-center font-medium text-[11px] text-tag-brown-subtle flex items-center justify-center gap-1.5 pt-1">

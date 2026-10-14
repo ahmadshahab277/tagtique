@@ -19,7 +19,7 @@ export default function Footer() {
               />
             </Link>
             <p className="text-sm text-[#C7B294] leading-relaxed max-w-md">
-              Custom tactile 3D QR stickers made to stick, be seen, and last forever. Designed in Faisalabad, shipped worldwide.
+              Waterproof QR stickers for vehicles. Printed in Faisalabad and delivered across Pakistan.
             </p>
             <div className="flex items-center gap-2 text-xs font-mono text-tag-amber pt-2">
               <span className="w-2 h-2 rounded-full bg-tag-amber" />
@@ -61,15 +61,7 @@ export default function Footer() {
           <div className="flex items-center gap-3">
             <span>© 2026 Tagtique. All rights reserved.</span>
           </div>
-          <div className="flex items-center gap-6">
-            <a href="#privacy" className="hover:text-white transition-colors">
-              Privacy Policy
-            </a>
-            <a href="#terms" className="hover:text-white transition-colors">
-              Terms of Service
-            </a>
-            <span className="font-mono">Faisalabad, PK</span>
-          </div>
+          <span className="font-mono">Faisalabad, PK</span>
         </div>
 
       </div>

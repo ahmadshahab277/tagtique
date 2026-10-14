@@ -2,23 +2,22 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { ShieldCheck, Truck, Lock } from 'lucide-react';
-import confetti from 'canvas-confetti';
 
 export default function CheckoutPage() {
   const { cartItems, completeOrder, userProfile } = useCart();
   const navigate = useNavigate();
 
   // Form states
-  const [email, setEmail] = useState(userProfile.email || 'ayesha@tagtique.co');
-  const [firstName, setFirstName] = useState('Ayesha');
-  const [lastName, setLastName] = useState('Khan');
-  const [address, setAddress] = useState('House 42, Street 7, Block G, Phase 5, DHA');
-  const [apartment, setApartment] = useState('Apartment 3B');
-  const [city, setCity] = useState('Lahore');
-  const [stateProvince, setStateProvince] = useState('Punjab');
-  const [postalCode, setPostalCode] = useState('54792');
+  const [email, setEmail] = useState(userProfile.email || '');
+  const [firstName, setFirstName] = useState(userProfile.name?.split(' ')[0] || '');
+  const [lastName, setLastName] = useState(userProfile.name?.split(' ').slice(1).join(' ') || '');
+  const [address, setAddress] = useState('');
+  const [apartment, setApartment] = useState('');
+  const [city, setCity] = useState('');
+  const [stateProvince, setStateProvince] = useState('');
+  const [postalCode, setPostalCode] = useState('');
   const [country, setCountry] = useState('Pakistan');
-  const [phone, setPhone] = useState('+92 300 114 2288');
+  const [phone, setPhone] = useState(userProfile.phone || '');
 
   // Shipping & Payment selection
   const [shippingMethod, setShippingMethod] = useState('standard'); // 'standard' | 'express'
@@ -76,14 +75,6 @@ export default function CheckoutPage() {
 
     setTimeout(() => {
       completeOrder(orderData);
-      try {
-        confetti({
-          particleCount: 80,
-          spread: 70,
-          origin: { y: 0.5 },
-          colors: ['#F5B21F', '#2E1B10', '#FFFDF8']
-        });
-      } catch (_) {}
       navigate('/order-confirmation');
     }, 900);
   };
@@ -134,7 +125,7 @@ export default function CheckoutPage() {
                   required
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+92 300 114 2288"
+                  placeholder="03xx xxxxxxx"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-tag-border bg-tag-bg text-sm text-tag-brown font-medium outline-none focus:border-tag-amber"
                 />
               </div>
@@ -155,7 +146,7 @@ export default function CheckoutPage() {
                   required
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  placeholder="Ayesha"
+                  placeholder="First name"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-tag-border bg-tag-bg text-sm text-tag-brown font-medium outline-none focus:border-tag-amber"
                 />
               </div>
@@ -167,7 +158,7 @@ export default function CheckoutPage() {
                   required
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  placeholder="Khan"
+                  placeholder="Last name"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-tag-border bg-tag-bg text-sm text-tag-brown font-medium outline-none focus:border-tag-amber"
                 />
               </div>
@@ -242,12 +233,6 @@ export default function CheckoutPage() {
                 className="w-full px-3.5 py-2.5 rounded-xl border border-tag-border bg-tag-bg text-sm text-tag-brown font-semibold outline-none focus:border-tag-amber"
               >
                 <option value="Pakistan">Pakistan</option>
-                <option value="United States">United States</option>
-                <option value="United Kingdom">United Kingdom</option>
-                <option value="United Arab Emirates">United Arab Emirates</option>
-                <option value="Canada">Canada</option>
-                <option value="Australia">Australia</option>
-                <option value="Germany">Germany</option>
               </select>
             </div>
           </div>
@@ -310,7 +295,7 @@ export default function CheckoutPage() {
                       Express Courier Priority
                     </div>
                     <div className="text-xs text-tag-brown-muted">
-                      Priority workshop casting · 1–2 business days delivery
+                      Faster dispatch · 1–2 business days delivery
                     </div>
                   </div>
                 </div>
@@ -391,7 +376,7 @@ export default function CheckoutPage() {
                   isEngraved: false,
                   engravedText: '',
                   totalPrice: 999,
-                  displayName: 'Ali Khan'
+                  displayName: [firstName, lastName].filter(Boolean).join(' ') || 'Your sticker'
                 }
               ]).map((item, idx) => (
                 <div
@@ -408,7 +393,7 @@ export default function CheckoutPage() {
                       </span>
                     )}
                     <span className="text-tag-brown-muted">
-                      Card linked to: <strong>{item.displayName || 'Ali Khan'}</strong>
+                      Card linked to: <strong>{item.displayName || 'Your sticker'}</strong>
                     </span>
                   </div>
                   <span className="font-mono font-bold text-sm text-tag-brown">
