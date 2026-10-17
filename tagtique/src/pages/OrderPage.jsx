@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { EDITIONS, findEdition } from '../data/editions';
+import { findNfcDesign } from '../data/nfcCards';
 
 const PACKAGES = [
   {
@@ -92,6 +93,7 @@ export default function OrderPage() {
   const [selectedPackageId, setSelectedPackageId] = useState(initialPackage);
   const [selectedMaterialId] = useState('shiny');
   const [selectedFinish] = useState(searchParams.get('finish') || 'amber');
+  const nfcDesign = findNfcDesign(searchParams.get('nfc'));
   const initialEdition = findEdition(searchParams.get('edition')) || EDITIONS[0];
   const [selectedEditionId, setSelectedEditionId] = useState(initialEdition.id);
   const [selectedStyleId, setSelectedStyleId] = useState(
@@ -374,7 +376,9 @@ export default function OrderPage() {
           emergencyPrivacy: t.emergencyPrivacy || 'private',
           displayName: t.name || primaryCustomer.name || 'Owner'
         })),
-        packageType: `${selectedEdition.name} Edition · ${selectedStyle.name} · ${selectedPackage.name}`,
+        packageType: nfcDesign
+          ? `Limited Edition NFC Card · ${nfcDesign.name} · ${selectedPackage.name}`
+          : `${selectedEdition.name} Edition · ${selectedStyle.name} · ${selectedPackage.name}`,
         totalAmount: totalPkr,
         paymentStatus: paymentMethod === 'cod' ? 'pending' : 'pending_transfer',
         deliveryStatus: 'pending',
@@ -429,7 +433,9 @@ export default function OrderPage() {
           Order Your Smart E-Tag
         </h1>
         <p className="text-sm sm:text-base text-tag-brown-muted font-medium max-w-2xl leading-relaxed">
-          One sticker for a laptop, bag, helmet, bottle, or vehicle. With internet, a scan opens the contact page. Without internet, it opens the phone dialer. After it arrives: use Wi-Fi, scan the QR, fill the form, and tap Assign.
+          {nfcDesign
+            ? `Limited Edition NFC card · ${nfcDesign.name}. Tap is the main way to open the profile. The small QR is only the fallback. Ordering does not program the chip.`
+            : 'One sticker for a laptop, bag, helmet, bottle, or vehicle. With internet, a scan opens the contact page. Without internet, it opens the phone dialer. After it arrives: use Wi-Fi, scan the QR, fill the form, and tap Assign.'}
         </p>
       </div>
 

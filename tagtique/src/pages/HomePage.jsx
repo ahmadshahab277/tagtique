@@ -2,6 +2,7 @@ import React from 'react';
 import HeroSection from '../components/HeroSection';
 import HowItWorksSection from '../components/HowItWorksSection';
 import PricingSection from '../components/PricingSection';
+import NfcCardSection from '../components/NfcCardSection';
 import FaqSection from '../components/FaqSection';
 
 export default function HomePage() {
@@ -10,6 +11,7 @@ export default function HomePage() {
       <HeroSection />
       <HowItWorksSection />
       <PricingSection />
+      <NfcCardSection />
       <section id="about" className="bg-white text-black py-16 border-t border-black/10">
         <div className="max-w-3xl mx-auto px-4 sm:px-6">
           <h2 className="font-manrope font-extrabold text-4xl tracking-tight">One sticker. Any belonging.</h2>

@@ -5,7 +5,7 @@
 // - If user number is PRIVATE: offline routing dials Tagtique Support Helpline (03292082080).
 // - If user number is PUBLIC: offline routing dials vehicle owner's direct phone number.
 
-const CACHE_NAME = 'tagtique-offline-v6';
+const CACHE_NAME = 'tagtique-offline-v7';
 const CORE_ASSETS = [
   '/',
   '/index.html'
@@ -353,6 +353,18 @@ self.addEventListener('fetch', (event) => {
         });
       }
     })());
+    return;
+  }
+
+  // Vite source and local dev files must always come from the network.
+  // Caching them serves an old module and the shop fails to load.
+  if (
+    url.pathname.startsWith('/src/') ||
+    url.pathname.startsWith('/@') ||
+    url.pathname.startsWith('/node_modules/') ||
+    url.hostname === 'localhost' ||
+    url.hostname === '127.0.0.1'
+  ) {
     return;
   }
 

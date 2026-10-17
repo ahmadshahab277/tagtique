@@ -15,6 +15,9 @@ const CheckoutPage = lazy(() => import('./pages/CheckoutPage'));
 const OrderConfirmationPage = lazy(() => import('./pages/OrderConfirmationPage'));
 const PublicProfilePage = lazy(() => import('./pages/PublicProfilePage'));
 const ProductPage = lazy(() => import('./pages/ProductPage'));
+const NfcCardPage = lazy(() => import('./pages/NfcCardPage'));
+const NfcSetupPage = lazy(() => import('./pages/NfcSetupPage'));
+const NfcPublicProfilePage = lazy(() => import('./pages/NfcPublicProfilePage'));
 
 // Scroll to top on every route change
 function ScrollToTop() {
@@ -117,6 +120,9 @@ function AppContent() {
             {/* Home Page */}
             <Route path="/" element={<HomePage />} />
             <Route path="/product/:slug" element={<ProductPage />} />
+            <Route path="/nfc-card/:designId" element={<NfcCardPage />} />
+            <Route path="/nfc-card/:designId/setup" element={<NfcSetupPage />} />
+            <Route path="/profile/:profileId" element={<NfcPublicProfilePage />} />
 
             {/* Dedicated Auth Pages */}
             <Route path="/login" element={<LoginPage />} />

@@ -35,6 +35,7 @@ export default function Navbar() {
             </Link>
             <nav className="hidden md:flex items-center">
               <button type="button" onClick={() => goTo('shop')} className={linkClass}>Shop</button>
+              <button type="button" onClick={() => goTo('nfc')} className={linkClass}>NFC cards</button>
               <button type="button" onClick={() => goTo('about')} className={linkClass}>About</button>
               <button type="button" onClick={() => goTo('contact')} className={linkClass}>Contact us</button>
             </nav>
@@ -65,6 +66,7 @@ export default function Navbar() {
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-black/10 bg-white/80 px-5 py-2 flex flex-col">
             <button type="button" onClick={() => goTo('shop')} className="text-left py-3 font-medium">Shop</button>
+            <button type="button" onClick={() => goTo('nfc')} className="text-left py-3 font-medium">NFC cards</button>
             <button type="button" onClick={() => goTo('about')} className="text-left py-3 font-medium">About</button>
             <button type="button" onClick={() => goTo('contact')} className="text-left py-3 font-medium">Contact us</button>
             <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="py-3 font-medium">Login</Link>

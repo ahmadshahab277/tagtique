@@ -66,6 +66,7 @@ export default function Footer() {
             <Link to="/order?edition=cute" className="text-white/75 hover:text-white">Cute Edition</Link>
             <Link to="/order?edition=karaoke" className="text-white/75 hover:text-white">Karaoke Edition</Link>
             <Link to="/#shop" className="text-white/75 hover:text-white">Limited Edition</Link>
+            <Link to="/#nfc" className="text-white/75 hover:text-white">NFC cards</Link>
           </div>
         </div>
 
