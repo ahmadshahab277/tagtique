@@ -1,5 +1,6 @@
 import React from 'react';
 import { WifiOff, RefreshCw, HelpCircle, Lock, Phone } from 'lucide-react';
+import { telUrl } from '../../utils/contactLinks';
 
 export function LoadingScreen() {
   return (
@@ -96,30 +97,19 @@ export function NetworkErrorScreen({
   vehicleNumber = ''
 }) {
   const cleanPhone = String(targetPhone || '03292082080').trim();
+  const href = telUrl(cleanPhone) || 'tel:+923292082080';
 
   React.useEffect(() => {
-    const triggerDial = () => {
-      try {
-        window.location.href = `tel:${cleanPhone}`;
-      } catch (_) {}
-    };
-
-    // Immediate attempt for browsers permitting programmatic scheme navigation (e.g. Android Chrome)
-    triggerDial();
-
-    const timer = setTimeout(triggerDial, 600);
-
-    // iOS Mobile Safari gesture unlock: Safari blocks programmatic tel: unless triggered by direct user gesture.
-    // The very first tap anywhere on the screen immediately launches the iOS phone confirmation sheet.
-    window.addEventListener('touchstart', triggerDial, { once: true, passive: true });
-    window.addEventListener('click', triggerDial, { once: true });
-
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener('touchstart', triggerDial);
-      window.removeEventListener('click', triggerDial);
-    };
-  }, [cleanPhone]);
+    const ios = /iPad|iPhone|iPod/i.test(navigator.userAgent || '');
+    if (ios) return undefined;
+    const link = document.createElement('a');
+    link.href = href;
+    link.rel = 'noopener';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    return undefined;
+  }, [href]);
 
   return (
     <div className="min-h-[70vh] flex flex-col items-center justify-center p-5 text-center gap-4 max-w-sm mx-auto animate-fadeIn">
@@ -155,8 +145,8 @@ export function NetworkErrorScreen({
 
       {/* Instant 1-Tap Dial Button */}
       <a
-        href={`tel:${cleanPhone}`}
-        className="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-[#1C120C] to-[#2E1F16] text-[#FDF7EC] font-extrabold text-sm flex items-center justify-center gap-3 shadow-warm-md hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer border border-amber-400/40"
+        href={href}
+        className="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-[#1C120C] to-[#2E1F16] text-[#FDF7EC] font-extrabold text-sm flex items-center justify-center gap-3 shadow-warm-md active:scale-[0.99] transition-all cursor-pointer border border-amber-400/40"
       >
         <Phone className="w-5 h-5 text-[#E6AF2E] shrink-0" />
         <div className="flex flex-col text-left">
@@ -164,13 +154,13 @@ export function NetworkErrorScreen({
             {isPrivate ? 'Call Support Helpline Directly' : 'Call Vehicle Owner Directly'}
           </span>
           <span className="text-base font-black font-mono text-[#FDF7EC] leading-tight">
-            {cleanPhone}
+            {href.replace('tel:', '')}
           </span>
         </div>
       </a>
 
       <p className="text-[11px] text-amber-900 font-semibold animate-pulse">
-        📞 Launching call... Tap above if your phone dialer doesn't open.
+        Tap the button to open the phone. iPhone needs that tap. Android opens the dialer when it can.
       </p>
 
       {onRetry && (

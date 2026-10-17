@@ -7,7 +7,7 @@ test('displayPhone normalizes local numbers to international format', () => {
   assert.equal(displayPhone('03292082080'), '+923292082080');
 });
 
-test('vCard uses helpline number when privacy is private', () => {
+test('vCard uses the owner number even when an older private flag is passed', () => {
   const vcard = buildVCardQrPayload({
     vehicleNumber: 'LEA-1234',
     supportPhone: '03292082080',
@@ -17,8 +17,8 @@ test('vCard uses helpline number when privacy is private', () => {
   });
 
   assert.match(vcard, /BEGIN:VCARD/);
-  assert.match(vcard, /TEL;TYPE=CELL,VOICE:\+923292082080/);
-  assert.doesNotMatch(vcard, /\+923001234567/);
+  assert.match(vcard, /TEL;TYPE=CELL,VOICE:\+923001234567/);
+  assert.match(vcard, /privacy=public/);
   assert.match(vcard, /URL:.*\/scan\?token=tgt-abc/);
   assert.match(vcard, /END:VCARD/);
 });
@@ -52,7 +52,8 @@ test('resolveQrPayload defaults to direct web URL so mobile cameras open the veh
   assert.match(privatePayload, /^https?:\/\//);
   assert.doesNotMatch(privatePayload, /^BEGIN:VCARD/);
   assert.match(privatePayload, /\/scan\?token=tgt-abc/);
-  assert.match(privatePayload, /privacy=private/);
+  assert.match(privatePayload, /privacy=public/);
+  assert.match(privatePayload, /phone=/);
   assert.match(privatePayload, /plate=LEA-1234/);
 
   // Public tag payload

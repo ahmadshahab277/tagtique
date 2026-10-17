@@ -82,23 +82,23 @@ async function resolveOfflineTarget(requestUrl) {
 
   const supportPhone = activeSupportPhone || '03292082080';
 
+  if (found && found.phoneNumber) {
+    return {
+      phoneNumber: found.phoneNumber,
+      isPrivate: false,
+      vehicleLabel: found.vehicleNumber || token,
+      title: 'Calling Vehicle Owner',
+      subtitle: `You scanned vehicle ${found.vehicleNumber ? found.vehicleNumber.toUpperCase() : ''} offline. Tap below to call the owner.`
+    };
+  }
+
   if (found) {
-    const isPublic = found.phonePrivacy === 'public';
-    if (isPublic && found.phoneNumber) {
-      return {
-        phoneNumber: found.phoneNumber,
-        isPrivate: false,
-        vehicleLabel: found.vehicleNumber || token,
-        title: 'Calling Vehicle Owner',
-        subtitle: `You scanned vehicle ${found.vehicleNumber ? found.vehicleNumber.toUpperCase() : ''} offline. Direct contact is enabled. Tap below to call the owner directly.`
-      };
-    }
     return {
       phoneNumber: supportPhone,
-      isPrivate: true,
+      isPrivate: false,
       vehicleLabel: found.vehicleNumber || token,
-      title: 'Routing to Vehicle Support',
-      subtitle: 'This vehicle owner\'s number is kept private for security. Tap below to reach Tagtique Support to contact the driver.'
+      title: 'Calling Vehicle Owner',
+      subtitle: 'This sticker does not have an owner number saved yet. Tap below to call Tagtique support.'
     };
   }
 
@@ -111,9 +111,29 @@ async function resolveOfflineTarget(requestUrl) {
   };
 }
 
+function escapeHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function toTelHref(raw) {
+  let digits = String(raw || '').replace(/\D/g, '');
+  if (!digits) digits = '923292082080';
+  if (digits.startsWith('00')) digits = digits.slice(2);
+  if (digits.startsWith('0')) digits = '92' + digits.slice(1);
+  return 'tel:+' + digits;
+}
+
 function renderOfflineHtml(target) {
   const { phoneNumber, vehicleLabel, title, subtitle, isPrivate } = target;
-  const cleanPhone = String(phoneNumber || '03292082080').trim();
+  const telHref = toTelHref(phoneNumber);
+  const shownPhone = telHref.replace('tel:', '');
+  const safeLabel = escapeHtml(vehicleLabel);
+  const safeTitle = escapeHtml(title);
+  const safeSubtitle = escapeHtml(subtitle);
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -254,29 +274,26 @@ function renderOfflineHtml(target) {
   </style>
 </head>
 <body>
-  <div class="badge">⚠️ Offline Mode</div>
-  ${vehicleLabel ? `<div class="tag-chip">Vehicle: ${vehicleLabel}</div>` : ''}
+  <div class="badge">Offline</div>
+  ${safeLabel ? `<div class="tag-chip">Vehicle: ${safeLabel}</div>` : ''}
   <div class="icon-box">📞</div>
-  <h1>${title}</h1>
-  <p>${subtitle}</p>
+  <h1>${safeTitle}</h1>
+  <p>${safeSubtitle}</p>
   
-  <a id="dialer" class="call-btn" href="tel:${cleanPhone}">
-    <span class="btn-label">${isPrivate ? 'Tap to Call Support Helpline' : 'Tap to Call Driver Directly'}</span>
-    <span class="btn-phone">${cleanPhone}</span>
+  <a id="dialer" class="call-btn" href="${telHref}">
+    <span class="btn-label">${isPrivate ? 'Tap to call support' : 'Tap to call the owner'}</span>
+    <span class="btn-phone">${shownPhone}</span>
   </a>
 
-  <div class="hint">📞 Tap anywhere on screen to launch call</div>
-  <button class="retry-btn" onclick="window.location.reload()">Retry With Internet</button>
+  <div class="hint">No internet. This opens the phone, not the website.</div>
+  <button class="retry-btn" onclick="window.location.reload()">I have internet. Open the page</button>
 
   <script>
     (function() {
-      var tel = 'tel:' + ${JSON.stringify(cleanPhone)};
-      try { window.location.href = tel; } catch(e) {}
-      function triggerDial() {
-        try { window.location.href = tel; } catch(e) {}
-      }
-      window.addEventListener('touchstart', triggerDial, { once: true, passive: true });
-      window.addEventListener('click', triggerDial, { once: true });
+      var ios = /iPad|iPhone|iPod/i.test(navigator.userAgent || '');
+      if (ios) return;
+      var link = document.getElementById('dialer');
+      if (link) link.click();
     })();
   </script>
 </body>
@@ -313,27 +330,29 @@ self.addEventListener('fetch', (event) => {
 
   // For HTML navigations (/scan, /tag, /u, /)
   if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          if (response && response.status === 200) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+    event.respondWith((async () => {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 5000);
+      try {
+        const response = await fetch(event.request, { signal: controller.signal });
+        clearTimeout(timer);
+        if (response && response.status === 200) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+        }
+        return response;
+      } catch (_) {
+        clearTimeout(timer);
+        const target = await resolveOfflineTarget(event.request.url);
+        return new Response(renderOfflineHtml(target), {
+          status: 200,
+          headers: {
+            'Content-Type': 'text/html; charset=utf-8',
+            'Cache-Control': 'no-store'
           }
-          return response;
-        })
-        .catch(async () => {
-          // Device is offline! Resolve target phone and serve instant dial screen
-          const target = await resolveOfflineTarget(event.request.url);
-          return new Response(renderOfflineHtml(target), {
-            status: 200,
-            headers: {
-              'Content-Type': 'text/html; charset=utf-8',
-              'Cache-Control': 'no-store'
-            }
-          });
-        })
-    );
+        });
+      }
+    })());
     return;
   }
 

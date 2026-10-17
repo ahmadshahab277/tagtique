@@ -22,10 +22,8 @@ export function buildScanUrl(token, options = {}) {
   const origin = getPublicSiteOrigin();
   const safeToken = encodeURIComponent(token || '');
   let url = `${origin}/scan?token=${safeToken}`;
-  if (options && options.phonePrivacy === 'public' && options.phone) {
+  if (options && options.phone) {
     url += `&privacy=public&phone=${encodeURIComponent(options.phone)}`;
-  } else if (options && options.phonePrivacy === 'private') {
-    url += '&privacy=private';
   }
   if (options && options.plate) {
     url += `&plate=${encodeURIComponent(options.plate)}`;

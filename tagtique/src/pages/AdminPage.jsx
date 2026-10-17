@@ -130,7 +130,7 @@ export default function AdminPage({ onLogout }) {
     phoneNumber: '',
     guardianNumber: '',
     status: 'Pending',
-    phonePrivacy: 'private',
+    phonePrivacy: 'public',
     namePrivacy: 'public',
     emergencyPrivacy: 'private'
   });
@@ -144,7 +144,7 @@ export default function AdminPage({ onLogout }) {
         phoneNumber: selectedOrder.phoneNumber || selectedOrder.phone_number || '',
         guardianNumber: selectedOrder.guardianNumber || selectedOrder.guardian_number || '',
         status: selectedOrder.status || 'Pending',
-        phonePrivacy: selectedOrder.phonePrivacy || 'private',
+        phonePrivacy: 'public',
         namePrivacy: selectedOrder.namePrivacy || 'public',
         emergencyPrivacy: selectedOrder.emergencyPrivacy || 'private'
       });
@@ -339,7 +339,7 @@ export default function AdminPage({ onLogout }) {
       phoneNumber: editForm.phoneNumber.trim(),
       guardian_number: editForm.guardianNumber.trim(),
       guardianNumber: editForm.guardianNumber.trim(),
-      phonePrivacy: editForm.phonePrivacy || 'private',
+      phonePrivacy: 'public',
       namePrivacy: editForm.namePrivacy || 'public',
       emergencyPrivacy: editForm.emergencyPrivacy || 'private',
       status: editForm.status
@@ -356,7 +356,7 @@ export default function AdminPage({ onLogout }) {
         ownerName: editForm.customerName.trim(),
         phoneNumber: editForm.phoneNumber.trim(),
         guardianNumber: editForm.guardianNumber.trim(),
-        phonePrivacy: editForm.phonePrivacy || 'private',
+        phonePrivacy: 'public',
         status: editForm.status === 'Deactivated' ? 'inactive' : 'active'
       });
 
@@ -480,6 +480,48 @@ export default function AdminPage({ onLogout }) {
     } catch (err) {
       console.error('Reassign tag error:', err);
       showToast('Failed to reassign QR details');
+    }
+  };
+
+  const handleUnassignTag = async (order) => {
+    const label = order.serialNumber || order.orderId || order.order_number || 'this sticker';
+    if (!window.confirm(`Unassign ${label}? The printed QR stays the same. The next scan opens first-time setup.`)) {
+      return;
+    }
+
+    const updates = {
+      vehicle_id: order.vehicle_id || order.vehicleId,
+      vehicle_number: 'UNASSIGNED',
+      vehicleNumber: 'UNASSIGNED',
+      vehicle_type: order.vehicleType || order.vehicle_type || 'Car',
+      vehicleType: order.vehicleType || order.vehicle_type || 'Car',
+      customer_id: order.customer_id || order.customerId,
+      customer_name: 'Unassigned Inventory',
+      customerName: 'Unassigned Inventory',
+      phone_number: '03000000000',
+      phoneNumber: '03000000000',
+      guardian_number: '',
+      guardianNumber: '',
+      status: 'Pending',
+      phonePrivacy: 'public',
+      regenerateQrToken: false
+    };
+
+    try {
+      await orderBackendService.reassignTagDetails(order.tag_id || order.tagId, updates);
+      setOrders((prev) => {
+        const safePrev = Array.isArray(prev) ? prev : [];
+        return safePrev.map((o) => {
+          const matchTag = order.tag_id && o.tag_id === order.tag_id;
+          const matchOrder = o.orderId === order.orderId || o.order_number === order.order_number;
+          if (matchTag || matchOrder) return { ...o, ...updates };
+          return o;
+        });
+      });
+      showToast(`${label} is unassigned. The next scan opens first-time setup.`);
+    } catch (err) {
+      console.error('Unassign tag error:', err);
+      showToast('Failed to unassign this sticker');
     }
   };
 
@@ -1037,17 +1079,6 @@ export default function AdminPage({ onLogout }) {
                               <div className="font-mono font-semibold text-tag-brown">
                                 {order.phoneNumber || '—'}
                               </div>
-                              <div className="mt-1">
-                                {order.phonePrivacy === 'public' ? (
-                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-sky-50 border border-sky-300 text-sky-800 text-[10px] font-extrabold shadow-2xs" title="Public: Caller connects directly to owner online & offline">
-                                    🌐 Public
-                                  </span>
-                                ) : (
-                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-50 border border-amber-300 text-amber-900 text-[10px] font-extrabold shadow-2xs" title="Private (Proxy): Calls route via Tagtique proxy / helpline">
-                                    🔒 Private (Proxy)
-                                  </span>
-                                )}
-                              </div>
                             </td>
 
                             {/* Guardian Number & Privacy */}
@@ -1161,6 +1192,15 @@ export default function AdminPage({ onLogout }) {
                                 >
                                   <RotateCcw className="w-3 h-3 text-tag-amber-deep" />
                                   <span>Reassign</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => handleUnassignTag(order)}
+                                  className="px-2.5 py-1 rounded-lg border border-tag-border bg-tag-card hover:bg-tag-pill text-tag-brown text-xs font-bold flex items-center gap-1 transition-colors"
+                                  title="Clear the owner so the next scan opens first-time setup. The printed QR does not change."
+                                >
+                                  <span>Unassign</span>
                                 </button>
 
                                 <button
@@ -2206,30 +2246,6 @@ export default function AdminPage({ onLogout }) {
                       <label className="text-[11px] font-bold text-tag-brown-muted">
                         Phone Number
                       </label>
-                      <div className="flex items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => setEditForm((prev) => ({ ...prev, phonePrivacy: 'private' }))}
-                          className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition-colors ${
-                            editForm.phonePrivacy !== 'public'
-                              ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                              : 'bg-white text-tag-brown-muted border border-tag-border'
-                          }`}
-                        >
-                          🔒 Private
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setEditForm((prev) => ({ ...prev, phonePrivacy: 'public' }))}
-                          className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition-colors ${
-                            editForm.phonePrivacy === 'public'
-                              ? 'bg-sky-100 text-sky-900 border border-sky-300'
-                              : 'bg-white text-tag-brown-muted border border-tag-border'
-                          }`}
-                        >
-                          🌐 Public
-                        </button>
-                      </div>
                     </div>
                     <input
                       type="text"
@@ -2403,7 +2419,7 @@ export default function AdminPage({ onLogout }) {
                     <span>Instant Blank Stock Tag Generation</span>
                   </div>
                   <p className="text-[11.5px] leading-relaxed text-amber-900/90">
-                    This generates a unique cryptographic QR token and Serial Number in Supabase. You can print the physical sticker immediately for your inventory drawer. When a customer orders or demands later, you can click <strong>Reassign</strong> to link their vehicle and phone number in seconds.
+                    This generates a unique QR for a blank sticker. Print it and give it to the customer. Their first scan opens the setup form, and they enter their own name, phone, and vehicle number. You can still use <strong>Reassign</strong> to fill those details yourself, or <strong>Unassign</strong> to send the same sticker back to first-time setup. The printed QR does not change.
                   </p>
                   <div className="grid grid-cols-2 gap-2 pt-1 font-mono text-[11px]">
                     <div className="p-2 rounded-xl bg-white border border-amber-200">

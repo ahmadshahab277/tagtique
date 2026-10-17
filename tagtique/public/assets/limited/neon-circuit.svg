@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 230 341" role="img" aria-label="Neon Circuit sticker">
+  <rect width="230" height="341" rx="36" fill="#07111A"/>
+  <g fill="none" stroke="#22D3EE" stroke-width="2" opacity="0.9">
+    <path d="M40 70 H110 V120 H170"/>
+    <path d="M50 180 H130 V140 H190"/>
+    <path d="M36 230 H90 V200 H150 V160"/>
+  </g>
+  <g fill="none" stroke="#A3E635" stroke-width="2">
+    <path d="M60 96 H150 V210 H80"/>
+  </g>
+  <circle cx="110" cy="120" r="4" fill="#22D3EE"/>
+  <circle cx="170" cy="70" r="4" fill="#FDE68A"/>
+  <circle cx="150" cy="160" r="4" fill="#A3E635"/>
+  <circle cx="90" cy="200" r="4" fill="#22D3EE"/>
+  <text x="115" y="268" text-anchor="middle" fill="#ECFEFF" font-family="Manrope, Arial, sans-serif" font-size="15" font-weight="700">NEON CIRCUIT</text>
+  <text x="115" y="290" text-anchor="middle" fill="#67E8F9" font-family="Manrope, Arial, sans-serif" font-size="11">QR identity sticker</text>
+</svg>

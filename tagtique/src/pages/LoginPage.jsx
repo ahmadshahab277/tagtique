@@ -170,7 +170,7 @@ export default function LoginPage() {
       </div>
 
       {/* RIGHT COLUMN: Cream Dot-Grid Login Form matching Image 2 */}
-      <div className="lg:col-span-6 p-6 sm:p-12 lg:p-16 flex flex-col justify-center items-center bg-tag-bg bg-dot-pattern [background-size:20px_20px]">
+      <div className="lg:col-span-6 p-6 sm:p-12 lg:p-16 flex flex-col justify-center items-center bg-white">
         <div className="w-full max-w-md bg-tag-card border-[1.5px] border-tag-border rounded-3xl p-6 sm:p-9 shadow-warm-lg flex flex-col gap-6">
           
           {/* Notification */}

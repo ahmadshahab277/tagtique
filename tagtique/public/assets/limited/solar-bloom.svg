@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 230 341" role="img" aria-label="Solar Bloom sticker">
+  <rect width="230" height="341" rx="36" fill="#FFF7ED"/>
+  <g transform="translate(115 130)">
+    <ellipse rx="18" ry="62" fill="#FDBA74" transform="rotate(0)"/>
+    <ellipse rx="18" ry="62" fill="#FB7185" transform="rotate(45)"/>
+    <ellipse rx="18" ry="62" fill="#F59E0B" transform="rotate(90)"/>
+    <ellipse rx="18" ry="62" fill="#FDE68A" transform="rotate(135)"/>
+    <circle r="22" fill="#FFF7ED"/>
+    <circle r="12" fill="#F97316"/>
+  </g>
+  <text x="115" y="268" text-anchor="middle" fill="#9A3412" font-family="Manrope, Arial, sans-serif" font-size="15" font-weight="700">SOLAR BLOOM</text>
+  <text x="115" y="290" text-anchor="middle" fill="#C2410C" font-family="Manrope, Arial, sans-serif" font-size="11">QR identity sticker</text>
+</svg>

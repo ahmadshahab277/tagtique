@@ -86,7 +86,7 @@ function createStickerCanvas(variant = 'amber', seed = 20260920) {
   // Top script: "Trusted. Safer. Higher Stakes."
   ctx.textAlign = 'center';
   ctx.fillStyle = v.textColor;
-  ctx.font = '700 52px "Caveat", "Baloo 2", cursive, sans-serif';
+  ctx.font = '700 52px "Baloo 2", cursive, sans-serif';
   ctx.fillText('Trusted. Safer. Higher Stakes.', cv.width / 2, 95);
 
   // Subtitle: "Scan to Connect."

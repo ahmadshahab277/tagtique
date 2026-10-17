@@ -72,7 +72,7 @@ export default function SignupPage() {
               One tap. They have everything.
             </h1>
             <p className="text-sm sm:text-base text-[#E9D9C1] leading-relaxed font-medium">
-              Stylish QR tags for bags, keys, jackets and desks. Someone scans, and your name, number and socials land straight in their phone — no apps, no typing.
+              One sticker for a laptop, bag, helmet, or vehicle. Someone scans the QR and uses the contact options you set. No app, and no location tracking.
             </p>
           </div>
         </div>
@@ -184,7 +184,7 @@ export default function SignupPage() {
       </div>
 
       {/* RIGHT COLUMN: Cream Dot-Grid Claim Tag Form matching Image 3 */}
-      <div className="lg:col-span-6 p-6 sm:p-12 lg:p-16 flex flex-col justify-center items-center bg-tag-bg bg-dot-pattern [background-size:20px_20px]">
+      <div className="lg:col-span-6 p-6 sm:p-12 lg:p-16 flex flex-col justify-center items-center bg-white">
         <div className="w-full max-w-md bg-tag-card border-[1.5px] border-tag-border rounded-3xl p-6 sm:p-9 shadow-warm-lg flex flex-col gap-6">
           
           {/* Notification */}

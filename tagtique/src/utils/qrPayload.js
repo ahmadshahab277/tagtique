@@ -9,31 +9,28 @@ export function displayPhone(raw) {
 /**
  * Builds a vCard QR payload for vehicle stickers.
  *
- * Privacy Rule:
- * - If user number is PRIVATE: offline camera/dialer opens Tagtique support helpline (+923292082080).
- * - If user number is PUBLIC: offline camera/dialer opens the vehicle owner's direct phone number.
- * - When online, the embedded URL navigates to the vehicle profile page.
+ * The owner number is public. Offline dials that number.
+ * When online, the embedded URL opens the vehicle page.
  */
 export function buildVCardQrPayload({
   vehicleNumber = '',
   supportPhone = '03292082080',
   ownerPhone = '',
-  isPrivate = true,
   token = ''
 } = {}) {
   const cleanSupport = displayPhone(supportPhone) || '+923292082080';
   const cleanOwner = displayPhone(ownerPhone);
   const url = token
     ? buildScanUrl(token, {
-        phonePrivacy: (!isPrivate && cleanOwner) ? 'public' : 'private',
+        phonePrivacy: 'public',
         phone: cleanOwner,
         plate: vehicleNumber
       })
     : '';
 
   // Determine offline target phone based on privacy setting
-  const offlinePhone = (!isPrivate && cleanOwner) ? cleanOwner : cleanSupport;
-  const roleLabel = (!isPrivate && cleanOwner) ? 'Driver' : 'Support Helpline';
+  const offlinePhone = cleanOwner || cleanSupport;
+  const roleLabel = cleanOwner ? 'Driver' : 'Support Helpline';
 
   const lines = [
     'BEGIN:VCARD',
@@ -48,9 +45,9 @@ export function buildVCardQrPayload({
   }
 
   lines.push(
-    !isPrivate && cleanOwner
+    cleanOwner
       ? 'NOTE:Scan offline to call driver directly or tap URL online.'
-      : 'NOTE:Private tag. Call helpline offline or tap URL online.'
+      : 'NOTE:No owner number saved. Call support or open the page online.'
   );
   lines.push('END:VCARD');
 

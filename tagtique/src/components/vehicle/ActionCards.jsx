@@ -74,8 +74,7 @@ export default function ActionCards({ vehicle }) {
   const [message, setMessage] = useState(defaultText);
   const [showCustomInput, setShowCustomInput] = useState(false);
 
-  const isPhonePrivate = (vehicle?.phonePrivacy || 'private') === 'private';
-  const rawOwnerPhone = vehicle?.phoneNumber || '03001234567';
+  const rawOwnerPhone = vehicle?.phoneNumber || '';
   const rawGuardianPhone =
     vehicle?.guardianNumber ||
     vehicle?.guardian_phone ||
@@ -89,8 +88,8 @@ export default function ActionCards({ vehicle }) {
   const proxyWhatsApp = vehicle?.proxyWhatsApp || (rawDigits.startsWith('0') ? `92${rawDigits.slice(1)}` : rawDigits);
 
   // Target numbers for owner actions
-  const targetOwnerCall = isPhonePrivate ? proxyPhone : rawOwnerPhone;
-  const targetOwnerWhatsApp = isPhonePrivate ? proxyWhatsApp : rawOwnerPhone;
+  const targetOwnerCall = rawOwnerPhone;
+  const targetOwnerWhatsApp = rawOwnerPhone;
 
   // Emergency Guardian is always directly reachable for urgent safety
   const targetGuardianCall = rawGuardianPhone;
@@ -103,82 +102,7 @@ export default function ActionCards({ vehicle }) {
 
   const finalMessage = message.trim() || defaultText;
 
-  const proxyRelayMessage = `🚨 *[TAGTIQUE SMART ALERT]*\n\n📌 *Vehicle:* ${plate}\n🔑 *Tag ID:* ${tagId}\n\n💬 *Message for Owner:*\n"${finalMessage}"\n\n🛡️ _Sent securely via Tagtique QR System._`;
-
   const guardianEmergencyMessage = `🚨 *[EMERGENCY VEHICLE ALERT]*\n\nAssalam-o-Alaikum, I am contacting you as the registered emergency guardian for vehicle *${plate}* (${vehicle?.vehicleName || 'Vehicle'}).\n\nI am trying to reach the owner (${ownerName}), but am unable to connect. Please assist urgently.\n\nThank you!`;
-
-  const isUnassigned =
-    String(plate || '').toUpperCase().startsWith('STOCK-') ||
-    vehicle?.status === 'unassigned' ||
-    !vehicle?.phoneNumber ||
-    vehicle?.phoneNumber === '0300 0000000' ||
-    vehicle?.phoneNumber === '03000000000';
-
-  if (isUnassigned) {
-    return (
-      <div className="w-full flex flex-col gap-4">
-        <div className="w-full bg-white rounded-3xl border border-[#EAE3D6] p-5 sm:p-6 shadow-sm flex flex-col gap-4 text-left">
-          <div className="flex items-center justify-between gap-2 flex-wrap">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-300 text-amber-900 text-[11px] font-black uppercase tracking-wider">
-              📦 Unassigned Stock Tag
-            </span>
-            <span className="text-xs font-mono font-bold text-[#1C120C]">
-              Tag: {plate}
-            </span>
-          </div>
-
-          <div>
-            <h2 className="font-baloo font-extrabold text-2xl text-[#1C120C] leading-tight">
-              Tag Ready for Activation
-            </h2>
-            <p className="text-xs text-[#8C7A6B] font-medium mt-1 leading-relaxed">
-              This Tagtique smart tag ({plate}) is in stock inventory and has not been linked to a vehicle owner yet.
-            </p>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-300/80 flex flex-col gap-1.5">
-            <span className="text-[11px] font-bold text-[#8C7A6B] uppercase tracking-wider">
-              24/7 Official Helpline
-            </span>
-            <span className="font-mono font-black text-2xl text-[#1C120C]">
-              {proxyPhone}
-            </span>
-            <p className="text-[11px] text-[#705540]">
-              To assign or activate this tag, call or message our support team anytime.
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-2.5 pt-1">
-            <button
-              type="button"
-              onClick={() => openLink(telUrl(proxyPhone))}
-              className="w-full py-3.5 px-5 rounded-2xl bg-[#1C120C] hover:bg-[#2B1B10] text-[#FDF7EC] font-extrabold text-base flex items-center justify-center gap-2.5 shadow-warm-md transition-all cursor-pointer"
-            >
-              <Phone className="w-5 h-5 text-[#E6AF2E]" />
-              <span>Call Tagtique Support ({proxyPhone})</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => openLink(whatsappUrl(proxyWhatsApp, `Assalam-o-Alaikum Tagtique, I scanned unassigned tag ${plate} (${tagId}). Please assist with activation.`))}
-              className="w-full py-3.5 px-5 rounded-2xl bg-[#25D366] hover:bg-[#20BD5A] text-white font-extrabold text-base flex items-center justify-center gap-2.5 shadow-warm-xs transition-all cursor-pointer"
-            >
-              <MessageCircle className="w-5 h-5 text-white" />
-              <span>WhatsApp Support ({proxyPhone})</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Bottom Helpline */}
-        <div className="p-3 rounded-2xl bg-[#FAF7F2] border border-[#EAE3D6] text-center text-xs text-[#8C7A6B] flex items-center justify-center gap-2">
-          <ShieldAlert className="w-4 h-4 text-amber-700 shrink-0" />
-          <span>
-            Tagtique Helpline: <a href={`tel:${proxyPhone}`} className="font-bold text-[#1C120C] underline font-mono">{proxyPhone}</a>
-          </span>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="w-full flex flex-col gap-4">
@@ -269,7 +193,7 @@ export default function ActionCards({ vehicle }) {
                 openLink(telUrl(targetOwnerCall));
                 return;
               }
-              openLink(whatsappUrl(targetOwnerWhatsApp, ownerWhatsAppText));
+              openLink(whatsappUrl(targetOwnerWhatsApp, finalMessage));
             }}
             className="w-full min-h-[58px] py-3.5 px-5 rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 active:scale-[0.99] text-white font-extrabold text-base flex items-center justify-center gap-3 shadow-warm-md transition-all cursor-pointer"
           >
@@ -297,12 +221,10 @@ export default function ActionCards({ vehicle }) {
             </div>
             <div className="flex flex-col text-left">
               <span className="text-[10px] uppercase tracking-wider text-amber-300 font-bold leading-none">
-                {isPhonePrivate ? 'Private Number Protected • Helpline Call' : 'Direct Voice Call'}
+                Direct call
               </span>
               <span className="text-base font-black leading-tight">
-                {isPhonePrivate
-                  ? `Call Tagtique Helpline (${formatPhoneDisplay(proxyPhone)})`
-                  : `Call Vehicle Owner (${formatPhoneDisplay(rawOwnerPhone)})`}
+                {`Call owner (${formatPhoneDisplay(rawOwnerPhone)})`}
               </span>
             </div>
           </button>

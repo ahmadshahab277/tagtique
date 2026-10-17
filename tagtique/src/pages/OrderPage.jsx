@@ -23,6 +23,7 @@ import {
   Check
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { EDITIONS, findEdition } from '../data/editions';
 
 const PACKAGES = [
   {
@@ -91,6 +92,13 @@ export default function OrderPage() {
   const [selectedPackageId, setSelectedPackageId] = useState(initialPackage);
   const [selectedMaterialId] = useState('shiny');
   const [selectedFinish] = useState(searchParams.get('finish') || 'amber');
+  const initialEdition = findEdition(searchParams.get('edition')) || EDITIONS[0];
+  const [selectedEditionId, setSelectedEditionId] = useState(initialEdition.id);
+  const [selectedStyleId, setSelectedStyleId] = useState(
+    initialEdition.styles.some((style) => style.id === searchParams.get('style'))
+      ? searchParams.get('style')
+      : initialEdition.styles[0].id
+  );
   const [customQuantity, setCustomQuantity] = useState(
     PACKAGES.find((p) => p.id === initialPackage)?.tagsCount || 2
   );
@@ -110,7 +118,7 @@ export default function OrderPage() {
       vehicleNumber: 'LEA-24-1234',
       email: userProfile.email || 'ali@example.com',
       bio: userProfile.bio || 'Product Designer · Faisalabad',
-      phonePrivacy: 'private', // 'private' | 'public'
+      phonePrivacy: 'public', // 'private' | 'public'
       namePrivacy: 'public',   // 'public' | 'private'
       emergencyPrivacy: 'private',
       detailsPrivacy: 'public'
@@ -123,7 +131,7 @@ export default function OrderPage() {
       vehicleNumber: 'ICT-2024-88',
       email: 'ayesha@tagtique.co',
       bio: 'Architect & Traveler',
-      phonePrivacy: 'private',
+      phonePrivacy: 'public',
       namePrivacy: 'public',
       emergencyPrivacy: 'private',
       detailsPrivacy: 'public'
@@ -136,7 +144,7 @@ export default function OrderPage() {
       vehicleNumber: '',
       email: '',
       bio: '',
-      phonePrivacy: 'private',
+      phonePrivacy: 'public',
       namePrivacy: 'public',
       emergencyPrivacy: 'private',
       detailsPrivacy: 'public'
@@ -149,7 +157,7 @@ export default function OrderPage() {
       vehicleNumber: 'FD-12-999',
       email: '',
       bio: '',
-      phonePrivacy: 'private',
+      phonePrivacy: 'public',
       namePrivacy: 'public',
       emergencyPrivacy: 'private',
       detailsPrivacy: 'public'
@@ -206,6 +214,9 @@ export default function OrderPage() {
       desc: `${customQuantity} glossy QR Stickers · Bulk discount applied`
     };
 
+  const selectedEdition = findEdition(selectedEditionId) || EDITIONS[0];
+  const selectedStyle =
+    selectedEdition.styles.find((style) => style.id === selectedStyleId) || selectedEdition.styles[0];
   const selectedMaterial = MATERIALS.find((m) => m.id === selectedMaterialId) || MATERIALS[0];
   const currentFinishObj = FINISHES.find((f) => f.id === selectedFinish) || FINISHES[0];
 
@@ -226,7 +237,7 @@ export default function OrderPage() {
           vehicleNumber: '',
           email: '',
           bio: '',
-          phonePrivacy: 'private',
+          phonePrivacy: 'public',
           namePrivacy: 'public',
           emergencyPrivacy: 'private',
           detailsPrivacy: 'public'
@@ -275,7 +286,7 @@ export default function OrderPage() {
           vehicleNumber: firstTag.vehicleNumber || '',
           email: firstTag.email || '',
           bio: firstTag.bio || '',
-          phonePrivacy: firstTag.phonePrivacy || 'private',
+          phonePrivacy: 'public',
           namePrivacy: firstTag.namePrivacy || 'public',
           emergencyPrivacy: firstTag.emergencyPrivacy || 'private',
           detailsPrivacy: firstTag.detailsPrivacy || 'public'
@@ -317,7 +328,7 @@ export default function OrderPage() {
       paymentMethod,
       items: Array.from({ length: customQuantity }).map((_, i) => ({
         id: i + 1,
-        finishName: currentFinishObj.name,
+        finishName: `${selectedEdition.name} · ${selectedStyle.name}`,
         materialName: selectedMaterial.name,
         basePrice: Math.round(totalPkr / customQuantity),
         isEngraved,
@@ -328,7 +339,7 @@ export default function OrderPage() {
         emergencyPhone: tagsData[i]?.emergencyPhone || '',
         tagType: tagsData[i]?.tagType || 'Vehicle',
         vehicleNumber: tagsData[i]?.vehicleNumber || '',
-        phonePrivacy: tagsData[i]?.phonePrivacy || 'private',
+        phonePrivacy: 'public',
         namePrivacy: tagsData[i]?.namePrivacy || 'public',
         emergencyPrivacy: tagsData[i]?.emergencyPrivacy || 'private',
         detailsPrivacy: tagsData[i]?.detailsPrivacy || 'public',
@@ -349,7 +360,7 @@ export default function OrderPage() {
           email: primaryCustomer.email || 'ataitsolution09@gmail.com',
           phone: primaryCustomer.phone || '0329-2082080',
           guardianNumber: primaryCustomer.emergencyPhone || '',
-          phonePrivacy: primaryCustomer.phonePrivacy || 'private',
+          phonePrivacy: 'public',
           namePrivacy: primaryCustomer.namePrivacy || 'public',
           emergencyPrivacy: primaryCustomer.emergencyPrivacy || 'private'
         },
@@ -358,12 +369,12 @@ export default function OrderPage() {
           vehicleType: t.tagType || 'Vehicle',
           phone: t.phone || primaryCustomer.phone || '0300 1234567',
           emergencyPhone: t.emergencyPhone || primaryCustomer.emergencyPhone || '',
-          phonePrivacy: t.phonePrivacy || 'private',
+          phonePrivacy: 'public',
           namePrivacy: t.namePrivacy || 'public',
           emergencyPrivacy: t.emergencyPrivacy || 'private',
           displayName: t.name || primaryCustomer.name || 'Owner'
         })),
-        packageType: selectedPackage.title || 'Single Tag',
+        packageType: `${selectedEdition.name} Edition · ${selectedStyle.name} · ${selectedPackage.name}`,
         totalAmount: totalPkr,
         paymentStatus: paymentMethod === 'cod' ? 'pending' : 'pending_transfer',
         deliveryStatus: 'pending',
@@ -411,14 +422,14 @@ export default function OrderPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 font-manrope">
+    <div className="bg-white text-black max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 font-manrope">
       {/* Page Header */}
       <div className="flex flex-col gap-3 mb-8">
         <h1 className="font-baloo font-extrabold text-3xl sm:text-4xl lg:text-5xl text-tag-brown leading-tight tracking-tight">
           Order Your Smart E-Tag
         </h1>
         <p className="text-sm sm:text-base text-tag-brown-muted font-medium max-w-2xl leading-relaxed">
-          Protect your privacy and stay reachable. Configured in under 90 seconds with instant smart profile routing and WhatsApp connection.
+          One sticker for a laptop, bag, helmet, bottle, or vehicle. With internet, a scan opens the contact page. Without internet, it opens the phone dialer. After it arrives: use Wi-Fi, scan the QR, fill the form, and tap Assign.
         </p>
       </div>
 
@@ -438,6 +449,49 @@ export default function OrderPage() {
                 <span className="text-xs text-tag-brown-muted font-medium">
                   Select vehicle/item count and physical sticker format. Get as many as you need!
                 </span>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <span className="text-xs font-bold tracking-wider text-tag-brown-muted">EDITION</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {EDITIONS.map((edition) => {
+                  const active = edition.id === selectedEdition.id;
+                  return (
+                    <button
+                      key={edition.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedEditionId(edition.id);
+                        setSelectedStyleId(edition.styles[0].id);
+                      }}
+                      className={`text-left rounded-2xl border-2 px-3 py-3 ${
+                        active ? 'border-black bg-white' : 'border-tag-border bg-tag-bg'
+                      }`}
+                    >
+                      <span className="block font-extrabold text-sm">{edition.name}</span>
+                      <span className="block text-[11px] text-tag-brown-muted mt-1">{edition.line}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {selectedEdition.styles.map((style) => {
+                  const active = style.id === selectedStyle.id;
+                  return (
+                    <button
+                      key={style.id}
+                      type="button"
+                      onClick={() => setSelectedStyleId(style.id)}
+                      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold border ${
+                        active ? 'border-black bg-black text-white' : 'border-tag-border bg-white text-tag-brown'
+                      }`}
+                    >
+                      <span className="w-2.5 h-2.5 rounded-full border border-white/40" style={{ background: style.swatch }} />
+                      {style.name}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -767,35 +821,9 @@ export default function OrderPage() {
                         {/* Primary Phone Number & Emergency Phone */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                           <div className="flex flex-col gap-1.5">
-                            <div className="flex items-center justify-between gap-1 flex-wrap">
-                              <label className="text-xs font-bold text-tag-brown">
-                                Phone Number *
-                              </label>
-                              <div className="flex items-center gap-0.5 bg-tag-pill p-0.5 rounded-lg border border-tag-border text-[10px] font-bold">
-                                <button
-                                  type="button"
-                                  onClick={() => handleUpdateTag(index, 'phonePrivacy', 'private')}
-                                  className={`px-1.5 py-0.5 rounded-md transition-all cursor-pointer ${
-                                    (tagItem.phonePrivacy || 'private') === 'private'
-                                      ? 'bg-tag-brown text-[#FDF7EC] shadow-2xs'
-                                      : 'text-tag-brown-muted hover:text-tag-brown'
-                                  }`}
-                                >
-                                  🔒 Private (Proxy)
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleUpdateTag(index, 'phonePrivacy', 'public')}
-                                  className={`px-1.5 py-0.5 rounded-md transition-all cursor-pointer ${
-                                    tagItem.phonePrivacy === 'public'
-                                      ? 'bg-tag-brown text-[#FDF7EC] shadow-2xs'
-                                      : 'text-tag-brown-muted hover:text-tag-brown'
-                                  }`}
-                                >
-                                  🌐 Public
-                                </button>
-                              </div>
-                            </div>
+                            <label className="text-xs font-bold text-tag-brown">
+                              Phone Number *
+                            </label>
                             <input
                               type="tel"
                               value={tagItem.phone}
@@ -803,16 +831,8 @@ export default function OrderPage() {
                               placeholder="e.g. 0329 2082080"
                               className="w-full px-3.5 py-2.5 rounded-xl border border-tag-border bg-tag-card text-sm text-tag-brown font-semibold outline-none focus:border-tag-amber"
                             />
-                            <span className="text-[10.5px] font-medium leading-tight">
-                              {(tagItem.phonePrivacy || 'private') === 'private' ? (
-                                <span className="text-emerald-800 font-semibold flex items-center gap-1">
-                                  🔒 Private: Scanners reach you through Tagtique Proxy without seeing your number.
-                                </span>
-                              ) : (
-                                <span className="text-amber-800 font-semibold flex items-center gap-1">
-                                  🌐 Public: Anyone who scans can see and dial your number directly.
-                                </span>
-                              )}
+                            <span className="text-[10.5px] font-medium leading-tight text-tag-brown-muted">
+                              This number is shown on the scan page and is the number people call.
                             </span>
                           </div>
 

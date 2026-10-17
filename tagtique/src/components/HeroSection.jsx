@@ -1,92 +1,54 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Tag3D from './Tag3D';
-import { ArrowRight, ShieldCheck, Truck } from 'lucide-react';
+
+const SIDE_STICKERS = [
+  {
+    name: 'Mimi',
+    href: '/product/cute-mimi',
+    src: '/assets/cute/mimi.png',
+    className: 'hidden md:block absolute left-[6%] lg:left-[14%] top-[8%] w-[20%] h-[84%] -rotate-[8deg]'
+  },
+  {
+    name: 'Beat',
+    href: '/product/cute-beat',
+    src: '/assets/cute/beat.png',
+    className: 'hidden md:block absolute right-[6%] lg:right-[14%] top-[8%] w-[20%] h-[84%] rotate-[8deg]'
+  }
+];
 
 export default function HeroSection() {
-  const selectedFinish = 'amber';
-
   return (
-    <section className="relative overflow-hidden pt-6 sm:pt-10 pb-16 sm:pb-24">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
-          
-          {/* Left Hero Column */}
-          <div className="lg:col-span-6 flex flex-col gap-6 max-w-xl">
-            {/* Kicker badge */}
-            <div className="self-start">
-              <span className="inline-flex items-center font-mono text-[11px] font-bold tracking-[1.6px] text-tag-brown-light bg-tag-pill px-3.5 py-1.5 rounded-full border border-tag-border shadow-xs">
-                WATERPROOF QR STICKERS FOR VEHICLES & MORE
-              </span>
-            </div>
-
-            {/* Main Headline */}
-            <h1 className="font-baloo font-extrabold text-4xl sm:text-5xl lg:text-[62px] leading-[1.04] tracking-[-1px] text-tag-brown">
-              A sticker worth showing off — and one scan does the talking.
-            </h1>
-
-            {/* Subhead */}
-            <p className="text-base sm:text-lg text-tag-brown-muted leading-relaxed font-medium">
-              Stick it to a car, a bike, a laptop, a helmet or a bag. Anyone who scans it gets your contact, number and socials — and you can change what they see whenever you like.
-            </p>
-
-            {/* CTA Buttons */}
-            <div className="flex flex-wrap items-center gap-3.5 pt-1">
-              <Link
-                to={`/order?finish=${selectedFinish}`}
-                className="amber-gradient-btn px-7 py-3.5 rounded-full text-base font-extrabold text-tag-brown flex items-center gap-2.5 group"
-              >
-                <span>Shop stickers</span>
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-              </Link>
-              <a
-                href="#pricing"
-                className="px-6 py-3.5 rounded-full text-base font-bold text-tag-brown-muted border-2 border-tag-border hover:border-tag-amber hover:text-tag-brown transition-all bg-tag-card/60 backdrop-blur-sm"
-              >
-                View pricing
-              </a>
-            </div>
-
-            {/* Value bullets */}
-            <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm font-semibold text-tag-brown-muted pt-2 border-t border-tag-border/60">
-              <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-tag-amber" />
-                No app to install
-              </span>
-              <span className="text-tag-border">·</span>
-              <span className="flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                Waterproof & scratch-proof
-              </span>
-              <span className="text-tag-border">·</span>
-              <span className="flex items-center gap-1.5">
-                <Truck className="w-4 h-4 text-tag-brown-light" />
-                Free delivery across Pakistan
-              </span>
-            </div>
-          </div>
-
-          {/* Right Column: 3D Interactive Tag Showcase */}
-          <div className="lg:col-span-6 flex flex-col items-center gap-5">
-            {/* 3D Canvas Box */}
-            <div className="relative w-full max-w-[520px] aspect-square rounded-[36px] bg-radial-gradient from-[#FFF8EC] via-[#F4E7CE] to-[#EAD8B5] border-[1.5px] border-tag-border shadow-warm-lg overflow-hidden group">
-              {/* Subtle top glare highlight */}
-              <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-white/30 to-transparent pointer-events-none" />
-
-              {/* Three.js Tag Engine */}
-              <div className="absolute inset-0">
-                <Tag3D variant={selectedFinish} interactive={true} autoSpin={true} />
-              </div>
-
-              {/* Drag indicator label */}
-              <div className="absolute left-5 bottom-4 flex items-center gap-2 font-mono text-[10.5px] tracking-[1.4px] text-tag-brown-light pointer-events-none select-none">
-                <span className="w-4 h-[1.5px] bg-tag-brown-subtle" />
-                <span>DRAG TO ROTATE 3D STICKER</span>
-              </div>
-            </div>
-          </div>
-
+    <section className="relative bg-white text-black overflow-hidden flex flex-col">
+      <div className="relative h-[50vh] min-h-[380px] max-h-[540px]">
+        <div className="absolute left-1/2 top-[58%] -translate-x-1/2 -translate-y-1/2 w-[70%] h-24 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.08),transparent_70%)] pointer-events-none" />
+        {SIDE_STICKERS.map((sticker) => (
+          <Link key={sticker.name} to={sticker.href} className={sticker.className} aria-label={sticker.name}>
+            <img
+              src={sticker.src}
+              alt=""
+              className="w-full h-full object-contain drop-shadow-[0_18px_30px_rgba(0,0,0,0.12)]"
+            />
+          </Link>
+        ))}
+        <div className="absolute left-1/2 top-[8%] -translate-x-1/2 w-[68%] sm:w-[40%] md:w-[26%] h-[84%] z-10">
+          <Tag3D variant="amber" autoSpin={false} interactive cameraDistance={3.45} />
         </div>
+      </div>
+
+      <div className="relative z-20 flex flex-col items-center text-center px-6 pt-2 pb-12 sm:pb-16 bg-white">
+        <h1 className="font-manrope font-extrabold text-4xl sm:text-6xl lg:text-7xl leading-[0.95] tracking-tight">
+          One sticker. Any belonging.
+        </h1>
+        <p className="mt-3 text-sm sm:text-base text-black/55 max-w-md">
+          A QR sticker for anything you might lose. A scan opens your page online, or a phone call when there is no internet.
+        </p>
+        <Link
+          to="/#shop"
+          className="mt-5 inline-flex items-center justify-center bg-black text-white rounded-full px-8 py-3 text-sm font-bold tracking-wide shadow-[0_10px_30px_rgba(0,0,0,0.18)] hover:bg-black/90"
+        >
+          SHOP NOW
+        </Link>
       </div>
     </section>
   );

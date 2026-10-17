@@ -12,7 +12,9 @@ import {
 import { tagCommunicationService } from '../services/tagCommunicationService';
 import { settingsService } from '../services/settingsService';
 import { tagRegistryService } from '../services/tagRegistryService';
-import { checkIsOnline, isLikelyNetworkError } from '../services/networkService';
+import { isLikelyNetworkError } from '../services/networkService';
+import { decideScanResult, isUnassignedTag } from '../utils/scanMode';
+import FirstTimeSetup from '../components/vehicle/FirstTimeSetup';
 import {
   ShieldCheck,
   ArrowRight,
@@ -39,7 +41,7 @@ export default function PublicVehicleScanPage() {
   const [errorType, setErrorType] = useState(null); // 'NOT_FOUND' | 'NETWORK' | null
   const [offlineTarget, setOfflineTarget] = useState({
     phoneNumber: settingsService.getSupportPhone(),
-    isPrivate: true,
+    isPrivate: false,
     vehicleNumber: ''
   });
 
@@ -65,20 +67,11 @@ export default function PublicVehicleScanPage() {
     }
     setErrorType('NETWORK');
     setLoading(false);
-
-    try {
-      window.location.href = `tel:${effectiveOfflinePhone}`;
-    } catch (_) {}
   };
 
   const fetchVehicleProfile = async (idToFetch) => {
-    const offlineRoute = tagRegistryService.resolveOfflineDialTarget(idToFetch);
-    const effectiveOfflinePhone = isUrlPublic ? urlPhone : offlineRoute.phoneNumber;
-    const effectiveIsPrivate = isUrlPublic ? false : offlineRoute.isPrivate;
-    const effectivePlate = urlPlate || offlineRoute.tag?.vehicleNumber || idToFetch;
-
-    // 1. FAST OFFLINE PATH: If device has no internet connection, route immediately to offline dialer
-    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    const browserOffline = typeof navigator !== 'undefined' && navigator.onLine === false;
+    if (browserOffline) {
       handleOfflineRouting(idToFetch);
       return;
     }
@@ -86,26 +79,23 @@ export default function PublicVehicleScanPage() {
     setLoading(true);
     setErrorType(null);
 
+    let lookupOk = false;
+    let networkFailed = false;
+
     try {
       const res = await Promise.race([
         tagCommunicationService.getVehicleByTagId(idToFetch),
         new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('NETWORK_TIMEOUT')), 4000)
+          setTimeout(() => reject(new Error('NETWORK_TIMEOUT')), 3500)
         )
       ]);
 
-      // If backend service detected offline status
       if (res && (res.error === 'NETWORK_ERROR' || res.isOffline)) {
-        handleOfflineRouting(idToFetch);
-        return;
-      }
-
-      if (res && res.success && res.data) {
-        // ONLINE SUCCESS: Show the full digital vehicle profile without dialing
+        networkFailed = true;
+      } else if (res && res.success && res.data) {
+        lookupOk = true;
         const data = { ...res.data };
-        if (privacyParam === 'public' || privacyParam === 'private') {
-          data.phonePrivacy = privacyParam;
-        }
+        data.phonePrivacy = 'public';
         if (isUrlPublic) {
           data.phoneNumber = urlPhone;
           data.phonePrivacy = 'public';
@@ -113,69 +103,32 @@ export default function PublicVehicleScanPage() {
         if (urlPlate) {
           data.registrationNumber = urlPlate;
         }
-        setVehicle(data);
-        setErrorType(null);
-        setLoading(false);
-        // Persist to offline registry so future offline scans of this tag work
-        tagRegistryService.registerTag(data);
-        return;
-      } else if (res && res.error === 'TAG_NOT_FOUND') {
-        const isOnline = await checkIsOnline();
-        if (!isOnline) {
-          handleOfflineRouting(idToFetch);
+        const mode = decideScanResult({ browserOffline: false, lookupOk: true, networkFailed: false });
+        if (mode === 'page') {
+          setVehicle(data);
+          setErrorType(null);
+          setLoading(false);
+          tagRegistryService.registerTag(data);
           return;
         }
-        setErrorType('NOT_FOUND');
-        setLoading(false);
-        return;
       }
     } catch (err) {
       console.warn('Tag profile live fetch notice:', err);
-      // Check if this error was caused by the device being OFFLINE
-      if (isLikelyNetworkError(err) || (typeof navigator !== 'undefined' && navigator.onLine === false)) {
-        const isOnline = await checkIsOnline();
-        if (!isOnline) {
-          handleOfflineRouting(idToFetch);
-          return;
-        }
-      }
+      networkFailed = isLikelyNetworkError(err) || (typeof navigator !== 'undefined' && navigator.onLine === false);
     }
 
-    // ONLINE PATH: Device has internet, but tag wasn't in Supabase DB (e.g. unseeded demo tag).
-    // Verify connectivity once more before presenting the online interactive profile
-    const isOnline = await checkIsOnline();
-    if (!isOnline) {
+    const mode = decideScanResult({
+      browserOffline: typeof navigator !== 'undefined' && navigator.onLine === false,
+      lookupOk,
+      networkFailed
+    });
+
+    if (mode === 'dial') {
       handleOfflineRouting(idToFetch);
       return;
     }
 
-    const activeProfile = offlineRoute.tag || {
-      tagId: idToFetch,
-      qrToken: idToFetch,
-      vehicleName: 'Verified Vehicle',
-      registrationNumber: effectivePlate,
-      vehicleType: 'Car',
-      status: 'active',
-      isVerified: true,
-      ownerName: 'Owner',
-      phoneNumber: effectiveOfflinePhone,
-      guardianNumber: '',
-      phonePrivacy: effectiveIsPrivate ? 'private' : 'public',
-      namePrivacy: 'public',
-      emergencyPrivacy: 'private',
-      proxyPhone: settingsService.getSupportPhone(),
-      proxyWhatsApp: settingsService.getSupportPhone(),
-      maskedPhone: effectiveOfflinePhone ? '+92 ••• ••••' + effectiveOfflinePhone.slice(-3) : '+92 ••• ••••000',
-      maskedGuardian: null,
-      hasGuardianConfigured: false,
-      emergencyEscalationSeconds: 180,
-      maskedCallAvailable: true,
-      maskedSmsAvailable: true,
-      city: 'Faisalabad'
-    };
-
-    setVehicle(activeProfile);
-    setErrorType(null);
+    setErrorType('NOT_FOUND');
     setLoading(false);
   };
 
@@ -236,7 +189,14 @@ export default function PublicVehicleScanPage() {
         )}
 
         {/* State E: Active Vehicle Profile (Normal Operation) */}
-        {!loading && !errorType && vehicle?.status !== 'inactive' && (
+        {!loading && !errorType && vehicle?.status !== 'inactive' && isUnassignedTag(vehicle) && (
+          <FirstTimeSetup
+            vehicle={vehicle}
+            onRegistered={() => fetchVehicleProfile(vehicle.qrToken || rawTagId)}
+          />
+        )}
+
+        {!loading && !errorType && vehicle?.status !== 'inactive' && !isUnassignedTag(vehicle) && (
           <>
             <VehicleCard vehicle={vehicle} />
             <ActionCards vehicle={vehicle} />

@@ -27,24 +27,22 @@ export function resolveQrPayload(item, options = {}) {
   const qrMode = options?.qrMode || settingsService.getQrMode();
   const supportPhone = options?.supportPhone || settingsService.getSupportPhone();
 
-  const isPrivate = (item?.phonePrivacy || 'private') === 'private';
   const ownerPhone = item?.phoneNumber || item?.owner_phone || item?.customerPhone || '';
   const vehicleNumber = item?.vehicleNumber || item?.vehicle_number || item?.plate || '';
 
   if (qrMode !== 'vcard') {
     return buildScanUrl(token, {
-      phonePrivacy: isPrivate ? 'private' : 'public',
+      phonePrivacy: 'public',
       phone: ownerPhone,
       plate: vehicleNumber
     });
   }
 
-  // Fallback if explicitly configured: vCard Contact Card
   return buildVCardQrPayload({
     vehicleNumber,
     supportPhone,
     ownerPhone,
-    isPrivate,
+    isPrivate: false,
     token
   });
 }
@@ -62,6 +60,17 @@ export async function renderStickerBlob(item, options = {}) {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   try {
+    if (typeof document !== 'undefined' && !document.getElementById('tagtique-urdu-font')) {
+      const link = document.createElement('link');
+      link.id = 'tagtique-urdu-font';
+      link.rel = 'stylesheet';
+      link.href = 'https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@700;800&display=swap';
+      document.head.appendChild(link);
+      await new Promise((resolve) => {
+        link.onload = resolve;
+        link.onerror = resolve;
+      });
+    }
     await document.fonts.load('800 72px "Noto Sans Arabic"');
     await document.fonts.load('800 56px Manrope');
   } catch (_) {}

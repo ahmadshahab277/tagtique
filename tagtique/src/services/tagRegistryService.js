@@ -5,8 +5,7 @@
  * instantly in offline mode.
  *
  * Logic:
- * - If user number is PRIVATE: offline routing dials Tagtique Support Helpline (03292082080).
- * - If user number is PUBLIC: offline routing dials vehicle owner's direct phone number.
+ * Offline routing dials the vehicle owner's phone number.
  *
  * Automatically keeps localStorage and Service Worker Cache in sync.
  */
@@ -92,7 +91,7 @@ class TagRegistryService {
       ownerName: tag.ownerName || tag.customerName || 'Owner',
       phoneNumber: tag.phoneNumber || tag.phone_number || tag.phone || '',
       guardianNumber: tag.guardianNumber || tag.guardian_phone || '',
-      phonePrivacy: tag.phonePrivacy === 'public' ? 'public' : 'private',
+      phonePrivacy: 'public',
       supportPhone: settingsService.getSupportPhone(),
       status: tag.status || 'active',
       updatedAt: Date.now()
@@ -118,7 +117,7 @@ class TagRegistryService {
         ownerName: o.customerName || o.displayName || 'Owner',
         phoneNumber: o.phoneNumber || o.phone_number || o.phone,
         guardianNumber: o.guardianNumber || o.emergencyPhone,
-        phonePrivacy: o.phonePrivacy || (o.proxyCallOnly ? 'private' : 'private'),
+        phonePrivacy: 'public',
         status: o.status === 'Deactivated' ? 'inactive' : 'active'
       });
     });
@@ -150,24 +149,13 @@ class TagRegistryService {
 
   /**
    * Returns the phone number to dial when offline for a given tag/token.
-   * If public -> owner's phone number.
-   * If private or unknown -> support helpline.
+   * Uses the owner's phone number. The helpline is only used when no owner number is saved.
    */
   resolveOfflineDialTarget(identifier) {
     const tag = this.getTag(identifier);
     const supportPhone = settingsService.getSupportPhone();
 
-    if (!tag) {
-      return {
-        phoneNumber: supportPhone,
-        isPrivate: true,
-        label: 'Tagtique Helpline',
-        tag: null
-      };
-    }
-
-    const isPrivate = tag.phonePrivacy !== 'public';
-    if (!isPrivate && tag.phoneNumber) {
+    if (tag?.phoneNumber) {
       return {
         phoneNumber: tag.phoneNumber,
         isPrivate: false,
@@ -178,9 +166,9 @@ class TagRegistryService {
 
     return {
       phoneNumber: supportPhone,
-      isPrivate: true,
-      label: 'Tagtique Helpline',
-      tag
+      isPrivate: false,
+      label: tag ? 'Vehicle Owner' : 'Tagtique Helpline',
+      tag: tag || null
     };
   }
 }

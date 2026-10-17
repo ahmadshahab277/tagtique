@@ -1,7 +1,7 @@
-import QRCode from 'qrcode';
 import { supabase, isSupabaseConfigured } from './supabaseClient';
 import { buildScanUrl } from '../utils/scanUrl';
 import { tagRegistryService } from './tagRegistryService';
+import { isUnassignedTag } from '../utils/scanMode';
 
 const LOCAL_STORAGE_ORDERS_KEY = 'tagtique_supabase_orders_cache';
 const LOCAL_STORAGE_TAGS_MAP_KEY = 'tagtique_supabase_tags_map';
@@ -41,6 +41,7 @@ class OrderBackendService {
    */
   async generateQRCodeDataUrl(text) {
     try {
+      const { default: QRCode } = await import('qrcode');
       return await QRCode.toDataURL(text, {
         width: 320,
         margin: 2,
@@ -80,7 +81,7 @@ class OrderBackendService {
       try {
         // A. Insert Customer with privacy metadata encoded in address
         const primaryVeh = vehicles[0] || {};
-        const pPhone = primaryVeh.phonePrivacy || customer.phonePrivacy || 'private';
+        const pPhone = 'public';
         const pName = primaryVeh.namePrivacy || customer.namePrivacy || 'public';
         const pEmerg = primaryVeh.emergencyPrivacy || customer.emergencyPrivacy || 'private';
         const baseAddr = shippingAddress?.address || customer.address || '';
@@ -125,7 +126,7 @@ class OrderBackendService {
           const vPhone = veh.phone || customer.phone || '0300 0000000';
           const vGuardian = veh.emergencyPhone || customer.guardianNumber || '';
           const vName = veh.displayName || customer.name || 'Valued Customer';
-          const vPhonePrivacy = veh.phonePrivacy || customer.phonePrivacy || 'private';
+          const vPhonePrivacy = 'public';
           const vNamePrivacy = veh.namePrivacy || customer.namePrivacy || 'public';
           const vEmergencyPrivacy = veh.emergencyPrivacy || customer.emergencyPrivacy || 'private';
 
@@ -146,7 +147,7 @@ class OrderBackendService {
           const isPub = vPhonePrivacy === 'public';
           const qrToken = `tgt-${isPub ? 'pub-' : ''}${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
           const qrDataUrl = await this.generateQRCodeDataUrl(
-            buildScanUrl(qrToken, isPub ? { phonePrivacy: 'public', phone: vPhone } : {})
+            buildScanUrl(qrToken, vPhone ? { phonePrivacy: 'public', phone: vPhone } : {})
           );
           const shortToken = qrToken.replace(/^tgt-/, '').replace(/[^a-zA-Z0-9]/g, '').slice(0, 8).toUpperCase();
           const serialNo = `SN-${shortToken}`;
@@ -231,13 +232,13 @@ class OrderBackendService {
         const vPhone = veh.phone || customer.phone || '0300 0000000';
         const vGuardian = veh.emergencyPhone || customer.guardianNumber || '';
         const vName = veh.displayName || customer.name || 'Valued Customer';
-        const vPhonePrivacy = veh.phonePrivacy || customer.phonePrivacy || 'private';
+        const vPhonePrivacy = 'public';
         const vNamePrivacy = veh.namePrivacy || customer.namePrivacy || 'public';
         const vEmergencyPrivacy = veh.emergencyPrivacy || customer.emergencyPrivacy || 'private';
 
         const qrToken = `tgt-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
         const qrDataUrl = await this.generateQRCodeDataUrl(
-          buildScanUrl(qrToken, vPhonePrivacy === 'public' ? { phonePrivacy: 'public', phone: vPhone } : {})
+          buildScanUrl(qrToken, vPhone ? { phonePrivacy: 'public', phone: vPhone } : {})
         );
         const shortToken = qrToken.replace(/^tgt-/, '').replace(/[^a-zA-Z0-9]/g, '').slice(0, 8).toUpperCase();
         const serialNo = `SN-${shortToken}`;
@@ -385,7 +386,7 @@ class OrderBackendService {
             const localMatch = (this.localOrders || []).find(
               (lo) => lo.tag_id === t.id || lo.qr_code_value === t.qr_code_value || lo.orderId === `#TGT-${rawId}`
             );
-            const phonePrivacy = t.phone_privacy || addrPhonePrivacy || (isTokenPublic ? 'public' : '') || localMatch?.phonePrivacy || 'private';
+            const phonePrivacy = 'public';
             const namePrivacy = t.name_privacy || addrNamePrivacy || localMatch?.namePrivacy || 'public';
             const emergencyPrivacy = t.emergency_privacy || addrEmergPrivacy || localMatch?.emergencyPrivacy || 'private';
 
@@ -475,6 +476,7 @@ class OrderBackendService {
     }
 
     // 1. Supabase update
+    let remoteError = '';
     if (supabase && isSupabaseConfigured()) {
       try {
         if (tagId) {
@@ -484,7 +486,10 @@ class OrderBackendService {
           if (Object.keys(tagUpdates).length > 0) {
             tagUpdates.updated_at = new Date().toISOString();
             const { error: tagErr } = await supabase.from('tags').update(tagUpdates).eq('id', tagId);
-            if (tagErr) console.warn('Supabase tag update warning:', tagErr);
+            if (tagErr) {
+              remoteError = tagErr.message || 'Tag update failed';
+              console.warn('Supabase tag update warning:', tagErr);
+            }
           }
 
           // If vehicle_id is missing, look it up from the tag in Supabase
@@ -499,7 +504,10 @@ class OrderBackendService {
           if (vNumber !== undefined) vehUpdates.vehicle_number = vNumber;
           if (vType !== undefined) vehUpdates.vehicle_type = vType;
           const { error: vehErr } = await supabase.from('vehicles').update(vehUpdates).eq('id', vId);
-          if (vehErr) console.warn('Supabase vehicle update warning:', vehErr);
+          if (vehErr) {
+            remoteError = remoteError || vehErr.message || 'Vehicle update failed';
+            console.warn('Supabase vehicle update warning:', vehErr);
+          }
         }
 
         if (!cId && vId) {
@@ -515,17 +523,25 @@ class OrderBackendService {
           if (updates.city) custUpdates.city = updates.city;
 
           const baseAddr = (updates.address || (index !== -1 ? current[index]?.address : '') || '').replace(/\s*\[privacy:[^\]]+\]\s*/g, '').trim();
-          const pPhone = updates.phonePrivacy || (index !== -1 ? current[index]?.phonePrivacy : 'private') || 'private';
+          const pPhone = updates.phonePrivacy || (index !== -1 ? current[index]?.phonePrivacy : 'public') || 'public';
           const pName = updates.namePrivacy || (index !== -1 ? current[index]?.namePrivacy : 'public') || 'public';
           const pEmerg = updates.emergencyPrivacy || (index !== -1 ? current[index]?.emergencyPrivacy : 'private') || 'private';
           custUpdates.address = `${baseAddr} [privacy:phone=${pPhone};name=${pName};emergency=${pEmerg}]`.trim();
 
           const { error: custErr } = await supabase.from('customers').update(custUpdates).eq('id', cId);
-          if (custErr) console.warn('Supabase customer update warning:', custErr);
+          if (custErr) {
+            remoteError = remoteError || custErr.message || 'Customer update failed';
+            console.warn('Supabase customer update warning:', custErr);
+          }
         }
       } catch (err) {
+        remoteError = remoteError || err?.message || 'Supabase update failed';
         console.warn('Supabase update error:', err);
       }
+    }
+
+    if (updates.requireRemote && remoteError) {
+      return { success: false, error: 'Could not save this sticker. Stay online and try again.' };
     }
 
     // 2. Local cache update
@@ -543,7 +559,7 @@ class OrderBackendService {
         phone_number: cPhone || current[index].phone_number,
         guardianNumber: cGuard || current[index].guardianNumber,
         guardian_number: cGuard || current[index].guardian_number,
-        phonePrivacy: updates.phonePrivacy !== undefined ? updates.phonePrivacy : (current[index].phonePrivacy || 'private'),
+        phonePrivacy: 'public',
         namePrivacy: updates.namePrivacy !== undefined ? updates.namePrivacy : (current[index].namePrivacy || 'public'),
         emergencyPrivacy: updates.emergencyPrivacy !== undefined ? updates.emergencyPrivacy : (current[index].emergencyPrivacy || 'private'),
         status: status ? (status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()) : current[index].status
@@ -695,6 +711,94 @@ class OrderBackendService {
   }
 
   /**
+   * One-time public setup. Only an unassigned sticker can be claimed.
+   * The printed QR token stays the same.
+   */
+  async claimTagSetup({
+    tagId,
+    qrToken,
+    customerName,
+    phoneNumber,
+    vehicleNumber,
+    vehicleType = 'Car',
+    guardianNumber = '',
+    vehicleId,
+    customerId
+  }) {
+    const name = String(customerName || '').trim();
+    const phone = String(phoneNumber || '').trim();
+    const plate = String(vehicleNumber || '').trim().toUpperCase();
+    if (!name || !phone || !plate) {
+      return { success: false, error: 'Name, phone number, and vehicle number are required.' };
+    }
+
+    let resolvedTagId = tagId;
+    let resolvedVehicleId = vehicleId;
+    let resolvedCustomerId = customerId;
+
+    if (supabase && isSupabaseConfigured()) {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(tagId || ''));
+      let tagQuery = supabase
+        .from('tags')
+        .select('id, qr_code_value, vehicles(id, vehicle_number, customers(id, full_name, phone_number))')
+        .limit(1);
+      tagQuery = isUuid ? tagQuery.eq('id', tagId) : tagQuery.eq('qr_code_value', qrToken || tagId);
+      const { data: rows, error } = await tagQuery;
+      if (error) return { success: false, error: 'This sticker could not be checked. Try again with internet.' };
+      const row = rows && rows[0];
+      if (!row) return { success: false, error: 'This sticker was not found.' };
+      const veh = row.vehicles || {};
+      const cust = veh.customers || {};
+      const current = {
+        registrationNumber: veh.vehicle_number,
+        ownerName: cust.full_name,
+        phoneNumber: cust.phone_number
+      };
+      if (!isUnassignedTag(current)) {
+        return { success: false, error: 'This sticker is already registered.' };
+      }
+      resolvedTagId = row.id;
+      resolvedVehicleId = veh.id;
+      resolvedCustomerId = cust.id;
+    }
+
+    const saved = await this.reassignTagDetails(resolvedTagId, {
+      customerName: name,
+      customer_name: name,
+      phoneNumber: phone,
+      phone_number: phone,
+      guardianNumber: guardianNumber,
+      guardian_number: guardianNumber,
+      vehicleNumber: plate,
+      vehicle_number: plate,
+      vehicleType,
+      vehicle_type: vehicleType,
+      vehicle_id: resolvedVehicleId,
+      customer_id: resolvedCustomerId,
+      qr_code_value: qrToken,
+      status: 'Active',
+      phonePrivacy: 'public',
+      regenerateQrToken: false,
+      requireRemote: true
+    });
+    if (saved && saved.success === false) return saved;
+
+    tagRegistryService.registerTag({
+      qrToken: qrToken || resolvedTagId,
+      registrationNumber: plate,
+      vehicleName: vehicleType,
+      vehicleType,
+      ownerName: name,
+      phoneNumber: phone,
+      guardianNumber,
+      phonePrivacy: 'public',
+      status: 'active'
+    });
+
+    return { success: true };
+  }
+
+  /**
    * Reassigns an existing QR Tag to new customer/vehicle details or regenerates QR token
    */
   async reassignTagDetails(tagId, updates) {
@@ -726,7 +830,8 @@ class OrderBackendService {
       }
     }
 
-    await this.updateTagAndOrder(tagId, payload);
+    const updated = await this.updateTagAndOrder(tagId, payload);
+    if (updated && updated.success === false) return updated;
     return {
       success: true,
       qr_code_value: newQrToken,

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 230 341" role="img" aria-label="Midnight Phantom sticker">
+  <rect width="230" height="341" rx="36" fill="#09090B"/>
+  <circle cx="115" cy="118" r="62" fill="#18181B"/>
+  <path d="M70 150 C90 90 150 70 176 128 C150 118 132 150 118 168 C100 150 82 160 70 150Z" fill="#E4E4E7" opacity="0.9"/>
+  <circle cx="148" cy="96" r="16" fill="#09090B"/>
+  <rect x="48" y="210" width="134" height="2" fill="#3F3F46"/>
+  <text x="115" y="268" text-anchor="middle" fill="#FAFAFA" font-family="Manrope, Arial, sans-serif" font-size="14" font-weight="700">MIDNIGHT PHANTOM</text>
+  <text x="115" y="290" text-anchor="middle" fill="#A1A1AA" font-family="Manrope, Arial, sans-serif" font-size="11">QR identity sticker</text>
+</svg>

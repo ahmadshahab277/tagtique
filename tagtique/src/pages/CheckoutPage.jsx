@@ -80,7 +80,7 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 font-manrope">
+    <div className="bg-white text-black max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 font-manrope">
       
       {/* Breadcrumb Steps */}
       <div className="flex items-center gap-2 font-mono text-[11px] font-bold tracking-wide text-tag-brown-light mb-8 flex-wrap">

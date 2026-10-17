@@ -1,20 +1,20 @@
-import React, { useEffect } from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { CartProvider } from './context/CartContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import WhatsAppButton from './components/WhatsAppButton';
-
-// Dedicated Pages
-import HomePage from './pages/HomePage';
-import LoginPage from './pages/LoginPage';
-import SignupPage from './pages/SignupPage';
-import OrderPage from './pages/OrderPage';
-import CheckoutPage from './pages/CheckoutPage';
-import OrderConfirmationPage from './pages/OrderConfirmationPage';
-import PublicProfilePage from './pages/PublicProfilePage';
 import PublicVehicleScanPage from './pages/PublicVehicleScanPage';
 import AdminRoute from './components/AdminRoute';
+
+const HomePage = lazy(() => import('./pages/HomePage'));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const SignupPage = lazy(() => import('./pages/SignupPage'));
+const OrderPage = lazy(() => import('./pages/OrderPage'));
+const CheckoutPage = lazy(() => import('./pages/CheckoutPage'));
+const OrderConfirmationPage = lazy(() => import('./pages/OrderConfirmationPage'));
+const PublicProfilePage = lazy(() => import('./pages/PublicProfilePage'));
+const ProductPage = lazy(() => import('./pages/ProductPage'));
 
 // Scroll to top on every route change
 function ScrollToTop() {
@@ -107,14 +107,16 @@ function AppContent() {
   const isStandalone = isAdmin || isPublicScan;
 
   return (
-    <div className="min-h-screen bg-tag-bg text-tag-brown flex flex-col selection:bg-tag-amber selection:text-tag-brown-deep">
+    <div className={`min-h-screen flex flex-col ${isStandalone ? 'bg-tag-bg text-tag-brown selection:bg-tag-amber selection:text-tag-brown-deep' : 'bg-[#f5f5f7] text-black selection:bg-black selection:text-white'}`}>
       {!isStandalone && <Navbar />}
       
-      <main className={`flex-1 ${!isStandalone ? 'pt-20 sm:pt-24' : ''}`}>
+      <main className={`flex-1 ${!isStandalone ? 'pt-[104px]' : ''}`}>
         <ErrorBoundary>
+          <Suspense fallback={<div className="min-h-[50vh]" />}>
           <Routes>
             {/* Home Page */}
             <Route path="/" element={<HomePage />} />
+            <Route path="/product/:slug" element={<ProductPage />} />
 
             {/* Dedicated Auth Pages */}
             <Route path="/login" element={<LoginPage />} />
@@ -144,6 +146,7 @@ function AppContent() {
             {/* Fallback */}
             <Route path="*" element={<HomePage />} />
           </Routes>
+          </Suspense>
         </ErrorBoundary>
       </main>
 
