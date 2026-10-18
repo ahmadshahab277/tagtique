@@ -1,11 +1,10 @@
 import React from 'react';
-import ProductSlider from './ProductSlider';
+import UnifiedShowcaseSection from './UnifiedShowcaseSection';
 
-export default function PricingSection() {
+export default function PricingSection(props) {
   return (
-    <section id="shop" className="bg-white">
-      <ProductSlider editionId="cute" />
-      <ProductSlider editionId="limited" />
-    </section>
+    <div id="shop">
+      <UnifiedShowcaseSection {...props} />
+    </div>
   );
 }

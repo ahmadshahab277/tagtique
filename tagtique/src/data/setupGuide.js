@@ -1,25 +1,29 @@
 export const SETUP_STEPS = [
   {
-    n: '1',
-    title: 'Use Wi-Fi',
-    text: 'After the sticker arrives, connect the phone to Wi-Fi before the first scan.'
+    n: '01',
+    time: '~5 sec',
+    title: 'Connect your phone',
+    text: 'Ensure your phone is connected to Wi-Fi or mobile data before scanning your sticker for the first time.'
   },
   {
-    n: '2',
-    title: 'Scan the QR code',
-    text: 'Open the camera and scan the code printed on the sticker.'
+    n: '02',
+    time: '~10 sec',
+    title: 'Scan the QR with Camera',
+    text: 'Open your default phone camera and point it at the code. A direct browser link pops up instantly.'
   },
   {
-    n: '3',
-    title: 'Fill the form, then tap Assign',
-    text: 'The website opens a short form. Enter your details, then tap Assign.'
+    n: '03',
+    time: '~30 sec',
+    title: 'Link your phone number',
+    text: 'A quick 1-page form opens in your mobile browser. Enter your contact number, tap Assign, and you are set.'
   },
   {
-    n: '4',
-    title: 'The tag is ready',
-    text: 'The sticker is linked to you. The next scan can reach the number you saved.'
+    n: '04',
+    time: 'Ready',
+    title: 'Stick it & you are covered',
+    text: 'Peel and stick to your laptop, helmet, bag, or keys. Anyone who scans it can now reach you instantly.'
   }
 ];
 
 export const SETUP_SUMMARY =
-  'After purchase: use Wi-Fi, scan the QR, fill the form, and tap Assign. The tag is then ready to use.';
+  'Setup takes under 60 seconds: connect to internet, scan the QR code with your camera, enter your contact number, and your tag is ready.';

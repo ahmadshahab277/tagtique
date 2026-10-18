@@ -13,9 +13,9 @@ export default function NfcPublicProfilePage() {
   if (profileId === 'unassigned') {
     return (
       <div className="max-w-md mx-auto px-4 py-16 text-center">
-        <h1 className="font-manrope font-extrabold text-3xl">This card is not linked yet.</h1>
-        <p className="mt-3 text-sm text-black/65">The QR on an unassigned preview opens this page. After setup, the shop points the chip and the printed QR at the owner’s profile link.</p>
-        <Link to="/#nfc" className="inline-flex mt-6 bg-black text-white rounded-full px-5 py-2.5 text-sm font-bold">See the cards</Link>
+        <h1 className="font-manrope font-extrabold text-3xl text-white">This card is not linked yet.</h1>
+        <p className="mt-3 text-sm text-white/60 leading-relaxed">The QR on an unassigned preview opens this page. After setup, the shop points the chip and the printed QR at the owner’s profile link.</p>
+        <Link to="/#nfc" className="inline-flex mt-6 bg-white hover:bg-zinc-200 text-black rounded-full px-5 py-2.5 text-sm font-extrabold shadow-md transition-all">See the cards</Link>
       </div>
     );
   }
@@ -23,8 +23,8 @@ export default function NfcPublicProfilePage() {
   if (!profile) {
     return (
       <div className="max-w-md mx-auto px-4 py-16 text-center">
-        <h1 className="font-manrope font-extrabold text-3xl">Profile not on this device.</h1>
-        <p className="mt-3 text-sm text-black/65">Profiles are saved in the browser that created them. Another phone will not see the links until the shop stores that profile for the card. Nothing private is shown here.</p>
+        <h1 className="font-manrope font-extrabold text-3xl text-white">Profile not on this device.</h1>
+        <p className="mt-3 text-sm text-white/60 leading-relaxed">Profiles are saved in the browser that created them. Another phone will not see the links until the shop stores that profile for the card. Nothing private is shown here.</p>
       </div>
     );
   }
@@ -33,22 +33,22 @@ export default function NfcPublicProfilePage() {
   const email = shown.find((field) => field.id === 'email');
 
   return (
-    <div className="max-w-md mx-auto px-4 py-10">
-      <article className="bg-white rounded-[28px] border border-black/5 p-6 shadow-[0_12px_40px_rgba(0,0,0,0.06)]">
-        <p className="text-xs font-bold tracking-wider text-black/40">{design ? design.name : 'Tagtique'} · NFC</p>
-        <h1 className="font-manrope font-extrabold text-3xl mt-2">{profile.name}</h1>
-        {profile.bio && <p className="mt-2 text-sm text-black/70">{profile.bio}</p>}
-        <div className="mt-5 flex flex-col gap-2">
+    <div className="max-w-md mx-auto px-4 py-12">
+      <article className="bg-[#12131A] rounded-[28px] border border-white/10 p-6 shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
+        <p className="text-xs font-bold tracking-wider text-white/50 uppercase">{design ? design.name : 'Tagtique'} · NFC</p>
+        <h1 className="font-manrope font-extrabold text-3xl mt-2 text-white">{profile.name}</h1>
+        {profile.bio && <p className="mt-2 text-sm text-white/70 leading-relaxed">{profile.bio}</p>}
+        <div className="mt-5 flex flex-col gap-2.5">
           {shown.map((field) => (
-            <a key={field.id} href={field.href} className="rounded-2xl border border-black/10 px-4 py-3 text-sm font-semibold">
+            <a key={field.id} href={field.href} className="rounded-2xl bg-white/[0.04] border border-white/10 px-4 py-3 text-sm font-semibold text-white hover:border-amber-400/50 hover:bg-white/[0.07] transition-all">
               {field.label}
-              <span className="block font-normal text-black/55 truncate">{field.value}</span>
+              <span className="block font-normal text-white/50 truncate text-xs mt-0.5">{field.value}</span>
             </a>
           ))}
         </div>
         <button
           type="button"
-          className="mt-5 w-full rounded-full bg-black text-white py-3 text-sm font-bold"
+          className="mt-6 w-full rounded-full bg-white hover:bg-zinc-200 text-black py-3 text-sm font-extrabold shadow-md transition-all cursor-pointer"
           onClick={() => downloadVCard({
             name: profile.name,
             phone: phone?.value,

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { Check } from 'lucide-react';
+import TagtiqueLogo from '../components/TagtiqueLogo';
 
 export default function SignupPage() {
   const [tagFlipped, setTagFlipped] = useState(false);
@@ -60,11 +61,11 @@ export default function SignupPage() {
 
         {/* Top: Logo & Headline */}
         <div className="relative z-10 flex flex-col gap-6">
-          <Link to="/">
-            <img
-              src="/assets/tagtique-logo.png"
-              alt="Tagtique"
-              className="w-48 sm:w-60 h-auto drop-shadow-lg"
+          <Link to="/" className="inline-block hover:opacity-95 transition-opacity" title="Tagtique Home">
+            <img 
+              src="/assets/tagtique-dark-logo.png" 
+              alt="Tagtique" 
+              className="w-52 sm:w-64 h-auto object-contain drop-shadow-xl" 
             />
           </Link>
           <div className="flex flex-col gap-3 max-w-md">

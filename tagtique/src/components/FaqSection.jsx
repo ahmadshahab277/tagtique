@@ -27,24 +27,24 @@ export default function FaqSection() {
   const [openIndex, setOpenIndex] = useState(0);
 
   return (
-    <section id="faq" className="bg-white text-black py-14 sm:py-20">
+    <section id="faq" className="bg-[#08090D] text-white py-14 sm:py-20 border-t border-white/10">
       <div className="max-w-3xl mx-auto px-4 sm:px-6">
-        <h2 className="font-manrope font-extrabold text-4xl tracking-tight mb-8">Questions.</h2>
-        <div className="border-t border-black/10">
+        <h2 className="font-manrope font-extrabold text-4xl tracking-tight mb-8 text-white">Questions.</h2>
+        <div className="border-t border-white/10">
           {FAQS.map((item, index) => {
             const open = openIndex === index;
             return (
-              <div key={item.q} className="border-b border-black/10">
+              <div key={item.q} className="border-b border-white/10">
                 <button
                   type="button"
                   onClick={() => setOpenIndex(open ? -1 : index)}
-                  className="w-full text-left py-4 flex items-center justify-between gap-4 font-semibold"
+                  className="w-full text-left py-4 flex items-center justify-between gap-4 font-semibold text-white/90 hover:text-white transition-colors cursor-pointer group"
                   aria-expanded={open}
                 >
-                  <span>{item.q}</span>
-                  <span className="text-xl leading-none">{open ? '–' : '+'}</span>
+                  <span className="group-hover:text-amber-400 transition-colors">{item.q}</span>
+                  <span className="text-xl leading-none font-mono text-white/50 group-hover:text-amber-400">{open ? '–' : '+'}</span>
                 </button>
-                {open && <p className="pb-4 text-sm text-black/70 leading-relaxed">{item.a}</p>}
+                {open && <p className="pb-4 text-sm text-white/65 leading-relaxed">{item.a}</p>}
               </div>
             );
           })}

@@ -18,6 +18,7 @@ const ProductPage = lazy(() => import('./pages/ProductPage'));
 const NfcCardPage = lazy(() => import('./pages/NfcCardPage'));
 const NfcSetupPage = lazy(() => import('./pages/NfcSetupPage'));
 const NfcPublicProfilePage = lazy(() => import('./pages/NfcPublicProfilePage'));
+const CatalogPage = lazy(() => import('./pages/CatalogPage'));
 
 // Scroll to top on every route change
 function ScrollToTop() {
@@ -110,15 +111,17 @@ function AppContent() {
   const isStandalone = isAdmin || isPublicScan;
 
   return (
-    <div className={`min-h-screen flex flex-col ${isStandalone ? 'bg-tag-bg text-tag-brown selection:bg-tag-amber selection:text-tag-brown-deep' : 'bg-[#f5f5f7] text-black selection:bg-black selection:text-white'}`}>
+    <div className={`min-h-screen flex flex-col ${isStandalone ? 'bg-tag-bg text-tag-brown selection:bg-tag-amber selection:text-tag-brown-deep' : 'bg-[#08090D] text-white selection:bg-amber-400 selection:text-black'}`}>
       {!isStandalone && <Navbar />}
       
-      <main className={`flex-1 ${!isStandalone ? 'pt-[104px]' : ''}`}>
+      <main className={`flex-1 ${!isStandalone ? 'pt-[68px]' : ''}`}>
         <ErrorBoundary>
           <Suspense fallback={<div className="min-h-[50vh]" />}>
           <Routes>
-            {/* Home Page */}
+            {/* Home Page & Catalog */}
             <Route path="/" element={<HomePage />} />
+            <Route path="/catalog" element={<CatalogPage />} />
+            <Route path="/shop" element={<CatalogPage />} />
             <Route path="/product/:slug" element={<ProductPage />} />
             <Route path="/nfc-card/:designId" element={<NfcCardPage />} />
             <Route path="/nfc-card/:designId/setup" element={<NfcSetupPage />} />

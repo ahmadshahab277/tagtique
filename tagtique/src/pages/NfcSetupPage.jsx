@@ -17,8 +17,8 @@ export default function NfcSetupPage() {
   if (!design) {
     return (
       <div className="max-w-xl mx-auto px-4 py-20 text-center">
-        <h1 className="font-manrope font-extrabold text-3xl">Choose a card first.</h1>
-        <Link to="/#nfc" className="inline-flex mt-6 bg-black text-white rounded-full px-5 py-2.5 text-sm font-bold">NFC cards</Link>
+        <h1 className="font-manrope font-extrabold text-3xl text-white">Choose a card first.</h1>
+        <Link to="/#nfc" className="inline-flex mt-6 bg-white hover:bg-zinc-200 text-black rounded-full px-5 py-2.5 text-sm font-bold shadow-md transition-all">NFC cards</Link>
       </div>
     );
   }
@@ -40,30 +40,30 @@ export default function NfcSetupPage() {
   };
 
   return (
-    <div className="bg-[#f5f5f7] text-black pb-16">
+    <div className="bg-[#08090D] text-white pb-24 min-h-screen selection:bg-amber-400 selection:text-black">
       <form onSubmit={save} className="max-w-6xl mx-auto px-4 sm:px-6 pt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div>
-          <p className="text-xs font-bold tracking-wider text-black/45">NFC PROFILE</p>
-          <h1 className="font-manrope font-extrabold text-4xl tracking-tight mt-2">Set what the tap shows</h1>
-          <p className="mt-3 text-sm text-black/65 leading-relaxed">
+          <p className="text-xs font-bold tracking-wider text-white/50 uppercase">NFC PROFILE</p>
+          <h1 className="font-manrope font-extrabold text-4xl tracking-tight mt-2 text-white">Set what the tap shows</h1>
+          <p className="mt-3 text-sm text-white/70 leading-relaxed">
             Turn a field on to show it. Turn it off to hide it. The value stays saved. This browser keeps the profile. The shop still has to program the physical card with the link below. Saving here does not write the chip.
           </p>
 
-          <label className="mt-6 block text-sm font-semibold">
+          <label className="mt-6 block text-sm font-semibold text-white/90">
             Display name
             <input
               required
               value={profile.name}
               onChange={(event) => { setSaved(false); setProfile((current) => ({ ...current, name: event.target.value })); }}
-              className="mt-1 w-full rounded-2xl border border-black/10 px-3 py-2.5"
+              className="mt-1.5 w-full rounded-2xl bg-white/[0.04] border border-white/10 px-4 py-3 text-white placeholder-white/30 focus:border-amber-400 outline-none transition-all"
             />
           </label>
-          <label className="mt-4 block text-sm font-semibold">
+          <label className="mt-4 block text-sm font-semibold text-white/90">
             Short introduction
             <textarea
               value={profile.bio}
               onChange={(event) => { setSaved(false); setProfile((current) => ({ ...current, bio: event.target.value })); }}
-              className="mt-1 w-full rounded-2xl border border-black/10 px-3 py-2.5 min-h-20"
+              className="mt-1.5 w-full rounded-2xl bg-white/[0.04] border border-white/10 px-4 py-3 text-white placeholder-white/30 focus:border-amber-400 outline-none min-h-20 transition-all"
             />
           </label>
 
@@ -72,18 +72,18 @@ export default function NfcSetupPage() {
               const entry = profile.fields[field.id];
               const error = entry.enabled ? fieldError(field, entry.value) : '';
               return (
-                <div key={field.id} className="bg-white rounded-3xl border border-black/5 p-4">
+                <div key={field.id} className="bg-[#12131A] rounded-3xl border border-white/10 p-4 shadow-sm">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="font-bold" id={`${field.id}-label`}>{field.label}</span>
+                    <span className="font-bold text-white" id={`${field.id}-label`}>{field.label}</span>
                     <button
                       type="button"
                       role="switch"
                       aria-checked={entry.enabled}
                       aria-labelledby={`${field.id}-label`}
                       onClick={() => updateField(field.id, { enabled: !entry.enabled })}
-                      className={`w-12 h-7 rounded-full p-1 ${entry.enabled ? 'bg-black' : 'bg-black/15'}`}
+                      className={`w-12 h-7 rounded-full p-1 transition-colors cursor-pointer ${entry.enabled ? 'bg-amber-400' : 'bg-white/15'}`}
                     >
-                      <span className={`block w-5 h-5 rounded-full bg-white transition-transform ${entry.enabled ? 'translate-x-5' : ''}`} />
+                      <span className={`block w-5 h-5 rounded-full transition-transform ${entry.enabled ? 'translate-x-5 bg-black' : 'bg-white'}`} />
                     </button>
                   </div>
                   {entry.enabled && (
@@ -93,34 +93,34 @@ export default function NfcSetupPage() {
                         onChange={(event) => updateField(field.id, { value: event.target.value })}
                         placeholder={field.placeholder}
                         aria-invalid={Boolean(error)}
-                        className="mt-3 w-full rounded-2xl border border-black/10 px-3 py-2.5"
+                        className="mt-3 w-full rounded-2xl bg-white/[0.04] border border-white/10 px-3 py-2.5 text-white placeholder-white/30 focus:border-amber-400 outline-none transition-all"
                       />
-                      {error && <p className="mt-2 text-xs text-red-700">{error}</p>}
+                      {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
                     </>
                   )}
                 </div>
               );
             })}
           </div>
-          <button type="submit" className="mt-6 bg-black text-white rounded-full px-6 py-3 text-sm font-bold">Save profile</button>
+          <button type="submit" className="mt-6 bg-white hover:bg-zinc-200 text-black rounded-full px-6 py-3 text-sm font-extrabold shadow-md transition-all cursor-pointer">Save profile</button>
           {saved && (
-            <p className="mt-3 text-sm">
-              Saved on this browser. Profile link: <Link className="underline" to={`/profile/${profile.id}`}>{publicUrl}</Link>
+            <p className="mt-3 text-sm text-emerald-400">
+              Saved on this browser. Profile link: <Link className="underline font-bold text-amber-400 hover:text-amber-300" to={`/profile/${profile.id}`}>{publicUrl}</Link>
             </p>
           )}
         </div>
 
         <aside className="lg:sticky lg:top-28 h-fit">
           <NfcCardArt design={design} side="back" qrValue={publicUrl} serial={profile.id.slice(0, 12).toUpperCase()} />
-          <div className="mt-4 bg-white rounded-3xl border border-black/5 p-5">
-            <p className="text-xs font-bold tracking-wider text-black/45">PUBLIC PREVIEW</p>
-            <h2 className="font-bold text-2xl mt-2">{profile.name || 'Your name'}</h2>
-            {profile.bio && <p className="mt-2 text-sm text-black/70">{profile.bio}</p>}
+          <div className="mt-4 bg-[#12131A] rounded-3xl border border-white/10 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
+            <p className="text-xs font-bold tracking-wider text-white/50 uppercase">PUBLIC PREVIEW</p>
+            <h2 className="font-bold text-2xl mt-2 text-white">{profile.name || 'Your name'}</h2>
+            {profile.bio && <p className="mt-2 text-sm text-white/70">{profile.bio}</p>}
             <ul className="mt-4 flex flex-col gap-2">
-              {shown.length === 0 && <li className="text-sm text-black/50">Nothing public yet. Turn a valid field on.</li>}
+              {shown.length === 0 && <li className="text-sm text-white/50">Nothing public yet. Turn a valid field on.</li>}
               {shown.map((field) => (
                 <li key={field.id}>
-                  <a href={field.href} className="text-sm font-semibold underline">{field.label}</a>
+                  <a href={field.href} className="text-sm font-semibold underline text-amber-400 hover:text-amber-300">{field.label}</a>
                 </li>
               ))}
             </ul>

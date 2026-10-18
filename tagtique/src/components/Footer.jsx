@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import TagtiqueLogo from './TagtiqueLogo';
 
 export default function Footer() {
   const [email, setEmail] = useState('');
@@ -70,9 +71,12 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 pt-6 border-t border-white/15 text-xs text-white/50 flex flex-col sm:flex-row justify-between gap-2">
-          <span>© 2026 Tagtique</span>
-          <span>Faisalabad, Pakistan</span>
+        <div className="mt-10 pt-6 border-t border-white/15 text-xs text-white/50 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <img src="/assets/tagtique-dark-logo.png" alt="Tagtique" className="h-6 w-auto object-contain opacity-85" />
+            <span>© 2026 Tagtique. All rights reserved.</span>
+          </div>
+          <span>Faisalabad, Pakistan · Express Nationwide Shipping</span>
         </div>
       </div>
     </footer>

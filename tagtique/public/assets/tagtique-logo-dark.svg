@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 64" fill="none">
+  <defs>
+    <linearGradient id="logoGoldDark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F7DF94" />
+      <stop offset="45%" stop-color="#D4AF37" />
+      <stop offset="100%" stop-color="#A67C00" />
+    </linearGradient>
+    <linearGradient id="logoCyanDark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3DDCFF" />
+      <stop offset="100%" stop-color="#00B4D8" />
+    </linearGradient>
+    <linearGradient id="squircleBgDark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#232634" />
+      <stop offset="100%" stop-color="#0E1015" />
+    </linearGradient>
+    <filter id="cyanGlowDark" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#3DDCFF" flood-opacity="0.5" />
+    </filter>
+  </defs>
+
+  <!-- Squircle Chassis Icon -->
+  <g transform="translate(6, 6)">
+    <rect 
+      x="0" 
+      y="0" 
+      width="52" 
+      height="52" 
+      rx="14" 
+      fill="url(#squircleBgDark)" 
+      stroke="rgba(255, 255, 255, 0.18)" 
+      stroke-width="1.2" 
+    />
+
+    <!-- Central Geometric Monogram T -->
+    <path
+      d="M 12 16 H 34 V 21 H 25 V 40 H 20 V 21 H 12 Z"
+      fill="url(#logoGoldDark)"
+    />
+
+    <!-- Precision Wireless NFC Arcs -->
+    <g fill="none" stroke-width="2.4" stroke-linecap="round" filter="url(#cyanGlowDark)">
+      <path d="M 31 23 A 8 8 0 0 1 31 35" stroke="url(#logoCyanDark)" />
+      <path d="M 36 19 A 13 13 0 0 1 36 39" stroke="url(#logoCyanDark)" opacity="0.8" />
+      <path d="M 41 15 A 18 18 0 0 1 41 43" stroke="url(#logoCyanDark)" opacity="0.45" />
+    </g>
+  </g>
+
+  <!-- Typography: TAGTIQUE -->
+  <text 
+    x="72" 
+    y="36" 
+    fill="#FFFFFF" 
+    font-family="Manrope, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" 
+    font-size="22" 
+    font-weight="800" 
+    letter-spacing="1.2"
+  >TAGTIQUE</text>
+
+  <text 
+    x="73" 
+    y="49" 
+    fill="rgba(255, 255, 255, 0.55)" 
+    font-family="'Space Mono', monospace, sans-serif" 
+    font-size="8.5" 
+    font-weight="700" 
+    letter-spacing="2.2"
+  >SMART IDENTITY</text>
+</svg>

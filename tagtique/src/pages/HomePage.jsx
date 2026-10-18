@@ -1,27 +1,76 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import HeroSection from '../components/HeroSection';
-import HowItWorksSection from '../components/HowItWorksSection';
 import PricingSection from '../components/PricingSection';
+import ScrollMascotSticker from '../components/ScrollMascotSticker';
+import HowItWorksSection from '../components/HowItWorksSection';
 import NfcCardSection from '../components/NfcCardSection';
 import FaqSection from '../components/FaqSection';
+import { SHOWCASE_EDITIONS } from '../data/showcaseEditions';
 
 export default function HomePage() {
+  const heroAnchorRef = useRef(null);
+  const mascotAnchorRef = useRef(null);
+  const [isDocked, setIsDocked] = useState(false);
+  const [activeEdition, setActiveEdition] = useState('mascot');
+
+  // Currently selected character in each edition (syncs bidirectionally with Hero)
+  const [selectedMascot, setSelectedMascot] = useState(SHOWCASE_EDITIONS.mascot.characters[0]);
+  const [selectedAnime, setSelectedAnime] = useState(SHOWCASE_EDITIONS.anime.characters[0]);
+  const [selectedCollection, setSelectedCollection] = useState(SHOWCASE_EDITIONS.collections.characters[0]);
+
+  const handleSelectCharacter = (editionId, character) => {
+    if (editionId === 'mascot') setSelectedMascot(character);
+    if (editionId === 'anime') setSelectedAnime(character);
+    if (editionId === 'collections') setSelectedCollection(character);
+  };
+
+  // Active character currently in the spotlight and eligible for scroll flight
+  const activeCharacter = 
+    activeEdition === 'mascot'
+      ? selectedMascot
+      : activeEdition === 'anime'
+      ? selectedAnime
+      : selectedCollection;
+
   return (
-    <div className="flex flex-col bg-white text-black">
-      <HeroSection />
+    <div className="flex flex-col bg-[#08090D] text-white relative">
+      {/* 3D Interactive Hero Section with 2-Way Edition & Character Sync */}
+      <HeroSection
+        heroAnchorRef={heroAnchorRef}
+        activeEdition={activeEdition}
+        onEditionChange={setActiveEdition}
+        selectedMascot={selectedMascot}
+        selectedAnime={selectedAnime}
+        selectedCollection={selectedCollection}
+      />
+
+      {/* Unified Master Showcase Container (Mascot, Anime, Collections with dynamic character glow) */}
+      <PricingSection
+        activeEdition={activeEdition}
+        onEditionChange={setActiveEdition}
+        activeCharacter={activeCharacter}
+        onSelectCharacter={handleSelectCharacter}
+        mascotAnchorRef={mascotAnchorRef}
+        isDocked={isDocked}
+      />
+
+      {/* High-Performance Smooth Scroll Flying Sticker */}
+      <ScrollMascotSticker
+        heroAnchorRef={heroAnchorRef}
+        mascotAnchorRef={mascotAnchorRef}
+        isDocked={isDocked}
+        onDockChange={setIsDocked}
+        activeCharacter={activeCharacter}
+      />
+
+      {/* Educational Dual-Recovery Guide */}
       <HowItWorksSection />
-      <PricingSection />
+
+      {/* NFC Metal Business Cards */}
       <NfcCardSection />
-      <section id="about" className="bg-white text-black py-16 border-t border-black/10">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6">
-          <h2 className="font-manrope font-extrabold text-4xl tracking-tight">One sticker. Any belonging.</h2>
-          <p className="mt-4 text-base text-black/70 leading-relaxed">
-            Put the sticker on a laptop, bag, helmet, bottle, or vehicle. Online, a scan opens your contact page. Offline, it opens the phone dialer. After purchase, use Wi-Fi, scan the QR, fill the form, and tap Assign.
-          </p>
-        </div>
-      </section>
+
+      {/* Interactive FAQ Accordion */}
       <FaqSection />
     </div>
   );
 }
-
