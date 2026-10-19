@@ -17,7 +17,6 @@ import {
   Shield,
   AlertCircle,
   RefreshCw,
-  Sparkles,
   Save,
   Car,
   Scan
@@ -713,7 +712,7 @@ export default function QRScannerModal({
                 {/* Status & Material */}
                 <div className="flex flex-col items-end gap-1.5">
                   <span
-                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wide border ${
+                    className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wide border ${
                       editForm.status === 'Delivered'
                         ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
                         : editForm.status === 'Shipped'
@@ -721,12 +720,11 @@ export default function QRScannerModal({
                         : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
                     }`}
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
                     <span>{editForm.status}</span>
                   </span>
 
                   <span className="text-[11px] font-medium text-tag-bg/80 font-mono">
-                    {editForm.vehicleType} • {scannedTag.package || 'Single Tag'}
+                    {editForm.vehicleType} — {scannedTag.package || 'Single Tag'}
                   </span>
                 </div>
               </div>
@@ -1177,8 +1175,7 @@ export default function QRScannerModal({
                   />
 
                   {isCameraActive && (
-                    <div className="absolute top-2.5 right-2.5 z-10 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-sm border border-emerald-500/40 text-emerald-300 text-[10px] font-bold flex items-center gap-1.5 shadow-sm">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <div className="absolute top-2.5 right-2.5 z-10 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-sm border border-emerald-500/40 text-emerald-300 text-[10px] font-bold shadow-sm">
                       <span>Live Camera</span>
                     </div>
                   )}
@@ -1234,7 +1231,6 @@ export default function QRScannerModal({
             <div className="p-4 rounded-2xl bg-tag-bg border border-tag-border flex flex-col gap-2.5">
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-tag-brown">
-                  <Sparkles className="w-3.5 h-3.5 text-tag-amber-deep" />
                   <span>Click Any Inventory Tag to Inspect & Reassign:</span>
                 </div>
                 <div className="relative w-44 sm:w-56">

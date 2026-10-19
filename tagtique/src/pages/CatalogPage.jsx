@@ -6,7 +6,6 @@ import NfcCardArt from '../components/NfcCardArt';
 import {
   Search,
   SlidersHorizontal,
-  Sparkles,
   Flame,
   Layers,
   CreditCard,
@@ -55,7 +54,7 @@ export default function CatalogPage() {
       productType: 'sticker',
       href: `/product/${item.slug}`,
       badge: 'Cyber Chibi',
-      icon: Sparkles
+      icon: Layers
     }));
 
     const animeList = (SHOWCASE_EDITIONS.anime.characters || []).map((item) => ({
@@ -147,9 +146,8 @@ export default function CatalogPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div className="max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.08] border border-white/10 text-white/80 text-xs font-bold uppercase tracking-wider mb-4 backdrop-blur-md">
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                <span>Complete Tagtique Collection • 50 Designs</span>
+              <div className="inline-flex items-center px-3 py-1 rounded-full bg-white/[0.08] border border-white/10 text-white/80 text-xs font-bold uppercase tracking-wider mb-4 backdrop-blur-md">
+                <span>Complete Tagtique Collection (50 Designs)</span>
               </div>
               <h1 className="font-manrope font-extrabold text-4xl sm:text-5xl lg:text-6xl text-white tracking-tight uppercase leading-[0.95]">
                 Full Catalog.
@@ -225,7 +223,7 @@ export default function CatalogPage() {
           <div className="flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {[
               { id: 'all', label: 'All Products', count: counts.all, icon: null },
-              { id: 'mascot', label: 'Mascot Edition', count: counts.mascot, icon: Sparkles },
+              { id: 'mascot', label: 'Mascot Edition', count: counts.mascot, icon: Layers },
               { id: 'anime', label: 'Anime Edition', count: counts.anime, icon: Flame },
               { id: 'collections', label: 'Collections Edition', count: counts.collections, icon: Layers },
               { id: 'nfc', label: 'NFC Metal Cards', count: counts.nfc, icon: CreditCard }

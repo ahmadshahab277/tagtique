@@ -35,7 +35,7 @@ export default function NfcPublicProfilePage() {
   return (
     <div className="max-w-md mx-auto px-4 py-12">
       <article className="bg-[#12131A] rounded-[28px] border border-white/10 p-6 shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
-        <p className="text-xs font-bold tracking-wider text-white/50 uppercase">{design ? design.name : 'Tagtique'} · NFC</p>
+        <p className="text-xs font-bold tracking-wider text-white/50 uppercase">{design ? design.name : 'Tagtique'} NFC</p>
         <h1 className="font-manrope font-extrabold text-3xl mt-2 text-white">{profile.name}</h1>
         {profile.bio && <p className="mt-2 text-sm text-white/70 leading-relaxed">{profile.bio}</p>}
         <div className="mt-5 flex flex-col gap-2.5">

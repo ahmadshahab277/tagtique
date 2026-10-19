@@ -96,8 +96,7 @@ export default function HowItWorksSection() {
             <article className="rounded-[32px] bg-gradient-to-b from-[#14151D] via-[#101117] to-[#0A0B0F] border border-white/10 p-6 sm:p-8 flex flex-col justify-between shadow-[0_20px_50px_rgba(0,0,0,0.6)] hover:shadow-[0_25px_60px_rgba(0,0,0,0.8)] hover:border-purple-400/40 transition-all duration-300 hover:-translate-y-1.5 group relative overflow-hidden">
               {/* Top Pill */}
               <div className="flex items-center justify-between mb-5">
-                <span className="text-[10px] font-black tracking-wider uppercase px-3 py-1 rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/30 shadow-sm flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-purple-400 shadow-[0_0_4px_rgba(192,132,252,0.8)]" />
+                <span className="text-[10px] font-black tracking-wider uppercase px-3 py-1 rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/30 shadow-sm">
                   Physical Belongings
                 </span>
                 <span className="text-xs font-mono font-extrabold text-white/30">01</span>
@@ -118,10 +117,6 @@ export default function HowItWorksSection() {
                       className="w-28 sm:w-32 h-auto object-contain select-none drop-shadow-[0_16px_28px_rgba(0,0,0,0.5)] transition-transform duration-300 group-hover:scale-105"
                       draggable={false}
                     />
-                    <div className="absolute -bottom-2 right-0 px-2 py-0.5 rounded-md bg-black/85 backdrop-blur-md text-[9px] font-mono font-bold text-white shadow-md flex items-center gap-1 border border-white/20">
-                      <QrCode className="w-2.5 h-2.5 text-pink-400" />
-                      <span>HIGH-DENSITY</span>
-                    </div>
                   </div>
                 </div>
 
@@ -152,8 +147,7 @@ export default function HowItWorksSection() {
             <article className="rounded-[32px] bg-gradient-to-b from-[#14151D] via-[#101117] to-[#0A0B0F] border border-white/10 p-6 sm:p-8 flex flex-col justify-between shadow-[0_20px_50px_rgba(0,0,0,0.6)] hover:shadow-[0_25px_60px_rgba(0,0,0,0.8)] hover:border-emerald-400/40 transition-all duration-300 hover:-translate-y-1.5 group relative overflow-hidden">
               {/* Top Pill */}
               <div className="flex items-center justify-between mb-5">
-                <span className="text-[10px] font-black tracking-wider uppercase px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 shadow-sm flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_4px_rgba(52,211,153,0.8)]" />
+                <span className="text-[10px] font-black tracking-wider uppercase px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 shadow-sm">
                   Online Portal
                 </span>
                 <span className="text-xs font-mono font-extrabold text-white/30">02</span>
@@ -217,8 +211,7 @@ export default function HowItWorksSection() {
             <article className="rounded-[32px] bg-gradient-to-b from-[#14151D] via-[#101117] to-[#0A0B0F] border border-white/10 p-6 sm:p-8 flex flex-col justify-between shadow-[0_20px_50px_rgba(0,0,0,0.6)] hover:shadow-[0_25px_60px_rgba(0,0,0,0.8)] hover:border-amber-400/40 transition-all duration-300 hover:-translate-y-1.5 group relative overflow-hidden">
               {/* Top Pill */}
               <div className="flex items-center justify-between mb-5">
-                <span className="text-[10px] font-black tracking-wider uppercase px-3 py-1 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 shadow-sm flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_4px_rgba(251,191,36,0.8)]" />
+                <span className="text-[10px] font-black tracking-wider uppercase px-3 py-1 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 shadow-sm">
                   Zero Internet Required
                 </span>
                 <span className="text-xs font-mono font-extrabold text-white/30">03</span>
@@ -279,9 +272,8 @@ export default function HowItWorksSection() {
           
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-12">
             <div className="max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.06] border border-white/10 text-white/80 text-xs font-semibold tracking-wide mb-3.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                <span>Zero App Downloads • Browser Based</span>
+              <div className="inline-flex items-center px-3 py-1 rounded-full bg-white/[0.06] border border-white/10 text-white/80 text-xs font-semibold tracking-wide mb-3.5">
+                <span>Zero App Downloads, Browser Based</span>
               </div>
               <h3 className="font-manrope font-extrabold text-3xl sm:text-4xl text-white tracking-tight leading-[1.1]">
                 After your sticker arrives.
@@ -535,10 +527,7 @@ export default function HowItWorksSection() {
 
                     {/* Verified Live Badge */}
                     <div className="w-full py-1 px-2.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 backdrop-blur-md flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.9)]" />
-                        <span className="text-[9px] font-extrabold text-emerald-300">Protected & Live</span>
-                      </div>
+                      <span className="text-[9px] font-extrabold text-emerald-300">Protected & Live</span>
                       <span className="text-[8px] font-mono font-bold text-emerald-200/80">TG-849</span>
                     </div>
                   </div>

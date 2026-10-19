@@ -11,38 +11,10 @@ function Pattern({ design }) {
       </g>
     );
   }
-  if (design.id === 'neo-chrome') {
-    return (
-      <g>
-        <polygon points="620,0 856,0 856,220" fill={design.accent} opacity="0.18" />
-        <polygon points="700,0 856,0 856,120" fill={design.accent} opacity="0.35" />
-      </g>
-    );
-  }
-  if (design.id === 'minimal-luxe') {
-    return <rect x="48" y="250" width="72" height="2" fill={design.ink} />;
-  }
-  if (design.id === 'digital-creator') {
-    return (
-      <g>
-        <rect x="0" y="0" width="18" height="540" fill={design.accent} />
-        <rect x="560" y="390" width="220" height="90" fill={design.accent} />
-      </g>
-    );
-  }
-  if (design.id === 'phantom-grid') {
-    return (
-      <g stroke={design.accent} strokeWidth="1" opacity="0.35">
-        {Array.from({ length: 8 }, (_, i) => (
-          <line key={i} x1={80 + i * 90} y1="40" x2={80 + i * 90} y2="500" />
-        ))}
-      </g>
-    );
-  }
-  return <rect x="48" y="300" width="120" height="1" fill={design.accent} />;
+  return <rect x="48" y="300" width="120" height="1" fill={design.accent || '#3DDCFF'} />;
 }
 
-function TapMark({ color }) {
+function TapMark({ color = '#3DDCFF' }) {
   return (
     <g fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" aria-hidden="true">
       <path d="M70 150 a28 28 0 0 1 28 28" />
@@ -56,6 +28,7 @@ export function NfcQr({ value, className = '' }) {
   const [src, setSrc] = useState('');
 
   useEffect(() => {
+    if (!value) return;
     let live = true;
     import('qrcode').then((QR) =>
       QR.toDataURL(value, {
@@ -73,22 +46,44 @@ export function NfcQr({ value, className = '' }) {
   }, [value]);
 
   if (!src) return <div className={`bg-white ${className}`} />;
-  return <img src={src} alt="" className={className} />;
+  return <img src={src} alt="NFC Profile QR Code" className={className} />;
 }
 
 export default function NfcCardArt({ design, side = 'front', qrValue, serial = 'PREVIEW' }) {
-  const backInk = design.id === 'signature' || design.id === 'minimal-luxe' ? '#1A1A1A' : '#F5F5F5';
+  if (!design) return null;
+
+  const hasImages = Boolean(design.frontImage && design.backImage);
+  const currentImg = side === 'front' ? design.frontImage : design.backImage;
+
+  if (hasImages && currentImg) {
+    return (
+      <div className="relative w-full aspect-[856/540] overflow-hidden rounded-[18px] shadow-[0_18px_45px_rgba(0,0,0,0.6)] group/card bg-[#12131A] select-none border border-white/10">
+        <img
+          src={currentImg}
+          alt={`${design.name} ${side}`}
+          className="w-full h-full object-cover rounded-[18px] transition-transform duration-500 will-change-transform group-hover/card:scale-[1.015]"
+          loading="lazy"
+        />
+
+        {/* Specular Glare & Metallic Sheen Overlay */}
+        <div className="absolute inset-0 pointer-events-none rounded-[18px] bg-gradient-to-tr from-transparent via-white/12 to-transparent opacity-75 group-hover/card:opacity-100 transition-opacity" />
+      </div>
+    );
+  }
+
+  // Fallback SVG rendering
+  const backInk = '#F5F5F5';
   return (
-    <div className="relative w-full aspect-[856/540] overflow-hidden rounded-[18px] shadow-[0_16px_40px_rgba(0,0,0,0.12)]">
+    <div className="relative w-full aspect-[856/540] overflow-hidden rounded-[18px] shadow-[0_16px_40px_rgba(0,0,0,0.12)] bg-[#12131A]">
       <svg viewBox="0 0 856 540" className="w-full h-full block" role="img" aria-label={`${design.name} ${side}`}>
-        <rect width="856" height="540" fill={side === 'front' ? design.front : design.back} />
+        <rect width="856" height="540" fill={side === 'front' ? (design.front || '#0F1017') : (design.back || '#1A1B24')} />
         {side === 'front' && <Pattern design={design} />}
         {side === 'front' ? (
           <>
             <TapMark color={design.accent} />
-            <text x="70" y="250" fill={design.ink} fontFamily="Manrope, Arial, sans-serif" fontSize="22" fontWeight="700">NFC</text>
-            <text x="48" y="430" fill={design.ink} fontFamily="Manrope, Arial, sans-serif" fontSize="42" fontWeight="800">{design.name}</text>
-            <text x="48" y="470" fill={design.ink} opacity="0.7" fontFamily="Manrope, Arial, sans-serif" fontSize="18">tagtique · tap to share</text>
+            <text x="70" y="250" fill={design.ink || '#FFFFFF'} fontFamily="Manrope, Arial, sans-serif" fontSize="22" fontWeight="700">NFC</text>
+            <text x="48" y="430" fill={design.ink || '#FFFFFF'} fontFamily="Manrope, Arial, sans-serif" fontSize="42" fontWeight="800">{design.name}</text>
+            <text x="48" y="470" fill={design.ink || '#FFFFFF'} opacity="0.7" fontFamily="Manrope, Arial, sans-serif" fontSize="18">tagtique tap to share</text>
           </>
         ) : (
           <>
@@ -98,11 +93,6 @@ export default function NfcCardArt({ design, side = 'front', qrValue, serial = '
           </>
         )}
       </svg>
-      {side === 'back' && (
-        <div className="absolute right-4 bottom-4 w-[22%] aspect-square bg-white p-1 rounded-md">
-          <NfcQr value={qrValue} className="w-full h-full" />
-        </div>
-      )}
     </div>
   );
 }

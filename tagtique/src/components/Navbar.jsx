@@ -63,8 +63,7 @@ export default function Navbar() {
             onClick={() => goTo('nfc')} 
             className={navLinkClass}
           >
-            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_#3DDCFF]" />
-            <span>NFC Cards</span>
+            NFC Cards
           </button>
 
           <button 
@@ -155,10 +154,9 @@ export default function Navbar() {
           <button 
             type="button" 
             onClick={() => goTo('nfc')} 
-            className="text-left py-3 px-4 font-bold text-sm text-white/90 hover:text-white hover:bg-white/10 rounded-xl transition-all flex items-center gap-2"
+            className="text-left py-3 px-4 font-bold text-sm text-white/90 hover:text-white hover:bg-white/10 rounded-xl transition-all"
           >
-            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_#3DDCFF]" />
-            <span>NFC Smart Cards</span>
+            NFC Smart Cards
           </button>
 
           <button 

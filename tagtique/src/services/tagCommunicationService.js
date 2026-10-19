@@ -93,7 +93,7 @@ class TagCommunicationService {
               ownerName: cust.full_name ? cust.full_name.split(' ')[0] : 'Owner',
               phoneNumber: cust.phone_number || '',
               guardianNumber: cust.guardian_number || '',
-              maskedPhone: cust.phone_number ? this.maskPhoneNumber(cust.phone_number) : '+92 ••• ••••000',
+              maskedPhone: cust.phone_number ? this.maskPhoneNumber(cust.phone_number) : '+92 *** ****000',
               maskedGuardian: cust.guardian_number ? this.maskPhoneNumber(cust.guardian_number) : null,
               hasGuardianConfigured: Boolean(cust.guardian_number),
               emergencyEscalationSeconds: 180,
@@ -127,7 +127,7 @@ class TagCommunicationService {
                 ownerName: n.owner_name ? n.owner_name.split(' ')[0] : (n.customer_name || 'Owner'),
                 phoneNumber: n.owner_phone || '',
                 guardianNumber: n.guardian_phone || '',
-                maskedPhone: n.owner_phone ? this.maskPhoneNumber(n.owner_phone) : '+92 ••• ••••000',
+                maskedPhone: n.owner_phone ? this.maskPhoneNumber(n.owner_phone) : '+92 *** ****000',
                 maskedGuardian: n.guardian_phone ? this.maskPhoneNumber(n.guardian_phone) : null,
                 hasGuardianConfigured: Boolean(n.guardian_phone),
                 phonePrivacy: 'public',
@@ -186,7 +186,7 @@ class TagCommunicationService {
               ownerName: cust.full_name ? cust.full_name.split(' ')[0] : 'Owner',
               phoneNumber: cust.phone_number || '',
               guardianNumber: cust.guardian_number || '',
-              maskedPhone: cust.phone_number ? this.maskPhoneNumber(cust.phone_number) : '+92 ••• ••••000',
+              maskedPhone: cust.phone_number ? this.maskPhoneNumber(cust.phone_number) : '+92 *** ****000',
               maskedGuardian: cust.guardian_number ? this.maskPhoneNumber(cust.guardian_number) : null,
               hasGuardianConfigured: Boolean(cust.guardian_number),
               emergencyEscalationSeconds: 180,
@@ -297,13 +297,13 @@ class TagCommunicationService {
 
   /**
    * Helper to mask telephone numbers for privacy
-   * e.g. 03001234567 -> +92 ••• ••••567
+   * e.g. 03001234567 -> +92 *** ****567
    */
   maskPhoneNumber(phone) {
-    if (!phone) return '+92 ••• ••••000';
+    if (!phone) return '+92 *** ****000';
     const digits = phone.replace(/\D/g, '');
     const last3 = digits.slice(-3);
-    return `+92 ••• ••••${last3}`;
+    return `+92 *** ****${last3}`;
   }
 }
 

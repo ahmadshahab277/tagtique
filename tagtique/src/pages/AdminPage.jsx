@@ -1941,8 +1941,8 @@ export default function AdminPage({ onLogout }) {
                   className="p-3 rounded-2xl hover:bg-tag-pill cursor-pointer flex items-center justify-between text-xs"
                 >
                   <div className="flex flex-col">
-                    <span className="font-bold text-tag-brown">{order.orderId} · {order.customerName}</span>
-                    <span className="text-[11px] text-tag-brown-muted">{order.vehicleNumber} · {order.package}</span>
+                    <span className="font-bold text-tag-brown">{order.orderId}, {order.customerName}</span>
+                    <span className="text-[11px] text-tag-brown-muted">{order.vehicleNumber}, {order.package}</span>
                   </div>
                   <span className="font-mono font-bold text-tag-brown">PKR {order.amount}</span>
                 </div>

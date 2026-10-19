@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 440" width="100%" height="100%">
+  <defs>
+    <!-- Metallic 3D Gold Gradients -->
+    <linearGradient id="gold-bevel-light" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFF5DF" />
+      <stop offset="25%" stop-color="#E8CE9E" />
+      <stop offset="60%" stop-color="#C5A065" />
+      <stop offset="100%" stop-color="#9C773E" />
+    </linearGradient>
+
+    <linearGradient id="gold-surface" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F2DDB8" />
+      <stop offset="50%" stop-color="#D9B780" />
+      <stop offset="100%" stop-color="#AD864B" />
+    </linearGradient>
+
+    <linearGradient id="gold-bevel-dark" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#805C2B" />
+      <stop offset="100%" stop-color="#D9B986" />
+    </linearGradient>
+
+    <!-- Electric Neon Cyan Gradients -->
+    <linearGradient id="cyan-glow" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00C4EF" />
+      <stop offset="50%" stop-color="#3DDCFF" />
+      <stop offset="100%" stop-color="#B2F5FF" />
+    </linearGradient>
+
+    <!-- Neon Glow Filter -->
+    <filter id="neon-glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="4.5" result="blur1" />
+      <feGaussianBlur stdDeviation="10" result="blur2" />
+      <feMerge>
+        <feMergeNode in="blur2" />
+        <feMergeNode in="blur1" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <filter id="subtle-shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="2" dy="5" stdDeviation="4" flood-color="#000000" flood-opacity="0.35" />
+    </filter>
+  </defs>
+
+  <!-- ================= 3D METALLIC GOLD 'T' ================= -->
+  <g id="metallic-t" filter="url(#subtle-shadow)">
+    <!-- Outer Chamfer/Bevel Edge Base -->
+    <path 
+      d="M 68 80 L 320 80 L 352 108 L 244 108 L 244 340 L 292 340 L 292 360 L 144 360 L 144 340 L 192 340 L 192 144 L 92 144 L 92 172 L 68 172 Z" 
+      fill="url(#gold-bevel-dark)" 
+    />
+
+    <!-- Main Front Surface -->
+    <path 
+      d="M 72 84 L 316 84 L 344 108 L 240 108 L 240 336 L 288 336 L 288 356 L 148 356 L 148 336 L 196 336 L 196 140 L 96 140 L 96 168 L 72 168 Z" 
+      fill="url(#gold-surface)" 
+      stroke="url(#gold-bevel-light)" 
+      stroke-width="2" 
+      stroke-linejoin="miter" 
+    />
+
+    <!-- Inner Vertical Slot (Double Line Inset Detail) -->
+    <path 
+      d="M 216 120 L 222 120 L 222 328 L 216 328 Z" 
+      fill="#1A1815" 
+      stroke="#5A4325" 
+      stroke-width="1.5" 
+    />
+
+    <!-- Right Flange Angled Return -->
+    <path 
+      d="M 240 108 Q 284 108 304 140 L 280 156 Q 268 132 240 132 Z" 
+      fill="url(#gold-bevel-light)" 
+      opacity="0.9" 
+    />
+  </g>
+
+  <!-- ================= 4 NEON CYAN NFC SIGNAL ARCS ================= -->
+  <g id="nfc-arcs" filter="url(#neon-glow)">
+    <!-- Arc 1 (Innermost) -->
+    <path 
+      d="M 295 240 A 42 42 0 0 1 332 164" 
+      fill="none" 
+      stroke="url(#cyan-glow)" 
+      stroke-width="12" 
+      stroke-linecap="round" 
+    />
+
+    <!-- Arc 2 -->
+    <path 
+      d="M 326 270 A 82 82 0 0 1 386 132" 
+      fill="none" 
+      stroke="url(#cyan-glow)" 
+      stroke-width="13" 
+      stroke-linecap="round" 
+    />
+
+    <!-- Arc 3 -->
+    <path 
+      d="M 358 302 A 124 124 0 0 1 438 98" 
+      fill="none" 
+      stroke="url(#cyan-glow)" 
+      stroke-width="14.5" 
+      stroke-linecap="round" 
+    />
+
+    <!-- Arc 4 (Outermost) -->
+    <path 
+      d="M 388 334 A 166 166 0 0 1 488 64" 
+      fill="none" 
+      stroke="url(#cyan-glow)" 
+      stroke-width="16" 
+      stroke-linecap="round" 
+    />
+  </g>
+</svg>

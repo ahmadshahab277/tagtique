@@ -18,7 +18,6 @@ import FirstTimeSetup from '../components/vehicle/FirstTimeSetup';
 import {
   ShieldCheck,
   ArrowRight,
-  Sparkles,
   CheckCircle2,
   Lock
 } from 'lucide-react';
@@ -206,7 +205,7 @@ export default function PublicVehicleScanPage() {
               <div className="absolute top-0 right-0 w-32 h-32 bg-[#E6AF2E]/10 rounded-full blur-2xl pointer-events-none" />
 
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#E6AF2E]">
-                <Sparkles className="w-3.5 h-3.5" />
+                <ShieldCheck className="w-3.5 h-3.5" />
                 <span>Protect Your Own Ride</span>
               </div>
 
@@ -245,7 +244,7 @@ export default function PublicVehicleScanPage() {
                 </span>
               </div>
               <p className="text-[10px] text-[#A8988B] mt-0.5">
-                Powered by Tagtique Pakistan • Smart Vehicle Safety Network
+                Powered by Tagtique Pakistan — Smart Vehicle Safety Network
               </p>
             </div>
           </>

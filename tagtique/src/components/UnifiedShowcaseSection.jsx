@@ -1,12 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  Sparkles, 
   Flame, 
   Layers, 
   ArrowRight, 
-  ShieldCheck, 
-  Zap, 
   ChevronLeft, 
   ChevronRight, 
   CheckCircle2 
@@ -133,13 +130,12 @@ export default function UnifiedShowcaseSection({
               <button
                 type="button"
                 onClick={() => onEditionChange('mascot')}
-                className={`relative z-10 flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all duration-300 cursor-pointer ${
+                className={`relative z-10 flex items-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all duration-300 cursor-pointer ${
                   activeEdition === 'mascot'
                     ? 'bg-gradient-to-r from-purple-600 via-purple-500 to-indigo-600 text-white shadow-[0_4px_18px_rgba(168,85,247,0.7),inset_0_1px_1px_rgba(255,255,255,0.45)] border border-purple-300/40 scale-102'
                     : 'text-white/80 hover:text-white hover:bg-white/[0.08]'
                 }`}
               >
-                <Sparkles className="w-3 h-3" />
                 <span>Mascot Edition</span>
               </button>
 
@@ -197,11 +193,7 @@ export default function UnifiedShowcaseSection({
           </div>
 
           {/* Quick Active Character Badge */}
-          <div className="hidden sm:flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-[#14141A] border border-white/15 backdrop-blur-md shadow-md shrink-0">
-            <span
-              className="w-2 h-2 rounded-full shadow-sm ring-2 ring-white/10"
-              style={{ backgroundColor: activeCharacter?.accentColor || '#8B5CF6' }}
-            />
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#14141A] border border-white/15 backdrop-blur-md shadow-md shrink-0">
             <div className="text-left">
               <span className="text-[9px] text-white/40 uppercase font-mono block leading-none">Active Spotlight</span>
               <span className="text-xs font-extrabold text-white leading-tight">{activeCharacter?.name}</span>
@@ -296,17 +288,6 @@ export default function UnifiedShowcaseSection({
 
             {/* Specs & Buy Link */}
             <div className="flex flex-col gap-2.5 relative z-10">
-              <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-semibold text-white/75">
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-white/[0.06] border border-white/10 backdrop-blur-md">
-                  <ShieldCheck className="w-3 h-3 text-emerald-400" />
-                  UV & Weatherproof
-                </span>
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-white/[0.06] border border-white/10 backdrop-blur-md">
-                  <Zap className="w-3 h-3 text-amber-400" />
-                  Instant Direct Call
-                </span>
-              </div>
-
               <div className="flex items-center justify-between gap-3 pt-2.5 border-t border-white/10">
                 <div>
                   <span className="text-[9px] text-white/50 uppercase tracking-widest block font-bold leading-none">Price</span>
@@ -334,11 +315,7 @@ export default function UnifiedShowcaseSection({
             {/* Vault Header with Category Pills & Arrows */}
             <div className="relative z-10 mb-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/5 text-black/75 text-[10px] font-bold uppercase tracking-wider mb-0.5">
-                  <span 
-                    className="w-1.5 h-1.5 rounded-full" 
-                    style={{ backgroundColor: activeCharacter?.accentColor || '#8B5CF6' }} 
-                  />
+                <div className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-black/5 text-black/75 text-[10px] font-bold uppercase tracking-wider mb-0.5">
                   <span>{currentEditionData.characters.length} Collectible Designs</span>
                 </div>
                 <h3 className="font-manrope font-extrabold text-lg sm:text-xl text-black tracking-tight leading-tight">

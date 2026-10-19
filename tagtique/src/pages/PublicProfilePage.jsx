@@ -47,7 +47,7 @@ export default function PublicProfilePage() {
   const activeProfile = scannedTag
     ? {
         name: scannedTag.ownerName || 'Vehicle Owner',
-        title: `${scannedTag.vehicleType} • Plate ${scannedTag.vehicleNumber}`,
+        title: `${scannedTag.vehicleType} — Plate ${scannedTag.vehicleNumber}`,
         organization: scannedTag.vehicleType || '',
         phone: scannedTag.phoneNumber,
         email: userProfile.email || '',

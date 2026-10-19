@@ -19,8 +19,6 @@ export default function StickerArt({ product, className = '' }) {
     return <div className={`w-full h-full ${className}`} style={cuteSheetStyle(product)} role="img" aria-label={product.name} />;
   }
   return (
-    <div className={`w-full h-full flex items-center justify-center bg-[#f3f3f3] text-sm text-black/50 ${className}`}>
-      Artwork not supplied
-    </div>
+    <div className={`w-full h-full bg-[#12131A] ${className}`} />
   );
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Sparkles, ArrowRight, ShieldCheck, Zap, ChevronLeft, ChevronRight, Eye, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, Eye, CheckCircle2 } from 'lucide-react';
 
 // The 11 collectible designs with product slugs matching editions.js
 const OTHER_DESIGNS = [
@@ -8,7 +8,7 @@ const OTHER_DESIGNS = [
     id: 'panda',
     slug: 'cute-panda',
     name: 'Panda',
-    line: 'Green · Calm · Cute',
+    line: 'Green, Calm, Cute',
     category: 'animals',
     tag: 'Bamboo Series',
     price: 999,
@@ -22,7 +22,7 @@ const OTHER_DESIGNS = [
     id: 'strawberry',
     slug: 'cute-berry',
     name: 'Berry',
-    line: 'Rose · Sweet · Cute',
+    line: 'Rose, Sweet, Cute',
     category: 'chibi',
     tag: 'Sweet Berries',
     price: 999,
@@ -36,7 +36,7 @@ const OTHER_DESIGNS = [
     id: 'frog',
     slug: 'cute-frog',
     name: 'Frog',
-    line: 'Leaf · Happy · Cute',
+    line: 'Leaf, Happy, Cute',
     category: 'animals',
     tag: 'Rainforest Leap',
     price: 999,
@@ -50,7 +50,7 @@ const OTHER_DESIGNS = [
     id: 'witch-cat',
     slug: 'cute-whisk',
     name: 'Whisk',
-    line: 'Violet · Night · Magic',
+    line: 'Violet, Night, Magic',
     category: 'chibi',
     tag: 'Midnight Mystic',
     price: 999,
@@ -64,7 +64,7 @@ const OTHER_DESIGNS = [
     id: 'pink-cat',
     slug: 'cute-mimi',
     name: 'Mimi',
-    line: 'Pink · Playful · Cute',
+    line: 'Pink, Playful, Cute',
     category: 'animals',
     tag: 'Playful Paw',
     price: 999,
@@ -78,7 +78,7 @@ const OTHER_DESIGNS = [
     id: 'shiba',
     slug: 'cute-scout',
     name: 'Shiba',
-    line: 'Amber · Loyal · Cheerful',
+    line: 'Amber, Loyal, Cheerful',
     category: 'animals',
     tag: 'Loyal Scout',
     price: 999,
@@ -92,7 +92,7 @@ const OTHER_DESIGNS = [
     id: 'bear',
     slug: 'cute-cub',
     name: 'Bear',
-    line: 'Honey · Warm · Friendly',
+    line: 'Honey, Warm, Friendly',
     category: 'animals',
     tag: 'Honey Cub',
     price: 999,
@@ -106,7 +106,7 @@ const OTHER_DESIGNS = [
     id: 'blue-headphones',
     slug: 'cute-beat',
     name: 'Beat',
-    line: 'Cyan · Chill · Beats',
+    line: 'Cyan, Chill, Beats',
     category: 'chibi',
     tag: 'Lo-Fi Chill',
     price: 999,
@@ -120,7 +120,7 @@ const OTHER_DESIGNS = [
     id: 'purple-bunny',
     slug: 'cute-bun',
     name: 'Bunny',
-    line: 'Lavender · Soft · Dreamy',
+    line: 'Lavender, Soft, Dreamy',
     category: 'animals',
     tag: 'Dreamy Bun',
     price: 999,
@@ -134,7 +134,7 @@ const OTHER_DESIGNS = [
     id: 'teal-twintail',
     slug: 'cute-star',
     name: 'Miku',
-    line: 'Aqua · Anime · Cyber Pop',
+    line: 'Aqua, Anime, Cyber Pop',
     category: 'chibi',
     tag: 'Cyber Diva',
     price: 999,
@@ -148,7 +148,7 @@ const OTHER_DESIGNS = [
     id: 'red-helmet',
     slug: 'cute-dash',
     name: 'Rider',
-    line: 'Ruby · Fast · Bold',
+    line: 'Ruby, Fast, Bold',
     category: 'chibi',
     tag: 'Neon Velocity',
     price: 999,
@@ -240,8 +240,7 @@ export default function MascotSection({ mascotAnchorRef, isDocked = false }) {
 
         {/* ================= TOP LEFT: MASCOT EDITION HEADER ================= */}
         <div className="mb-8 sm:mb-10 text-left">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-300 text-xs font-extrabold uppercase tracking-widest mb-3 shadow-[0_0_15px_rgba(168,85,247,0.12)]">
-            <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+          <div className="inline-flex items-center px-3.5 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-300 text-xs font-extrabold uppercase tracking-widest mb-3 shadow-[0_0_15px_rgba(168,85,247,0.12)]">
             <span>Featured Mascot Edition</span>
           </div>
           <h2 className="font-manrope font-extrabold text-3xl sm:text-4xl lg:text-5xl text-white tracking-tight uppercase leading-[0.95]">
@@ -283,8 +282,7 @@ export default function MascotSection({ mascotAnchorRef, isDocked = false }) {
                   Cool Boy QR.
                 </h3>
               </div>
-              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.05] border border-white/10 text-[11px] font-medium text-white/70 backdrop-blur-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <div className="flex items-center px-3 py-1 rounded-full bg-white/[0.05] border border-white/10 text-[11px] font-medium text-white/70 backdrop-blur-sm">
                 <span>Ready to Scan</span>
               </div>
             </div>
@@ -332,17 +330,6 @@ export default function MascotSection({ mascotAnchorRef, isDocked = false }) {
 
             {/* Mascot Specs & Direct Product Link */}
             <div className="flex flex-col gap-4 relative z-10">
-              <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-white/75">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/[0.06] border border-white/10 backdrop-blur-md">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                  UV & Weatherproof Vinyl
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/[0.06] border border-white/10 backdrop-blur-md">
-                  <Zap className="w-3.5 h-3.5 text-amber-400" />
-                  Instant Cellular Call
-                </span>
-              </div>
-
               <div className="flex items-center justify-between gap-3 pt-3 border-t border-white/10">
                 <div>
                   <span className="text-[10px] text-white/50 uppercase tracking-widest block font-bold">Price</span>

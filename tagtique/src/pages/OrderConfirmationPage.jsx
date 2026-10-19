@@ -33,7 +33,7 @@ export default function OrderConfirmationPage() {
 
         <div className="flex flex-col gap-2 max-w-lg">
           <span className="font-mono text-xs font-bold tracking-[1.6px] text-tag-brown-light uppercase">
-            ORDER CONFIRMED · {order.orderId}
+            ORDER CONFIRMED — {order.orderId}
           </span>
           <h1 className="font-baloo font-extrabold text-3xl sm:text-5xl text-tag-brown leading-tight">
             Thank you, {order.customer.name.split(' ')[0]}!
@@ -49,7 +49,6 @@ export default function OrderConfirmationPage() {
             <Truck className="w-4 h-4 text-tag-brown-light" />
             Estimated Dispatch: <strong>In 1–2 business days</strong>
           </span>
-          <span className="text-tag-border">·</span>
           <span>
             Delivery: <strong>Doorstep Express Delivery (TCS / Leopard / Call Courier)</strong>
           </span>
@@ -96,7 +95,7 @@ export default function OrderConfirmationPage() {
               >
                 <div className="flex flex-col gap-1 min-w-0">
                   <span className="font-baloo font-bold text-base text-tag-brown">
-                    {item.finishName} {item.displayName ? `· ${item.displayName}` : ''}
+                    {item.finishName} {item.displayName ? `(${item.displayName})` : ''}
                   </span>
                   {item.vehicleNumber && (
                     <div className="flex items-center gap-2 flex-wrap">
@@ -119,7 +118,7 @@ export default function OrderConfirmationPage() {
                     </span>
                   )}
                   <span className="text-tag-brown-muted">
-                    High-gloss waterproof vinyl sticker · Weatherproof & UV safe
+                    High-gloss waterproof vinyl sticker, Weatherproof & UV safe
                   </span>
                 </div>
                 <span className="font-mono font-bold text-sm text-tag-brown">

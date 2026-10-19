@@ -5,22 +5,18 @@ import { getPublicSiteOrigin } from '../utils/scanUrl';
 import NfcCardArt from '../components/NfcCardArt';
 import {
   ArrowRight,
-  Sparkles,
   CreditCard,
   ShieldCheck,
   Zap,
   Radio,
   CheckCircle2,
   RotateCw,
-  Smartphone,
-  Wifi,
   ExternalLink,
   Layers,
   Lock,
   QrCode,
   Share2,
-  Check,
-  X
+  Check
 } from 'lucide-react';
 
 const USES = [
@@ -38,7 +34,7 @@ const USES = [
   },
   {
     title: 'Retail & Brands',
-    icon: Sparkles,
+    icon: ShieldCheck,
     tag: 'Business',
     text: 'Direct clients to your digital menu, Google review page, online storefront, or customer care WhatsApp.'
   },
@@ -65,12 +61,7 @@ export default function NfcCardPage() {
   const { designId } = useParams();
   const design = findNfcDesign(designId);
   const [side, setSide] = useState('front');
-  const [showSimulator, setShowSimulator] = useState(false);
-  const [simStep, setSimStep] = useState('idle'); // 'idle' | 'tapping' | 'success'
-  
-  // Independent flip state for cards in the "Other Cards" section
   const [otherCardSides, setOtherCardSides] = useState({});
-
   const previewUrl = `${getPublicSiteOrigin()}/profile/unassigned`;
 
   if (!design) {
@@ -99,17 +90,6 @@ export default function NfcCardPage() {
       ...prev,
       [id]: prev[id] === 'back' ? 'front' : 'back'
     }));
-  };
-
-  const runSimulation = () => {
-    setShowSimulator(true);
-    setSimStep('idle');
-    setTimeout(() => {
-      setSimStep('tapping');
-      setTimeout(() => {
-        setSimStep('success');
-      }, 1200);
-    }, 400);
   };
 
   return (
@@ -160,7 +140,7 @@ export default function NfcCardPage() {
                 <div className="absolute inset-0 pointer-events-none rounded-[18px] bg-gradient-to-tr from-transparent via-white/10 to-transparent opacity-70" />
               </div>
 
-              {/* View Controls: Front, Back, and Tap Simulation */}
+              {/* View Controls: Front, Back */}
               <div className="mt-6 flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-white/10">
                 <div className="inline-flex p-1 rounded-full bg-white/5 border border-white/10">
                   <button
@@ -183,15 +163,6 @@ export default function NfcCardPage() {
                     <span>Back (QR Code)</span>
                   </button>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={runSimulation}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 text-xs font-extrabold transition-all cursor-pointer shadow-xs"
-                >
-                  <Smartphone className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Simulate Phone Tap</span>
-                </button>
               </div>
 
               {/* Clarification footer note */}
@@ -221,10 +192,9 @@ export default function NfcCardPage() {
             <div>
               <div className="flex items-center justify-between gap-4">
                 <span className="text-[11px] font-extrabold uppercase tracking-widest text-white/50">
-                  EXECUTIVE HARDWARE • LIMITED RUN
+                  EXECUTIVE HARDWARE, LIMITED RUN
                 </span>
-                <span className="inline-flex items-center gap-1.5 text-xs font-extrabold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="inline-flex items-center text-xs font-extrabold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
                   <span>In Stock</span>
                 </span>
               </div>
@@ -273,14 +243,13 @@ export default function NfcCardPage() {
                   className="flex-1 bg-white hover:bg-zinc-200 text-black rounded-full py-3.5 px-6 text-sm font-extrabold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all cursor-pointer"
                 >
                   <CreditCard className="w-4 h-4" />
-                  <span>Order Now • PKR {NFC_CARD_PRICE_PKR}</span>
+                  <span>Order Now — PKR {NFC_CARD_PRICE_PKR}</span>
                 </Link>
 
                 <Link
                   to={`/nfc-card/${design.id}/setup`}
                   className="inline-flex bg-white/10 hover:bg-white/15 border border-white/15 text-white rounded-full py-3.5 px-6 text-sm font-extrabold items-center justify-center gap-2 transition-all cursor-pointer"
                 >
-                  <Sparkles className="w-4 h-4 text-amber-400" />
                   <span>Preview & Setup Profile</span>
                 </Link>
               </div>
@@ -426,13 +395,13 @@ export default function NfcCardPage() {
             <div>
               <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 text-white/80 text-xs font-mono font-bold uppercase tracking-wider mb-2.5">
                 <Radio className="w-3.5 h-3.5 text-amber-400" />
-                <span>Executive Hardware • 6 Bespoke Finishes</span>
+                <span>Executive Hardware (30 Bespoke Editions)</span>
               </div>
               <h2 className="font-manrope font-extrabold text-3xl sm:text-4xl text-white tracking-tight">
                 Other Executive Cards
               </h2>
               <p className="mt-2 text-sm text-white/60 max-w-2xl leading-relaxed">
-                Discover our full spectrum of laser-etched and papercraft NFC smart cards. Each card is embedded with genuine NTAG216 high-frequency silicon.
+                Discover our full spectrum of 30 custom designed NFC smart cards. Each card is embedded with genuine NXP NTAG216 high-frequency silicon with dual NFC and fallback QR code.
               </p>
             </div>
 
@@ -440,7 +409,7 @@ export default function NfcCardPage() {
               to="/catalog?filter=nfc"
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white hover:bg-zinc-200 text-black text-xs font-extrabold tracking-wide shadow-sm hover:shadow-md transition-all self-start sm:self-auto shrink-0"
             >
-              <span>Explore All 50 in Catalog</span>
+              <span>Explore All 30 Cards in Catalog</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -504,12 +473,6 @@ export default function NfcCardPage() {
 
                       {/* Realistic Specular Glare Overlay */}
                       <div className="absolute inset-0 pointer-events-none rounded-[20px] bg-gradient-to-tr from-transparent via-white/12 to-transparent opacity-75 group-hover:opacity-100 transition-opacity" />
-
-                      {/* Interactive Flip indicator pill */}
-                      <div className="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-md text-white text-[9px] font-mono font-bold flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <RotateCw className="w-2.5 h-2.5" />
-                        <span>Tap to flip</span>
-                      </div>
                     </div>
                   </div>
 
@@ -519,8 +482,7 @@ export default function NfcCardPage() {
                       <h3 className="font-manrope font-extrabold text-base text-white group-hover:text-amber-400 transition-colors">
                         {item.name}
                       </h3>
-                      <span className="text-[10px] font-extrabold text-emerald-400 flex items-center gap-1 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="text-[10px] font-extrabold text-emerald-400 flex items-center bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
                         In Stock
                       </span>
                     </div>
@@ -563,7 +525,7 @@ export default function NfcCardPage() {
                   Executive Hardware Guarantee
                 </h4>
                 <p className="text-xs sm:text-sm text-white/60 mt-0.5">
-                  1-Year Chip Warranty • Free 24h Express Dispatch • Cash on Delivery Nationwide
+                  1-Year Chip Warranty, Free 24h Express Dispatch, Cash on Delivery Nationwide
                 </p>
               </div>
             </div>
@@ -580,86 +542,6 @@ export default function NfcCardPage() {
         </section>
 
       </div>
-
-      {/* ================= INTERACTIVE PHONE TAP SIMULATION MODAL ================= */}
-      {showSimulator && (
-        <div 
-          className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4"
-          onClick={() => setShowSimulator(false)}
-        >
-          <div 
-            className="bg-[#12141A] text-white rounded-[36px] max-w-md w-full p-6 sm:p-8 border border-white/10 shadow-2xl relative flex flex-col items-center text-center overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              type="button"
-              onClick={() => setShowSimulator(false)}
-              className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-all cursor-pointer"
-              aria-label="Close simulator"
-            >
-              <X className="w-4 h-4" />
-            </button>
-
-            <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-emerald-400 mb-1">
-              Virtual NFC Induction Field
-            </span>
-            <h3 className="font-manrope font-extrabold text-2xl text-white">
-              Phone Tap Demonstration
-            </h3>
-            <p className="text-xs text-white/60 mt-1 max-w-xs">
-              Simulating an NFC handshake between a smartphone and your {design.name} smart card.
-            </p>
-
-            {/* Simulated Smartphone */}
-            <div className="my-8 relative w-56 aspect-[9/16] bg-black rounded-[36px] p-2.5 border-4 border-white/20 shadow-2xl flex flex-col items-center justify-between overflow-hidden">
-              {/* Phone Speaker Notch */}
-              <div className="w-20 h-4 bg-zinc-800 rounded-full mx-auto" />
-
-              {/* Notification Banner when tapped */}
-              <div className="w-full flex-1 flex flex-col items-center justify-center px-2">
-                {simStep === 'idle' && (
-                  <p className="text-xs text-zinc-400 font-mono animate-pulse">Approaching NFC Card...</p>
-                )}
-                {simStep === 'tapping' && (
-                  <div className="flex flex-col items-center gap-2">
-                    <Wifi className="w-8 h-8 text-cyan-400 animate-ping" />
-                    <p className="text-xs text-cyan-300 font-bold">Reading NTAG216 Chip...</p>
-                  </div>
-                )}
-                {simStep === 'success' && (
-                  <div className="w-full bg-zinc-900/90 border border-white/20 rounded-2xl p-3 shadow-xl text-left animate-in fade-in slide-in-from-top-2 duration-300">
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <div className="w-5 h-5 rounded-md bg-white text-black flex items-center justify-center text-[10px] font-extrabold">
-                        T
-                      </div>
-                      <span className="text-[10px] font-mono text-zinc-400">TAGTIQUE NFC</span>
-                    </div>
-                    <p className="text-xs font-bold text-white leading-tight">
-                      Open &quot;tagtique.com/profile&quot;
-                    </p>
-                    <p className="text-[10px] text-zinc-400 mt-0.5">
-                      Tap to view contact card & socials
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Simulated Home Bar */}
-              <div className="w-24 h-1 bg-white/40 rounded-full mb-1" />
-            </div>
-
-            <button
-              type="button"
-              onClick={runSimulation}
-              className="px-6 py-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-extrabold flex items-center gap-2 transition-all cursor-pointer"
-            >
-              <RotateCw className="w-3.5 h-3.5" />
-              <span>Tap Again</span>
-            </button>
-          </div>
-        </div>
-      )}
-
     </article>
   );
 }

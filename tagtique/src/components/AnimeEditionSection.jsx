@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Sparkles, ArrowRight, ShieldCheck, Zap, ChevronLeft, ChevronRight, CheckCircle2, Flame } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, CheckCircle2, Flame } from 'lucide-react';
 
 const ANIME_STICKERS = [
   {
@@ -9,7 +9,7 @@ const ANIME_STICKERS = [
     name: 'Goku',
     series: 'Dragon Ball Z',
     title: 'Super Saiyan',
-    line: 'Saiyan Pride · High-Density QR',
+    line: 'Saiyan Pride, High-Density QR',
     price: 999,
     src: '/assets/stickers/anime/goku.png',
     accentColor: '#F97316',
@@ -22,7 +22,7 @@ const ANIME_STICKERS = [
     name: 'Naruto',
     series: 'Naruto Shippuden',
     title: 'Nine-Tails Sage',
-    line: 'Hidden Leaf · Will of Fire',
+    line: 'Hidden Leaf, Will of Fire',
     price: 999,
     src: '/assets/stickers/anime/naruto_uzumaki.png',
     accentColor: '#EA580C',
@@ -35,7 +35,7 @@ const ANIME_STICKERS = [
     name: 'Luffy',
     series: 'One Piece',
     title: 'Straw Hat Captain',
-    line: 'Gear 5 · King of Pirates',
+    line: 'Gear 5, King of Pirates',
     price: 999,
     src: '/assets/stickers/anime/monkey_d_luffy.png',
     accentColor: '#EF4444',
@@ -48,7 +48,7 @@ const ANIME_STICKERS = [
     name: 'Zoro',
     series: 'One Piece',
     title: 'Three Sword Style',
-    line: 'King of Hell · Wano Blade',
+    line: 'King of Hell, Wano Blade',
     price: 999,
     src: '/assets/stickers/anime/roronoa_zoro.png',
     accentColor: '#10B981',
@@ -61,7 +61,7 @@ const ANIME_STICKERS = [
     name: 'Gojo',
     series: 'Jujutsu Kaisen',
     title: 'Limitless Void',
-    line: 'Six Eyes · The Strongest',
+    line: 'Six Eyes, The Strongest',
     price: 999,
     src: '/assets/stickers/anime/gojo_satoru.png',
     accentColor: '#3B82F6',
@@ -74,7 +74,7 @@ const ANIME_STICKERS = [
     name: 'Eren',
     series: 'Attack on Titan',
     title: 'Attack Titan',
-    line: 'Founding Titan · Freedom',
+    line: 'Founding Titan, Freedom',
     price: 999,
     src: '/assets/stickers/anime/eren_yeager.png',
     accentColor: '#A8A29E',
@@ -100,7 +100,7 @@ const ANIME_STICKERS = [
     name: 'Mikasa',
     series: 'Attack on Titan',
     title: 'Mikasa Ackerman',
-    line: 'Red Scarf · Scout Elite',
+    line: 'Red Scarf, Scout Elite',
     price: 999,
     src: '/assets/stickers/anime/mikasa_ackerman.png',
     accentColor: '#DC2626',
@@ -113,7 +113,7 @@ const ANIME_STICKERS = [
     name: 'Ichigo',
     series: 'Bleach',
     title: 'Substitute Shinigami',
-    line: 'Bankai · Soul Reaper',
+    line: 'Bankai, Soul Reaper',
     price: 999,
     src: '/assets/stickers/anime/ichigo_kurosaki.png',
     accentColor: '#F59E0B',
@@ -126,7 +126,7 @@ const ANIME_STICKERS = [
     name: 'Hinata',
     series: 'Naruto Shippuden',
     title: 'Gentle Fist',
-    line: 'Byakugan Princess · Hyuga',
+    line: 'Byakugan Princess, Hyuga',
     price: 999,
     src: '/assets/stickers/anime/hinata_hyuga.png',
     accentColor: '#8B5CF6',
@@ -139,7 +139,7 @@ const ANIME_STICKERS = [
     name: 'Robin',
     series: 'One Piece',
     title: 'Devil Child',
-    line: 'Hana Hana · Poneglyph Reader',
+    line: 'Hana Hana, Poneglyph Reader',
     price: 999,
     src: '/assets/stickers/anime/nico_robin.png',
     accentColor: '#6366F1',
@@ -152,7 +152,7 @@ const ANIME_STICKERS = [
     name: 'Yor',
     series: 'Spy x Family',
     title: 'Thorn Princess',
-    line: 'Garden Assassin · Forger Clan',
+    line: 'Garden Assassin, Forger Clan',
     price: 999,
     src: '/assets/stickers/anime/yor_forger.png',
     accentColor: '#BE123C',
@@ -282,17 +282,6 @@ export default function AnimeEditionSection() {
 
             {/* Specs & Buy Link */}
             <div className="flex flex-col gap-4 relative z-10">
-              <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-white/75">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/[0.06] border border-white/10 backdrop-blur-md">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                  Heavy-Duty Acrylic Vinyl
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/[0.06] border border-white/10 backdrop-blur-md">
-                  <Zap className="w-3.5 h-3.5 text-amber-400" />
-                  Instant Cellular Call
-                </span>
-              </div>
-
               <div className="flex items-center justify-between gap-3 pt-3 border-t border-white/10">
                 <div>
                   <span className="text-[10px] text-white/50 uppercase tracking-widest block font-bold">Official Price</span>

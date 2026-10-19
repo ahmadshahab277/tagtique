@@ -265,7 +265,7 @@ export default function CheckoutPage() {
                       Standard Tracked Shipping
                     </div>
                     <div className="text-xs text-tag-brown-muted">
-                      Dispatched in 3 days · Delivery in 3–5 business days
+                      Dispatched in 3 days, Delivery in 3–5 business days
                     </div>
                   </div>
                 </div>
@@ -295,7 +295,7 @@ export default function CheckoutPage() {
                       Express Courier Priority
                     </div>
                     <div className="text-xs text-tag-brown-muted">
-                      Faster dispatch · 1–2 business days delivery
+                      Faster dispatch, 1–2 business days delivery
                     </div>
                   </div>
                 </div>
@@ -355,7 +355,7 @@ export default function CheckoutPage() {
             disabled={isSubmitting}
             className="amber-gradient-btn w-full py-4 rounded-full text-base sm:text-lg font-extrabold text-tag-brown shadow-warm-md active:scale-98"
           >
-            <span>{isSubmitting ? 'Securing your order...' : `Complete Order · PKR ${finalTotal.toLocaleString()}`}</span>
+            <span>{isSubmitting ? 'Securing your order...' : `Complete Order, PKR ${finalTotal.toLocaleString()}`}</span>
           </button>
         </form>
 

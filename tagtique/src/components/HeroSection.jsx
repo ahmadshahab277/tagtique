@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Sparkles, ArrowRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 
 const STICKERS = [
   {
@@ -381,16 +381,12 @@ export default function HeroSection({
       <div className="relative z-30 mt-2 flex flex-col items-center gap-4">
         {/* Active Sticker Info Pill */}
         <div className="flex items-center gap-3 px-5 py-2.5 rounded-full bg-[#13141D]/90 border border-white/15 backdrop-blur-md shadow-[0_12px_35px_rgba(0,0,0,0.8)]">
-          <span
-            className="w-2.5 h-2.5 rounded-full shadow-sm ring-2 ring-white/10"
-            style={{ backgroundColor: activeSticker.accentColor }}
-          />
           <div className="flex items-center gap-2">
             <span className="font-manrope font-extrabold text-sm sm:text-base text-white">
               {activeSticker.name}
             </span>
             <span className="text-xs text-white/50 hidden sm:inline">
-              • {activeSticker.tagline}
+              ({activeSticker.tagline})
             </span>
           </div>
 

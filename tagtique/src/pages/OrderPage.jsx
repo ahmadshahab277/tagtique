@@ -34,7 +34,7 @@ const PACKAGES = [
     pkrPrice: 999,
     oldPkrPrice: null,
     usdPrice: 12,
-    desc: '1 glossy QR Sticker · One-time fee'
+    desc: '1 glossy QR Sticker, One-time fee'
   },
   {
     id: 'pack2',
@@ -43,7 +43,7 @@ const PACKAGES = [
     pkrPrice: 1499,
     oldPkrPrice: null,
     usdPrice: 18,
-    desc: '2 glossy QR Stickers · One-time fee',
+    desc: '2 glossy QR Stickers, One-time fee',
     isPopular: true
   },
   {
@@ -53,7 +53,7 @@ const PACKAGES = [
     pkrPrice: 1999,
     oldPkrPrice: null,
     usdPrice: 24,
-    desc: '3 glossy QR Stickers · One-time fee'
+    desc: '3 glossy QR Stickers, One-time fee'
   }
 ];
 
@@ -119,7 +119,7 @@ export default function OrderPage() {
       tagType: 'Vehicle',
       vehicleNumber: 'LEA-24-1234',
       email: userProfile.email || 'ali@example.com',
-      bio: userProfile.bio || 'Product Designer · Faisalabad',
+      bio: userProfile.bio || 'Product Designer, Faisalabad',
       phonePrivacy: 'public', // 'private' | 'public'
       namePrivacy: 'public',   // 'public' | 'private'
       emergencyPrivacy: 'private',
@@ -213,7 +213,7 @@ export default function OrderPage() {
       name: `${customQuantity} Stickers Custom Pack`,
       tagsCount: customQuantity,
       pkrPrice: getBasePkrPrice(customQuantity),
-      desc: `${customQuantity} glossy QR Stickers · Bulk discount applied`
+      desc: `${customQuantity} glossy QR Stickers, Bulk discount applied`
     };
 
   const selectedEdition = findEdition(selectedEditionId) || EDITIONS[0];
@@ -330,7 +330,7 @@ export default function OrderPage() {
       paymentMethod,
       items: Array.from({ length: customQuantity }).map((_, i) => ({
         id: i + 1,
-        finishName: `${selectedEdition.name} · ${selectedStyle.name}`,
+        finishName: `${selectedEdition.name}, ${selectedStyle.name}`,
         materialName: selectedMaterial.name,
         basePrice: Math.round(totalPkr / customQuantity),
         isEngraved,
@@ -377,8 +377,8 @@ export default function OrderPage() {
           displayName: t.name || primaryCustomer.name || 'Owner'
         })),
         packageType: nfcDesign
-          ? `Limited Edition NFC Card · ${nfcDesign.name} · ${selectedPackage.name}`
-          : `${selectedEdition.name} Edition · ${selectedStyle.name} · ${selectedPackage.name}`,
+          ? `Limited Edition NFC Card, ${nfcDesign.name}, ${selectedPackage.name}`
+          : `${selectedEdition.name} Edition, ${selectedStyle.name}, ${selectedPackage.name}`,
         totalAmount: totalPkr,
         paymentStatus: paymentMethod === 'cod' ? 'pending' : 'pending_transfer',
         deliveryStatus: 'pending',
@@ -434,7 +434,7 @@ export default function OrderPage() {
         </h1>
         <p className="text-sm sm:text-base text-tag-brown-muted font-medium max-w-2xl leading-relaxed">
           {nfcDesign
-            ? `Limited Edition NFC card · ${nfcDesign.name}. Tap is the main way to open the profile. The small QR is only the fallback. Ordering does not program the chip.`
+            ? `Limited Edition NFC card, ${nfcDesign.name}. Tap is the main way to open the profile. The small QR is only the fallback. Ordering does not program the chip.`
             : 'One sticker for a laptop, bag, helmet, bottle, or vehicle. With internet, a scan opens the contact page. Without internet, it opens the phone dialer. After it arrives: use Wi-Fi, scan the QR, fill the form, and tap Assign.'}
         </p>
       </div>
@@ -606,7 +606,7 @@ export default function OrderPage() {
               <div className="flex flex-col">
                 <span>Total Stickers to Print ({customQuantity} {customQuantity > 1 ? 'items' : 'item'})</span>
                 <span className="text-[11px] text-tag-brown-muted font-normal">
-                  Add as many stickers as you want · PKR 500 per extra sticker
+                  Add as many stickers as you want, PKR 500 per extra sticker
                 </span>
               </div>
               
@@ -723,7 +723,7 @@ export default function OrderPage() {
                         </span>
                         <span>Sticker {index + 1}</span>
                         <span className="text-xs font-normal text-tag-brown-muted">
-                          · {tagItem.name ? tagItem.name : 'Click to configure details'}
+                         , {tagItem.name ? tagItem.name : 'Click to configure details'}
                           {tagItem.tagType === 'Vehicle' && tagItem.vehicleNumber ? ` (${tagItem.vehicleNumber})` : ''}
                         </span>
                       </div>
@@ -905,7 +905,7 @@ export default function OrderPage() {
                               type="text"
                               value={tagItem.bio}
                               onChange={(e) => handleUpdateTag(index, 'bio', e.target.value)}
-                              placeholder="e.g. Industrial Designer · Lahore"
+                              placeholder="e.g. Industrial Designer, Lahore"
                               className="w-full px-3.5 py-2.5 rounded-xl border border-tag-border bg-tag-card text-sm text-tag-brown font-medium outline-none focus:border-tag-amber"
                             />
                           </div>
@@ -1128,7 +1128,7 @@ export default function OrderPage() {
 
                   {/* Account Title Footnote */}
                   <p className="text-xs text-tag-brown-muted font-medium pt-0.5">
-                    Account Title: <strong className="text-tag-brown">Tagtique Technologies (Pvt) Ltd</strong> • Please use your vehicle plate or Order ID as reference.
+                    Account Title: <strong className="text-tag-brown">Tagtique Technologies (Pvt) Ltd</strong> — Please use your vehicle plate or Order ID as reference.
                   </p>
                 </div>
               </div>
@@ -1253,7 +1253,7 @@ export default function OrderPage() {
               onClick={handlePlaceOrder}
               className="amber-gradient-btn w-full py-4 rounded-full text-base sm:text-lg font-extrabold text-tag-brown shadow-warm-md hover:shadow-warm-lg transition-all flex items-center justify-center gap-2 transform active:scale-98"
             >
-              <span>{isSubmitting ? 'Placing Order...' : `Place Order · PKR ${totalPkr.toLocaleString()}`}</span>
+              <span>{isSubmitting ? 'Placing Order...' : `Place Order, PKR ${totalPkr.toLocaleString()}`}</span>
               <ArrowRight className="w-5 h-5" />
             </button>
 

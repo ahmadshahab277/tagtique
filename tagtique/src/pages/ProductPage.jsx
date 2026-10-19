@@ -4,7 +4,6 @@ import { findProduct, allProducts } from '../data/editions';
 import { SETUP_STEPS, SETUP_SUMMARY } from '../data/setupGuide';
 import StickerArt from '../components/StickerArt';
 import {
-  Sparkles,
   ShieldCheck,
   Zap,
   Truck,
@@ -86,8 +85,8 @@ export default function ProductPage() {
   // Related products carousel ref
   const carouselRef = useRef(null);
 
-  // All other related stickers for the bottom carousel
-  const relatedProducts = allProducts().filter((p) => p.slug !== slug);
+  // All other related stickers for the bottom carousel (only with valid artwork)
+  const relatedProducts = allProducts().filter((p) => p.slug !== slug && Boolean(p.image));
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -142,7 +141,6 @@ export default function ProductPage() {
       {/* Top Ambient Glow Banner */}
       <div className="w-full bg-gradient-to-r from-amber-500/10 via-purple-500/10 to-amber-500/10 border-b border-white/10 py-2.5 px-4 text-center">
         <p className="text-xs font-bold text-white/80 tracking-wide flex items-center justify-center gap-2">
-          <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
           <span>Free Nationwide Delivery & Cash on Delivery across Pakistan</span>
         </p>
       </div>
@@ -183,12 +181,6 @@ export default function ProductPage() {
               {/* Background Subtle Tech Rings */}
               <div className="absolute w-[360px] h-[360px] rounded-full border border-white/[0.04] pointer-events-none" />
               <div className="absolute w-[240px] h-[240px] rounded-full border border-dashed border-white/[0.06] pointer-events-none animate-[spin_80s_linear_infinite]" />
-
-              {/* Top Floating Badge */}
-              <div className="absolute top-5 left-5 z-20 flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#13141D]/90 backdrop-blur-md border border-white/15 shadow-md text-[11px] font-bold text-white uppercase tracking-wider">
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                <span>Original Collectible</span>
-              </div>
 
               {/* Top Right Zoom Hint Button */}
               <div className="absolute top-5 right-5 z-20 w-9 h-9 rounded-full bg-[#13141D]/90 backdrop-blur-md border border-white/15 shadow-md flex items-center justify-center text-white/70 group-hover:text-white group-hover:scale-110 transition-all">
@@ -252,14 +244,13 @@ export default function ProductPage() {
               
               {/* Category & Status Row */}
               <div className="flex items-center justify-between gap-3 flex-wrap">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-xs font-extrabold uppercase tracking-widest text-white/80">
-                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: product.swatch || '#F59E0B' }} />
+                <span className="inline-flex items-center px-3 py-1 rounded-full bg-white/10 border border-white/15 text-xs font-extrabold uppercase tracking-widest text-white/80">
                   <span>{product.editionName} Collection</span>
                 </span>
                 
                 <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-400 bg-emerald-500/15 px-3 py-1 rounded-full border border-emerald-500/30">
                   <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>In Stock · Ships in 24h</span>
+                  <span>In Stock, Ships in 24h</span>
                 </span>
               </div>
 
@@ -275,7 +266,6 @@ export default function ProductPage() {
                   ))}
                 </div>
                 <span className="text-xs font-bold text-white/90">4.9/5</span>
-                <span className="text-xs text-white/40">·</span>
                 <span className="text-xs font-medium text-white/60">180+ verified Pakistan orders</span>
               </div>
 
@@ -422,8 +412,7 @@ export default function ProductPage() {
             {/* Header with Slider Navigation Controls */}
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
               <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-extrabold uppercase tracking-wider mb-2">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <div className="inline-flex items-center px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-extrabold uppercase tracking-wider mb-2">
                   <span>Complete Your Collection</span>
                 </div>
                 <h2 className="font-manrope font-extrabold text-2xl sm:text-3xl text-white tracking-tight">
