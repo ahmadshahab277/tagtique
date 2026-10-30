@@ -104,7 +104,7 @@ class TagRegistryService {
   }
 
   /**
-   * Synchronizes registry from an array of order records (e.g. from Admin or Supabase).
+   * Synchronizes registry from an array of order records.
    */
   syncFromOrders(orders) {
     if (!Array.isArray(orders)) return;

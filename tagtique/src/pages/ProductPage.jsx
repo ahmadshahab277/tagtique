@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { findProduct, allProducts } from '../data/editions';
 import { SETUP_STEPS, SETUP_SUMMARY } from '../data/setupGuide';
+import { useCart } from '../context/CartContext';
 import StickerArt from '../components/StickerArt';
 import {
   ShieldCheck,
@@ -18,7 +19,8 @@ import {
   HelpCircle,
   Layers,
   ChevronDown,
-  ExternalLink
+  ExternalLink,
+  ShoppingBag
 } from 'lucide-react';
 
 const USES = [
@@ -73,6 +75,8 @@ function priceForQuantity(quantity) {
 
 export default function ProductPage() {
   const { slug } = useParams();
+  const navigate = useNavigate();
+  const { addToCart } = useCart();
   const product = findProduct(slug);
 
   const [quantity, setQuantity] = useState(1);
@@ -363,21 +367,56 @@ export default function ProductPage() {
 
               {/* ================= PRIMARY ACTION BUTTONS ================= */}
               <div className="mt-6 flex flex-col sm:flex-row gap-3">
-                <Link
-                  to={orderHref}
-                  className="flex-1 py-4 px-6 rounded-2xl bg-white hover:bg-zinc-100 active:scale-[0.99] text-black font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg transition-all group/btn"
+                <button
+                  type="button"
+                  onClick={() => {
+                    addToCart({
+                      id: `sticker-${product.editionId}-${product.id}`,
+                      name: product.name,
+                      category: `${product.editionName} Edition`,
+                      price: currentPrice,
+                      quantity: quantity,
+                      type: 'sticker',
+                      accent: product.swatch || '#F59E0B',
+                      image: product.image || product.src,
+                      badge: `${quantity === 1 ? 'Single Sticker' : quantity + '-Pack'} • Glossy Vinyl`
+                    });
+                  }}
+                  className="flex-1 py-4 px-6 rounded-2xl bg-amber-400 hover:bg-amber-300 active:scale-[0.98] text-black font-extrabold text-sm flex items-center justify-center gap-2 shadow-[0_6px_20px_rgba(245,158,11,0.25)] transition-all cursor-pointer"
                 >
-                  <span>Proceed to Order ({quantity})</span>
-                  <ArrowRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
-                </Link>
+                  <ShoppingBag className="w-4 h-4" />
+                  <span>Add to Cart ({quantity})</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    addToCart({
+                      id: `sticker-${product.editionId}-${product.id}`,
+                      name: product.name,
+                      category: `${product.editionName} Edition`,
+                      price: currentPrice,
+                      quantity: quantity,
+                      type: 'sticker',
+                      accent: product.swatch || '#F59E0B',
+                      image: product.image || product.src,
+                      badge: `${quantity === 1 ? 'Single Sticker' : quantity + '-Pack'} • Glossy Vinyl`
+                    });
+                    navigate('/cart');
+                  }}
+                  className="flex-1 py-4 px-6 rounded-2xl bg-white hover:bg-zinc-100 active:scale-[0.98] text-black font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer"
+                >
+                  <span>Buy Now</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
 
                 <a
                   href={`https://wa.me/923292082080?text=Hi%20Tagtique!%20I%20want%20to%20order%20the%20${product.name}%20QR%20sticker.`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="py-4 px-5 rounded-2xl bg-[#25D366]/15 hover:bg-[#25D366]/25 border border-[#25D366]/40 text-[#25D366] font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.99]"
+                  className="py-4 px-5 rounded-2xl bg-[#25D366]/15 hover:bg-[#25D366]/25 border border-[#25D366]/40 text-[#25D366] font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
                 >
-                  <span>WhatsApp Order</span>
+                  <span>WhatsApp</span>
                   <ExternalLink className="w-4 h-4" />
                 </a>
               </div>

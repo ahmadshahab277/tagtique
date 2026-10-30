@@ -70,15 +70,15 @@ a.glass-pill:focus-visible {
   }
   
   body {
-    background-color: #ffffff;
-    color: #111111;
+    background-color: #08090D;
+    color: #ffffff;
     overflow-x: clip;
     -webkit-overflow-scrolling: touch;
   }
 
   ::selection {
-    background-color: #111111;
-    color: #ffffff;
+    background-color: #F59E0B;
+    color: #08090D;
   }
 
   #shop,
@@ -114,16 +114,16 @@ a.glass-pill:focus-visible {
 }
 
 ::-webkit-scrollbar-track {
-  background: #F4EADA;
+  background: #0D0E15;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #D8C4A5;
+  background: #232534;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #BFA57F;
+  background: #37394E;
 }
 
 /* Print Stylesheet - Prints only the physical vehicle sticker */

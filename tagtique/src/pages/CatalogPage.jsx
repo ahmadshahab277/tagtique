@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { SHOWCASE_EDITIONS } from '../data/showcaseEditions';
 import { NFC_DESIGNS, NFC_CARD_PRICE_PKR } from '../data/nfcCards';
 import NfcCardArt from '../components/NfcCardArt';
+import { useCart } from '../context/CartContext';
 import {
   Search,
   SlidersHorizontal,
@@ -15,10 +16,12 @@ import {
   ShieldCheck,
   Zap,
   Truck,
-  X
+  X,
+  ShoppingBag
 } from 'lucide-react';
 
 export default function CatalogPage() {
+  const { addToCart } = useCart();
   const [searchParams, setSearchParams] = useSearchParams();
   const initialFilter = searchParams.get('filter') || 'all';
 
@@ -92,6 +95,9 @@ export default function CatalogPage() {
       href: `/nfc-card/${card.id}`,
       badge: 'NTAG216',
       icon: CreditCard,
+      src: card.frontImage,
+      frontImage: card.frontImage,
+      image: card.frontImage,
       nfcData: card
     }));
 
@@ -360,14 +366,41 @@ export default function CatalogPage() {
                       {product.line || product.title}
                     </p>
 
-                    {/* Action Button */}
-                    <Link
-                      to={product.href}
-                      className="mt-3 w-full py-2 px-3 rounded-xl bg-white hover:bg-zinc-100 text-black font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all shadow-md group-hover:bg-amber-400 group-hover:text-black cursor-pointer active:scale-95"
-                    >
-                      <span>{isNfc ? 'Customize Card' : 'View Sticker'}</span>
-                      <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
-                    </Link>
+                    {/* Action Button Group */}
+                    <div className="mt-3 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          addToCart({
+                            id: isNfc ? `nfc-${product.id}` : `sticker-${product.sectionId}-${product.id}`,
+                            name: product.name,
+                            category: product.series || product.badge,
+                            price: product.price || 999,
+                            quantity: 1,
+                            type: isNfc ? 'nfc' : 'sticker',
+                            accent: product.accentColor || '#F59E0B',
+                            image: isNfc ? (product.frontImage || product.image || product.src) : product.src,
+                            badge: isNfc ? 'NFC Metal Card + Dynamic QR' : 'Glossy Vinyl Sticker'
+                          });
+                        }}
+                        className="flex-1 py-2 px-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-95 cursor-pointer"
+                        title="Add to Cart"
+                      >
+                        <ShoppingBag className="w-3.5 h-3.5" />
+                        <span>+ Cart</span>
+                      </button>
+
+                      <Link
+                        to={product.href}
+                        className="py-2 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs flex items-center justify-center gap-1 transition-all cursor-pointer"
+                        title="View Details"
+                      >
+                        <span>Details</span>
+                        <ArrowRight className="w-3 h-3 text-white/60" />
+                      </Link>
+                    </div>
                   </div>
                 </div>
               );

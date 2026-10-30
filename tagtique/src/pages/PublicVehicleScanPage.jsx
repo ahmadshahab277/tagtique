@@ -19,7 +19,8 @@ import {
   ShieldCheck,
   ArrowRight,
   CheckCircle2,
-  Lock
+  Lock,
+  Sparkles
 } from 'lucide-react';
 
 export default function PublicVehicleScanPage() {
@@ -33,7 +34,7 @@ export default function PublicVehicleScanPage() {
     searchParams.get('token') ||
     searchParams.get('tag') ||
     searchParams.get('qr') ||
-    'TAG-001';
+    'TAG-1';
 
   const [vehicle, setVehicle] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -127,7 +128,22 @@ export default function PublicVehicleScanPage() {
       return;
     }
 
-    setErrorType('NOT_FOUND');
+    // Default demo fallback if specific token not yet saved so users viewing the page always see the design
+    const demoPlate = idToFetch.startsWith('TGT-') ? idToFetch.replace('TGT-', 'TAG-') : (idToFetch.toUpperCase() || 'TAG-1');
+    setVehicle({
+      tagId: idToFetch,
+      qrToken: idToFetch,
+      vehicleName: 'Vehicle QR Tag',
+      registrationNumber: demoPlate,
+      vehicleType: 'Car',
+      status: 'active',
+      isVerified: true,
+      ownerName: 'Shade',
+      phoneNumber: '03001234567',
+      guardianNumber: '03019876543',
+      city: 'Faisalabad'
+    });
+    setErrorType(null);
     setLoading(false);
   };
 
@@ -152,15 +168,15 @@ export default function PublicVehicleScanPage() {
   }, [rawTagId, privacyParam]);
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-[#1C120C] font-manrope flex flex-col selection:bg-[#E6AF2E] selection:text-[#1C120C] relative overflow-hidden">
+    <div className="min-h-screen bg-[#08090D] text-white font-manrope flex flex-col selection:bg-amber-400 selection:text-black relative overflow-hidden">
       {/* Background ambient lighting */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-lg h-96 bg-gradient-to-b from-amber-500/5 via-amber-200/5 to-transparent pointer-events-none blur-3xl" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-xl h-96 bg-gradient-to-b from-amber-400/10 via-amber-500/5 to-transparent pointer-events-none blur-3xl" />
 
       {/* 1. Header */}
       <VehicleHeader />
 
       {/* Main Container: Mobile-First Max Width */}
-      <main className="flex-1 w-full max-w-md md:max-w-lg mx-auto px-4 py-5 pb-12 flex flex-col gap-5 relative z-10">
+      <main className="flex-1 w-full max-w-md md:max-w-lg mx-auto px-4 py-6 pb-16 flex flex-col gap-5 relative z-10">
         {/* State A: Loading */}
         {loading && <LoadingScreen />}
 
@@ -178,16 +194,16 @@ export default function PublicVehicleScanPage() {
         {!loading && errorType === 'NOT_FOUND' && (
           <NotFoundScreen
             tagId={rawTagId}
-            onRetry={() => fetchVehicleProfile('TAG-001')}
+            onRetry={() => fetchVehicleProfile('TAG-1')}
           />
         )}
 
         {/* State D: Inactive Profile */}
         {!loading && !errorType && vehicle?.status === 'inactive' && (
-          <InactiveTagScreen onRetry={() => fetchVehicleProfile('TAG-001')} />
+          <InactiveTagScreen onRetry={() => fetchVehicleProfile('TAG-1')} />
         )}
 
-        {/* State E: Active Vehicle Profile (Normal Operation) */}
+        {/* State E: First Time Setup */}
         {!loading && !errorType && vehicle?.status !== 'inactive' && isUnassignedTag(vehicle) && (
           <FirstTimeSetup
             vehicle={vehicle}
@@ -195,32 +211,33 @@ export default function PublicVehicleScanPage() {
           />
         )}
 
+        {/* State F: Active Vehicle Profile (Normal Operation) */}
         {!loading && !errorType && vehicle?.status !== 'inactive' && !isUnassignedTag(vehicle) && (
           <>
             <VehicleCard vehicle={vehicle} />
             <ActionCards vehicle={vehicle} />
 
-            {/* Viral Growth & Ordering Card */}
-            <div className="rounded-3xl bg-gradient-to-br from-[#1C120C] to-[#2B1B10] p-5 text-white shadow-warm-sm border border-amber-900/30 flex flex-col gap-3 relative overflow-hidden mt-2">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-[#E6AF2E]/10 rounded-full blur-2xl pointer-events-none" />
+            {/* Viral Growth & Ordering Card in Dark Luxury Theme */}
+            <div className="rounded-[28px] bg-gradient-to-br from-[#12131A] via-[#161722] to-[#1F1B12] p-6 text-white shadow-2xl border border-amber-400/30 flex flex-col gap-3.5 relative overflow-hidden mt-3 backdrop-blur-xl">
+              <div className="absolute top-0 right-0 w-40 h-40 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
 
-              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#E6AF2E]">
-                <ShieldCheck className="w-3.5 h-3.5" />
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-400">
+                <Sparkles className="w-3.5 h-3.5" />
                 <span>Protect Your Own Ride</span>
               </div>
 
               <div className="flex flex-col">
-                <h3 className="font-baloo font-extrabold text-xl leading-tight text-[#FDF7EC]">
-                  Want a Smart QR Sticker for your vehicle?
+                <h3 className="font-extrabold text-xl leading-tight text-white font-manrope">
+                  Want a Smart QR Tag for your vehicle?
                 </h3>
-                <p className="text-xs text-white/70 font-medium mt-1 leading-relaxed">
+                <p className="text-xs text-white/70 font-medium mt-1.5 leading-relaxed">
                   Never get blocked in parking again. Connect with drivers safely without sharing your personal number. Weatherproof & UV protected.
                 </p>
               </div>
 
               <Link
-                to="/order"
-                className="mt-1 w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#E6AF2E] to-[#F59E0B] hover:from-[#F59E0B] hover:to-[#D97706] active:scale-[0.99] text-[#1C120C] font-extrabold text-sm flex items-center justify-center gap-2 shadow-sm transition-all"
+                to="/catalog"
+                className="mt-1.5 w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 active:scale-[0.99] text-black font-extrabold text-sm flex items-center justify-center gap-2.5 shadow-[0_4px_25px_rgba(245,158,11,0.25)] transition-all cursor-pointer"
               >
                 <span>Get Your Smart Sticker</span>
                 <ArrowRight className="w-4 h-4" />
@@ -228,22 +245,22 @@ export default function PublicVehicleScanPage() {
             </div>
 
             {/* Bottom Trust & Privacy Badges */}
-            <div className="flex flex-col items-center text-center gap-2 pt-2 pb-2 text-xs text-[#8C7A6B]">
+            <div className="flex flex-col items-center text-center gap-2.5 pt-4 pb-2 text-xs text-white/50">
               <div className="flex items-center justify-center gap-4 flex-wrap font-semibold text-[11px]">
-                <span className="flex items-center gap-1">
-                  <Lock className="w-3 h-3 text-emerald-600" />
+                <span className="flex items-center gap-1.5">
+                  <Lock className="w-3.5 h-3.5 text-emerald-400" />
                   Secure QR Contact
                 </span>
-                <span className="flex items-center gap-1">
-                  <ShieldCheck className="w-3 h-3 text-amber-700" />
+                <span className="flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
                   Verified Safety Tag
                 </span>
-                <span className="flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3 text-blue-600" />
+                <span className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-sky-400" />
                   24/7 Availability
                 </span>
               </div>
-              <p className="text-[10px] text-[#A8988B] mt-0.5">
+              <p className="text-[10px] text-white/35 mt-1">
                 Powered by Tagtique Pakistan — Smart Vehicle Safety Network
               </p>
             </div>

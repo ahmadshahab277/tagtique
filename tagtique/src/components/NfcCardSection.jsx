@@ -7,6 +7,7 @@ import {
 } from '../data/nfcCards';
 import { getPublicSiteOrigin } from '../utils/scanUrl';
 import NfcCardArt from './NfcCardArt';
+import { useCart } from '../context/CartContext';
 import {
   ChevronUp,
   ChevronDown,
@@ -18,16 +19,18 @@ import {
   Check,
   SlidersHorizontal,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  ShoppingBag
 } from 'lucide-react';
 
 export default function NfcCardSection() {
+  const { addToCart } = useCart();
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [activeIdx, setActiveIdx] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [isInView, setIsInView] = useState(true);
+  const [isInView, setIsInView] = useState(false);
 
   const dragStartY = useRef(0);
   const wheelCooldown = useRef(false);
@@ -47,17 +50,18 @@ export default function NfcCardSection() {
 
   // Pause auto-rotation when section is scrolled out of viewport
   useEffect(() => {
-    const handleScroll = () => {
-      const el = document.getElementById('nfc');
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      const visible = rect.top < window.innerHeight && rect.bottom > 0;
-      setIsInView(visible);
-    };
+    const el = document.getElementById('nfc');
+    if (!el) return;
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsInView(entry.isIntersecting);
+      },
+      { threshold: 0.15 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
   }, []);
 
   // Step rotation: upward (-1) or downward (+1)
@@ -83,15 +87,17 @@ export default function NfcCardSection() {
     return () => clearInterval(timer);
   }, [isHovered, isDragging, isInView, stepCard, totalCards]);
 
-  // Keep thumbnail strip scrolled into view for active card
+  // Keep thumbnail strip scrolled to active card (only scroll container horizontally, never window)
   useEffect(() => {
-    if (scrollStripRef.current) {
-      const activeBtn = scrollStripRef.current.children[safeIdx];
+    const strip = scrollStripRef.current;
+    if (strip) {
+      const activeBtn = strip.children[safeIdx];
       if (activeBtn) {
-        activeBtn.scrollIntoView({
-          behavior: 'smooth',
-          inline: 'center',
-          block: 'nearest'
+        const targetScrollLeft =
+          activeBtn.offsetLeft - (strip.clientWidth - activeBtn.clientWidth) / 2;
+        strip.scrollTo({
+          left: Math.max(0, targetScrollLeft),
+          behavior: 'smooth'
         });
       }
     }
@@ -501,8 +507,29 @@ export default function NfcCardSection() {
 
               {/* Action Buttons */}
               <div className="relative z-10 mt-5 flex flex-col sm:flex-row gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    addToCart({
+                      id: `nfc-${activeDesign.id}`,
+                      name: activeDesign.name,
+                      category: activeDesign.category,
+                      price: NFC_CARD_PRICE_PKR || 999,
+                      quantity: 1,
+                      type: 'nfc',
+                      accent: activeDesign.accent || '#F59E0B',
+                      image: activeDesign.frontImage || activeDesign.previewImg,
+                      badge: 'NFC Metal Card + Dynamic QR'
+                    });
+                  }}
+                  className="py-3 px-5 rounded-full bg-white hover:bg-zinc-100 text-black font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg transition-all duration-300 active:scale-95 cursor-pointer"
+                >
+                  <ShoppingBag className="w-4 h-4" />
+                  <span>Add to Cart</span>
+                </button>
+
                 <Link
-                  to={`/order?nfc=${activeDesign.id}`}
+                  to={`/cart?nfc=${activeDesign.id}`}
                   className="flex-1 py-3 px-5 rounded-full text-black font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg transition-all duration-300 hover:scale-102 active:scale-95 group/btn"
                   style={{
                     backgroundColor: activeDesign.accent,
@@ -510,15 +537,15 @@ export default function NfcCardSection() {
                   }}
                 >
                   <CreditCard className="w-4 h-4" />
-                  <span>Order {activeDesign.name}</span>
+                  <span>Order Now</span>
                   <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover/btn:translate-x-0.5" />
                 </Link>
 
                 <Link
                   to={`/nfc-card/${activeDesign.id}`}
-                  className="py-3 px-5 rounded-full bg-white/[0.08] hover:bg-white/[0.15] border border-white/15 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all text-center"
+                  className="py-3 px-4 rounded-full bg-white/[0.08] hover:bg-white/[0.15] border border-white/15 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all text-center"
                 >
-                  <span>Inspect Card</span>
+                  <span>Inspect</span>
                   <ExternalLink className="w-3.5 h-3.5 text-white/60" />
                 </Link>
               </div>

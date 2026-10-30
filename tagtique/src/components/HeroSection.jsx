@@ -78,8 +78,15 @@ export default function HeroSection({
   const [isDragging, setIsDragging] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isInView, setIsInView] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const dragStartX = useRef(0);
   const dragStartAngle = useRef(0);
+
+  // Trigger entrance animation after first paint
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== 'undefined' ? window.innerWidth : 1200
@@ -236,6 +243,11 @@ export default function HeroSection({
       onPointerLeave={handlePointerUp}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      style={{
+        opacity: mounted ? 1 : 0,
+        transform: mounted ? 'translateY(0)' : 'translateY(28px)',
+        transition: 'opacity 0.75s cubic-bezier(0.22,1,0.36,1), transform 0.75s cubic-bezier(0.22,1,0.36,1)'
+      }}
     >
       {/* Dynamic 3D Stage Background Lighting */}
       <div className="absolute inset-0 pointer-events-none">

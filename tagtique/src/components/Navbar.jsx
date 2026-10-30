@@ -96,17 +96,9 @@ export default function Navbar() {
             <span>Search</span>
           </button>
 
-          {/* Login Link */}
-          <Link
-            to="/login"
-            className="hidden sm:inline-block px-3 py-1.5 rounded-full text-sm font-bold text-white/85 hover:text-white hover:bg-white/10 transition-all"
-          >
-            Login
-          </Link>
-
           {/* High-Contrast Luxury Cart Pill */}
           <Link
-            to="/checkout"
+            to="/cart"
             className="inline-flex items-center gap-2 bg-white hover:bg-zinc-100 text-black font-extrabold rounded-full px-4 py-2 text-xs sm:text-sm shadow-md hover:shadow-xl transition-all duration-200 active:scale-95 cursor-pointer"
           >
             <ShoppingBag className="w-4 h-4 text-black" />
@@ -175,13 +167,7 @@ export default function Navbar() {
             Contact WhatsApp
           </button>
 
-          <Link 
-            to="/login" 
-            onClick={() => setMobileMenuOpen(false)} 
-            className="py-3 px-4 font-bold text-sm text-white/90 hover:text-white hover:bg-white/10 rounded-xl transition-all border-t border-white/10 mt-1"
-          >
-            Customer Login
-          </Link>
+
         </div>
       )}
     </header>

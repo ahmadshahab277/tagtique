@@ -5,13 +5,9 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import WhatsAppButton from './components/WhatsAppButton';
 import PublicVehicleScanPage from './pages/PublicVehicleScanPage';
-import AdminRoute from './components/AdminRoute';
 
 const HomePage = lazy(() => import('./pages/HomePage'));
-const LoginPage = lazy(() => import('./pages/LoginPage'));
-const SignupPage = lazy(() => import('./pages/SignupPage'));
-const OrderPage = lazy(() => import('./pages/OrderPage'));
-const CheckoutPage = lazy(() => import('./pages/CheckoutPage'));
+const CartPage = lazy(() => import('./pages/CartPage'));
 const OrderConfirmationPage = lazy(() => import('./pages/OrderConfirmationPage'));
 const PublicProfilePage = lazy(() => import('./pages/PublicProfilePage'));
 const ProductPage = lazy(() => import('./pages/ProductPage'));
@@ -102,16 +98,15 @@ class ErrorBoundary extends React.Component {
 
 function AppContent() {
   const location = useLocation();
-  const isAdmin = location.pathname.startsWith('/admin');
   const isPublicScan =
     location.pathname.startsWith('/scan') ||
     location.pathname.startsWith('/tag') ||
     location.pathname.startsWith('/nfc') ||
     location.pathname.startsWith('/u/');
-  const isStandalone = isAdmin || isPublicScan;
+  const isStandalone = isPublicScan;
 
   return (
-    <div className={`min-h-screen flex flex-col ${isStandalone ? 'bg-tag-bg text-tag-brown selection:bg-tag-amber selection:text-tag-brown-deep' : 'bg-[#08090D] text-white selection:bg-amber-400 selection:text-black'}`}>
+    <div className="min-h-screen flex flex-col bg-[#08090D] text-white selection:bg-amber-400 selection:text-black">
       {!isStandalone && <Navbar />}
       
       <main className={`flex-1 ${!isStandalone ? 'pt-[68px]' : ''}`}>
@@ -127,15 +122,10 @@ function AppContent() {
             <Route path="/nfc-card/:designId/setup" element={<NfcSetupPage />} />
             <Route path="/profile/:profileId" element={<NfcPublicProfilePage />} />
 
-            {/* Dedicated Auth Pages */}
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
-
-            {/* Dedicated Customizer / Order Page */}
-            <Route path="/order" element={<OrderPage />} />
-
-            {/* Dedicated Address & Checkout Page */}
-            <Route path="/checkout" element={<CheckoutPage />} />
+            {/* Unified Luxury Cart & Checkout */}
+            <Route path="/cart" element={<CartPage />} />
+            <Route path="/checkout" element={<CartPage />} />
+            <Route path="/order" element={<CartPage />} />
 
             {/* Dedicated Order Confirmation Receipt */}
             <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
@@ -148,9 +138,6 @@ function AppContent() {
 
             {/* Legacy Profile Card Route */}
             <Route path="/card/:username" element={<PublicProfilePage />} />
-
-            {/* Admin console. The page stays unmounted until the admin session is valid. */}
-            <Route path="/admin" element={<AdminRoute />} />
 
             {/* Fallback */}
             <Route path="*" element={<HomePage />} />
@@ -167,11 +154,11 @@ function AppContent() {
 
 export default function App() {
   return (
-    <CartProvider>
-      <BrowserRouter>
+    <BrowserRouter>
+      <CartProvider>
         <ScrollToTop />
         <AppContent />
-      </BrowserRouter>
-    </CartProvider>
+      </CartProvider>
+    </BrowserRouter>
   );
 }

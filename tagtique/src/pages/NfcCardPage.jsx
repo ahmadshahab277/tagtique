@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { findNfcDesign, NFC_DESIGNS, NFC_CARD_PRICE_PKR } from '../data/nfcCards';
 import { getPublicSiteOrigin } from '../utils/scanUrl';
+import { useCart } from '../context/CartContext';
 import NfcCardArt from '../components/NfcCardArt';
 import {
   ArrowRight,
@@ -16,7 +17,8 @@ import {
   Lock,
   QrCode,
   Share2,
-  Check
+  Check,
+  ShoppingBag
 } from 'lucide-react';
 
 const USES = [
@@ -59,6 +61,7 @@ const HARDWARE_SPECS = [
 
 export default function NfcCardPage() {
   const { designId } = useParams();
+  const { addToCart } = useCart();
   const design = findNfcDesign(designId);
   const [side, setSide] = useState('front');
   const [otherCardSides, setOtherCardSides] = useState({});
@@ -238,19 +241,40 @@ export default function NfcCardPage() {
             {/* CTAs */}
             <div className="mt-8 pt-6 border-t border-white/10">
               <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    addToCart({
+                      id: `nfc-${design.id}`,
+                      name: design.name,
+                      category: design.category,
+                      price: NFC_CARD_PRICE_PKR || 999,
+                      quantity: 1,
+                      type: 'nfc',
+                      accent: design.accent || '#F59E0B',
+                      image: design.frontImage || design.previewImg,
+                      badge: 'NFC Metal Card + Dynamic QR'
+                    });
+                  }}
+                  className="flex-1 bg-amber-400 hover:bg-amber-300 text-black rounded-full py-3.5 px-6 text-sm font-extrabold flex items-center justify-center gap-2 shadow-[0_6px_20px_rgba(245,158,11,0.25)] transition-all cursor-pointer active:scale-95"
+                >
+                  <ShoppingBag className="w-4 h-4" />
+                  <span>Add to Cart — PKR {NFC_CARD_PRICE_PKR}</span>
+                </button>
+
                 <Link
-                  to={`/order?nfc=${design.id}`}
+                  to={`/cart?nfc=${design.id}`}
                   className="flex-1 bg-white hover:bg-zinc-200 text-black rounded-full py-3.5 px-6 text-sm font-extrabold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all cursor-pointer"
                 >
                   <CreditCard className="w-4 h-4" />
-                  <span>Order Now — PKR {NFC_CARD_PRICE_PKR}</span>
+                  <span>Order Directly</span>
                 </Link>
 
                 <Link
                   to={`/nfc-card/${design.id}/setup`}
                   className="inline-flex bg-white/10 hover:bg-white/15 border border-white/15 text-white rounded-full py-3.5 px-6 text-sm font-extrabold items-center justify-center gap-2 transition-all cursor-pointer"
                 >
-                  <span>Preview & Setup Profile</span>
+                  <span>Preview Profile</span>
                 </Link>
               </div>
 

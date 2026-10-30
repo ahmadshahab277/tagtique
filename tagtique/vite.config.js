@@ -7,5 +7,22 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true
+  },
+  build: {
+    target: 'esnext',
+    cssCodeSplit: true,
+    minify: 'esbuild',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-icons': ['lucide-react'],
+          'vendor-utils': ['qrcode', 'canvas-confetti']
+        }
+      }
+    }
+  },
+  esbuild: {
+    drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : []
   }
 });

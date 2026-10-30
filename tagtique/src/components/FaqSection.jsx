@@ -15,7 +15,7 @@ const FAQS = [
   },
   {
     q: 'Can I change the phone number later?',
-    a: 'The printed QR stays the same. After registration, updates are made from the admin Reassign control or by contacting the shop. The next scan uses the saved number.'
+    a: 'The printed QR stays the same. After registration, updates can be made anytime by contacting Tagtique support. The next scan uses your updated contact information.'
   },
   {
     q: 'Does it track my item?',

@@ -10,16 +10,12 @@
     "test": "node --test src/**/*.test.js"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.117.1",
     "canvas-confetti": "^1.9.4",
-    "html5-qrcode": "^2.3.8",
-    "jsqr": "^1.4.0",
     "lucide-react": "^1.16.0",
     "qrcode": "^1.5.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^7.18.4",
-    "three": "^0.174.0"
+    "react-router-dom": "^7.18.4"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",

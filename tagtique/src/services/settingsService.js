@@ -1,5 +1,3 @@
-import { supabase } from './supabaseClient.js';
-
 const SUPPORT_PHONE_KEY = 'tagtique_support_phone';
 const STORE_SETTINGS_KEY = 'tagtique_store_settings';
 const QR_MODE_KEY = 'tagtique_qr_mode';
