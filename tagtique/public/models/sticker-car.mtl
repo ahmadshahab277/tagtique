@@ -1,0 +1,55 @@
+# Exported by three-d-stage
+newmtl paint_pearl_white
+Kd 0.7305 0.7379 0.7084
+Ks 0.2000 0.2000 0.2000
+Ns 144
+d 1.0000
+
+newmtl tinted_glass
+Kd 0.0075 0.0110 0.0160
+Ks 0.2000 0.2000 0.2000
+Ns 172
+d 1.0000
+
+newmtl trim_gloss_black
+Kd 0.0052 0.0056 0.0070
+Ks 0.2000 0.2000 0.2000
+Ns 160
+d 1.0000
+
+newmtl headlight
+Kd 0.9047 0.9216 0.9560
+Ks 0.2000 0.2000 0.2000
+Ns 170
+d 1.0000
+
+newmtl trim_matte_black
+Kd 0.0103 0.0110 0.0123
+Ks 0.2000 0.2000 0.2000
+Ns 40
+d 1.0000
+
+newmtl taillight
+Kd 0.2542 0.0052 0.0052
+Ks 0.2000 0.2000 0.2000
+Ns 160
+d 1.0000
+
+newmtl tire_rubber
+Kd 0.0110 0.0110 0.0116
+Ks 0.2000 0.2000 0.2000
+Ns 30
+d 1.0000
+
+newmtl alloy
+Kd 0.4851 0.5089 0.5457
+Ks 0.2000 0.2000 0.2000
+Ns 140
+d 1.0000
+
+newmtl sticker_vinyl
+Kd 1.0000 1.0000 1.0000
+Ks 0.2000 0.2000 0.2000
+Ns 140
+d 1.0000
+

@@ -1,0 +1,49 @@
+# Exported by three-d-stage
+newmtl titanium_frame
+Kd 0.1441 0.1500 0.1620
+Ks 0.2000 0.2000 0.2000
+Ns 136
+d 1.0000
+
+newmtl back_glass_frosted
+Kd 0.0194 0.0296 0.0497
+Ks 0.2000 0.2000 0.2000
+Ns 116
+d 1.0000
+
+newmtl display_glass
+Kd 0.0021 0.0024 0.0030
+Ks 0.2000 0.2000 0.2000
+Ns 184
+d 1.0000
+
+newmtl camera_plateau
+Kd 0.0252 0.0369 0.0612
+Ks 0.2000 0.2000 0.2000
+Ns 164
+d 1.0000
+
+newmtl lens_ring
+Kd 0.3231 0.3419 0.3763
+Ks 0.2000 0.2000 0.2000
+Ns 150
+d 1.0000
+
+newmtl lens_glass
+Kd 0.0015 0.0018 0.0024
+Ks 0.2000 0.2000 0.2000
+Ns 192
+d 1.0000
+
+newmtl flash
+Kd 0.8796 0.8469 0.7605
+Ks 0.2000 0.2000 0.2000
+Ns 140
+d 1.0000
+
+newmtl sticker_vinyl
+Kd 1.0000 1.0000 1.0000
+Ks 0.2000 0.2000 0.2000
+Ns 140
+d 1.0000
+
