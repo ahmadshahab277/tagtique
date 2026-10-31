@@ -166,8 +166,8 @@ export default function OrderConfirmationPage() {
                       </span>
                     </div>
                   </div>
-                  <span className="font-mono font-extrabold text-sm text-white">
-                    PKR {(item.price || 999).toLocaleString()}
+                  <span className="font-mono font-bold text-xs text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-full border border-amber-400/20">
+                    Verified
                   </span>
                 </div>
               ))}
@@ -176,16 +176,16 @@ export default function OrderConfirmationPage() {
             <div className="pt-3 border-t border-white/10 flex flex-col gap-2 text-xs">
               <div className="flex justify-between text-white/60">
                 <span>Doorstep Delivery:</span>
-                <span className="text-emerald-400 font-bold">FREE</span>
+                <span className="text-emerald-400 font-bold">FREE NATIONWIDE</span>
               </div>
               <div className="flex justify-between text-white/60">
                 <span>Setup & Routing:</span>
                 <span className="text-emerald-400 font-bold">INCLUDED FREE</span>
               </div>
               <div className="flex justify-between text-base font-extrabold text-white pt-2 border-t border-white/10">
-                <span>Total Amount:</span>
-                <span className="text-amber-400 font-mono">
-                  PKR {(order.finalTotal || order.totalAmount || 999).toLocaleString()}
+                <span>Dispatch Status:</span>
+                <span className="text-emerald-400 font-mono">
+                  CONFIRMED
                 </span>
               </div>
             </div>

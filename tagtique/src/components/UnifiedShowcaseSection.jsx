@@ -290,8 +290,8 @@ export default function UnifiedShowcaseSection({
             <div className="flex flex-col gap-2.5 relative z-10">
               <div className="flex items-center justify-between gap-3 pt-2.5 border-t border-white/10">
                 <div>
-                  <span className="text-[9px] text-white/50 uppercase tracking-widest block font-bold leading-none">Price</span>
-                  <span className="font-manrope font-extrabold text-xl text-white">PKR {activeCharacter?.price || 999}</span>
+                  <span className="text-[9px] text-white/50 uppercase tracking-widest block font-bold leading-none">Format</span>
+                  <span className="font-manrope font-extrabold text-sm sm:text-base text-amber-400">UV Glossy Vinyl</span>
                 </div>
 
                 <Link
@@ -393,8 +393,8 @@ export default function UnifiedShowcaseSection({
                       <span className="text-[9px] font-bold uppercase tracking-wider text-black/50 truncate max-w-[75px]">
                         {character.series}
                       </span>
-                      <span className="font-mono text-[10px] font-bold text-black/60">
-                        PKR {character.price}
+                      <span className="font-mono text-[9px] font-bold text-black/60 bg-black/10 px-1.5 py-0.5 rounded-full">
+                        Die-Cut
                       </span>
                     </div>
 

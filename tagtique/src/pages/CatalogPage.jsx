@@ -319,8 +319,8 @@ export default function CatalogPage() {
                       >
                         {product.series || product.badge}
                       </span>
-                      <span className="font-mono text-[11px] font-extrabold text-white/80">
-                        PKR {product.price}
+                      <span className="font-mono text-[10px] font-bold text-amber-400/90 bg-amber-400/10 px-2 py-0.5 rounded-full border border-amber-400/20">
+                        Exclusive
                       </span>
                     </div>
 

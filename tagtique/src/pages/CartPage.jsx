@@ -504,8 +504,8 @@ export default function CartPage() {
                       )}
 
                       <div className="text-right">
-                        <span className="font-extrabold text-base text-white font-mono block">
-                          PKR {((item.price || 999) * (item.quantity || 1)).toLocaleString()}
+                        <span className="font-extrabold text-xs text-amber-400 font-mono block uppercase px-2 py-1 rounded-lg bg-amber-400/10 border border-amber-400/20">
+                          {item.type === 'nfc' ? 'Metal Card' : 'Smart Tag'}
                         </span>
                       </div>
                     </div>
@@ -887,7 +887,7 @@ export default function CartPage() {
                         {currentPreviewItem.name}
                       </h4>
                       <span className="text-[11px] text-white/50">
-                        PKR {((currentPreviewItem.price || 999) * (currentPreviewItem.quantity || 1)).toLocaleString()} • Qty: {currentPreviewItem.quantity || 1}
+                        Qty: {currentPreviewItem.quantity || 1} • {currentPreviewItem.type === 'nfc' ? 'NFC Metal Card' : 'High-Gloss Vinyl'}
                       </span>
                     </div>
 
@@ -924,11 +924,11 @@ export default function CartPage() {
                 </div>
               )}
 
-              {/* Price Breakdown */}
+              {/* Order Package & Delivery Overview */}
               <div className="flex flex-col gap-3 text-sm">
                 <div className="flex justify-between items-center text-white/70">
-                  <span>Subtotal</span>
-                  <span className="font-mono font-bold text-white">PKR {subtotal.toLocaleString()}</span>
+                  <span>Selected Package</span>
+                  <span className="font-mono font-bold text-white">{effectiveItems.length} {effectiveItems.length === 1 ? 'Product' : 'Products'}</span>
                 </div>
 
                 <div className="flex justify-between items-center text-white/70">
@@ -936,27 +936,26 @@ export default function CartPage() {
                     <Truck className="w-4 h-4 text-emerald-400" />
                     <span>Doorstep Express Courier</span>
                   </span>
-                  <span className="font-extrabold text-emerald-400 font-mono">FREE</span>
+                  <span className="font-extrabold text-emerald-400 font-mono">FREE NATIONWIDE</span>
                 </div>
 
                 <div className="flex justify-between items-center text-white/70">
-                  <span>Digital Routing Setup</span>
+                  <span>Digital Safety Routing</span>
                   <span className="font-extrabold text-emerald-400 font-mono">FREE (No Monthly Fee)</span>
                 </div>
               </div>
 
               <div className="h-px bg-white/10" />
 
-              {/* Total Due */}
+              {/* Dispatch Mode */}
               <div className="flex justify-between items-baseline pt-1">
                 <div>
-                  <span className="font-extrabold text-xl text-white block">Total Amount</span>
-                  <span className="text-xs text-white/50">One-time payment</span>
+                  <span className="font-extrabold text-xl text-white block">Dispatch Service</span>
+                  <span className="text-xs text-white/50">Cash on Delivery • Direct Verification</span>
                 </div>
                 <div className="text-right">
-                  <span className="text-xs font-mono text-white/50 mr-1.5">PKR</span>
-                  <span className="font-extrabold text-3xl sm:text-4xl text-amber-400 font-mono">
-                    {finalTotal.toLocaleString()}
+                  <span className="font-extrabold text-base sm:text-lg text-emerald-400 font-mono bg-emerald-500/10 px-3 py-1 rounded-xl border border-emerald-500/20">
+                    PRIORITY DISPATCH
                   </span>
                 </div>
               </div>

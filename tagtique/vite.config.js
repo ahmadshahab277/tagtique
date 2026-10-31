@@ -12,11 +12,13 @@ export default defineConfig({
     target: 'esnext',
     cssCodeSplit: true,
     minify: 'esbuild',
+    chunkSizeWarningLimit: 700,
     rollupOptions: {
       output: {
         manualChunks: {
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
           'vendor-icons': ['lucide-react'],
+          'vendor-three': ['three'],
           'vendor-utils': ['qrcode', 'canvas-confetti']
         }
       }

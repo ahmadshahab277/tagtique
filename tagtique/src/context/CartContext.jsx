@@ -215,7 +215,7 @@ export function CartProvider({ children }) {
                 {toast.item.name}
               </span>
               <span className="text-[11px] font-mono text-white/50">
-                PKR {toast.item.price.toLocaleString()} • Qty: {toast.item.quantity || 1}
+                Qty: {toast.item.quantity || 1} • {toast.item.badge || 'Ready for Dispatch'}
               </span>
             </div>
           </div>

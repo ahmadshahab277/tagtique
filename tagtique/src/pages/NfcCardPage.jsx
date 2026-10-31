@@ -206,15 +206,12 @@ export default function NfcCardPage() {
                 {design.name}
               </h1>
 
-              <div className="mt-4 flex items-baseline gap-3">
-                <span className="font-manrope font-extrabold text-3xl text-white">
-                  PKR {NFC_CARD_PRICE_PKR.toLocaleString('en-PK')}
+              <div className="mt-4 flex items-center gap-3">
+                <span className="text-xs font-extrabold text-emerald-300 bg-emerald-500/20 px-3 py-1 rounded-full border border-emerald-500/30">
+                  Free 24h Nationwide Delivery
                 </span>
-                <span className="text-xs font-bold text-white/40 line-through">
-                  PKR 1,499
-                </span>
-                <span className="text-xs font-extrabold text-emerald-300 bg-emerald-500/20 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
-                  Free 24h Delivery
+                <span className="text-xs font-mono font-bold text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/30">
+                  Zero Monthly Fees
                 </span>
               </div>
 
@@ -259,7 +256,7 @@ export default function NfcCardPage() {
                   className="flex-1 bg-amber-400 hover:bg-amber-300 text-black rounded-full py-3.5 px-6 text-sm font-extrabold flex items-center justify-center gap-2 shadow-[0_6px_20px_rgba(245,158,11,0.25)] transition-all cursor-pointer active:scale-95"
                 >
                   <ShoppingBag className="w-4 h-4" />
-                  <span>Add to Cart — PKR {NFC_CARD_PRICE_PKR}</span>
+                  <span>Add to Cart</span>
                 </button>
 
                 <Link
@@ -463,8 +460,8 @@ export default function NfcCardPage() {
                       </span>
 
                       <div className="flex items-center gap-2">
-                        <span className="font-manrope text-xs font-extrabold text-white/80">
-                          PKR {NFC_CARD_PRICE_PKR}
+                        <span className="font-mono text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                          In Stock
                         </span>
 
                         {/* Interactive Flip Toggle Button */}

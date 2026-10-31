@@ -4,11 +4,15 @@ import { findProduct, allProducts } from '../data/editions';
 import { SETUP_STEPS, SETUP_SUMMARY } from '../data/setupGuide';
 import { useCart } from '../context/CartContext';
 import StickerArt from '../components/StickerArt';
+import Sticker3DViewer from '../components/Sticker3DViewer';
 import {
   ShieldCheck,
   Zap,
   Truck,
   Smartphone,
+  Laptop,
+  Car,
+  Tag,
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
@@ -80,6 +84,7 @@ export default function ProductPage() {
   const product = findProduct(slug);
 
   const [quantity, setQuantity] = useState(1);
+  const [selectedTarget, setSelectedTarget] = useState('mobile'); // 'mobile' | 'laptop' | 'vehicle' | 'sticker'
   const [zoom, setZoom] = useState(false);
   const [activeFaq, setActiveFaq] = useState(null);
 
@@ -165,64 +170,15 @@ export default function ProductPage() {
         {/* ================= HERO PRODUCT SECTION (2-COL) ================= */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           
-          {/* ================= LEFT: 3D INTERACTIVE STICKER SHOWCASE ================= */}
+          {/* ================= LEFT: 3D INTERACTIVE MOVEABLE SHOWCASE ================= */}
           <div className="lg:col-span-6 flex flex-col items-center">
-            
-            {/* Main Stage Card */}
-            <div
-              className="w-full max-w-[500px] aspect-[4/5] rounded-[36px] bg-gradient-to-b from-[#181822] via-[#12131A] to-[#0A0B0E] border border-white/15 p-6 sm:p-10 flex flex-col items-center justify-center relative shadow-[0_20px_50px_rgba(0,0,0,0.6)] overflow-hidden group cursor-pointer"
-              onMouseMove={handleMouseMove}
-              onMouseLeave={handleMouseLeave}
-              onClick={() => setZoom(true)}
-              style={{ perspective: '1000px' }}
-            >
-              {/* Dynamic Aura Glow matching character palette */}
-              <div
-                className="absolute inset-0 opacity-20 group-hover:opacity-35 transition-opacity duration-500 blur-3xl pointer-events-none"
-                style={{ backgroundColor: product.swatch || '#F59E0B' }}
-              />
+            <Sticker3DViewer
+              product={product}
+              selectedTarget={selectedTarget}
+              onSelectTarget={setSelectedTarget}
+            />
 
-              {/* Background Subtle Tech Rings */}
-              <div className="absolute w-[360px] h-[360px] rounded-full border border-white/[0.04] pointer-events-none" />
-              <div className="absolute w-[240px] h-[240px] rounded-full border border-dashed border-white/[0.06] pointer-events-none animate-[spin_80s_linear_infinite]" />
-
-              {/* Top Right Zoom Hint Button */}
-              <div className="absolute top-5 right-5 z-20 w-9 h-9 rounded-full bg-[#13141D]/90 backdrop-blur-md border border-white/15 shadow-md flex items-center justify-center text-white/70 group-hover:text-white group-hover:scale-110 transition-all">
-                <ZoomIn className="w-4 h-4" />
-              </div>
-
-              {/* 3D Floating Sticker Image */}
-              <div
-                className="relative z-10 w-full h-full max-h-[380px] flex items-center justify-center transition-transform duration-200 ease-out"
-                style={{
-                  transform: `rotateX(${tilt.y}deg) rotateY(${tilt.x}deg) scale(1.02)`,
-                  transformStyle: 'preserve-3d'
-                }}
-              >
-                {product.image ? (
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-full object-contain drop-shadow-[0_20px_35px_rgba(0,0,0,0.5)] select-none transition-transform duration-300 group-hover:scale-105"
-                    draggable={false}
-                  />
-                ) : (
-                  <div className="w-[240px] aspect-[230/341]">
-                    <StickerArt product={product} />
-                  </div>
-                )}
-              </div>
-
-              {/* Ground Pedestal Shadow */}
-              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-48 h-6 bg-[radial-gradient(ellipse,rgba(0,0,0,0.8)_0%,transparent_70%)] blur-md pointer-events-none" />
-
-              {/* Bottom Inspect Hint */}
-              <div className="absolute bottom-4 z-20 text-[11px] font-semibold text-white/40 tracking-wide flex items-center gap-1">
-                <span>Click image to view in high definition</span>
-              </div>
-            </div>
-
-            {/* Feature Pills under the sticker */}
+            {/* Feature Pills under the 3D Viewer */}
             <div className="w-full max-w-[500px] grid grid-cols-3 gap-2.5 mt-4">
               <div className="p-3 rounded-2xl bg-[#12131A] border border-white/10 shadow-sm text-center">
                 <ShieldCheck className="w-4 h-4 text-emerald-400 mx-auto mb-1" />
@@ -283,32 +239,117 @@ export default function ProductPage() {
                 Premium die-cut vinyl emergency identity sticker. When scanned, it instantly launches your private contact card or direct phone dialer so lost items find their way back to you.
               </p>
 
-              {/* Price Block */}
-              <div className="mt-6 pt-5 border-t border-white/10 flex items-baseline justify-between">
-                <div>
-                  <span className="text-[11px] font-bold text-white/40 uppercase tracking-widest block">Official Price</span>
-                  <div className="flex items-baseline gap-2 mt-0.5">
-                    <span className="font-manrope font-extrabold text-3xl sm:text-4xl text-white">
-                      PKR {currentPrice.toLocaleString('en-PK')}
+              {/* ================= TARGET SURFACE SELECTOR (3D REAL-SCALE) ================= */}
+              <div className="mt-6 pt-5 border-t border-white/10">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <span className="text-xs font-extrabold text-white uppercase tracking-wider block">
+                      Select Placement Surface:
                     </span>
-                    {quantity > 1 && (
-                      <span className="text-xs font-bold text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded-md">
-                        {quantity === 2 ? 'Save PKR 499' : 'Save PKR 998'}
-                      </span>
-                    )}
+                    <span className="text-[11px] text-white/50">
+                      Tap an object to view on 3D movable model
+                    </span>
                   </div>
+                  <span className="text-xs font-mono font-bold text-amber-400 bg-amber-400/10 border border-amber-400/30 px-2.5 py-1 rounded-full shadow-sm">
+                    {selectedTarget === 'vehicle' ? 'Real Scale: 4" × 4"' : 'Real Scale: 2" × 2"'}
+                  </span>
                 </div>
 
-                <div className="text-right">
-                  <span className="text-xs font-bold text-white/70">Free Shipping</span>
-                  <span className="text-[10px] text-white/40 block">Cash on Delivery</span>
+                <div className="grid grid-cols-2 gap-2.5">
+                  {/* Option 1: Mobile */}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedTarget('mobile')}
+                    className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer relative flex flex-col gap-1 ${
+                      selectedTarget === 'mobile'
+                        ? 'border-amber-400 bg-amber-400/10 shadow-[0_0_20px_rgba(245,158,11,0.2)] text-white'
+                        : 'border-white/10 bg-[#161822] hover:border-white/25 text-white/80'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Smartphone className={`w-4 h-4 ${selectedTarget === 'mobile' ? 'text-amber-400' : 'text-white/60'}`} />
+                        <span className="font-extrabold text-sm text-white">Mobile Phone</span>
+                      </div>
+                      <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-white/10 text-amber-300">
+                        2" × 2"
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-white/50">Sleek back glass fit for smartphones</p>
+                  </button>
+
+                  {/* Option 2: Laptop */}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedTarget('laptop')}
+                    className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer relative flex flex-col gap-1 ${
+                      selectedTarget === 'laptop'
+                        ? 'border-amber-400 bg-amber-400/10 shadow-[0_0_20px_rgba(245,158,11,0.2)] text-white'
+                        : 'border-white/10 bg-[#161822] hover:border-white/25 text-white/80'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Laptop className={`w-4 h-4 ${selectedTarget === 'laptop' ? 'text-amber-400' : 'text-white/60'}`} />
+                        <span className="font-extrabold text-sm text-white">Laptop / PC</span>
+                      </div>
+                      <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-white/10 text-amber-300">
+                        2" × 2"
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-white/50">MacBook & PC aluminium lid fit</p>
+                  </button>
+
+                  {/* Option 3: Vehicle */}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedTarget('vehicle')}
+                    className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer relative flex flex-col gap-1 ${
+                      selectedTarget === 'vehicle'
+                        ? 'border-amber-400 bg-amber-400/10 shadow-[0_0_20px_rgba(245,158,11,0.2)] text-white'
+                        : 'border-white/10 bg-[#161822] hover:border-white/25 text-white/80'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Car className={`w-4 h-4 ${selectedTarget === 'vehicle' ? 'text-amber-400' : 'text-white/60'}`} />
+                        <span className="font-extrabold text-sm text-white">Car / Vehicle</span>
+                      </div>
+                      <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-amber-400 text-black">
+                        4" × 4"
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-white/50">Weatherproof rear windshield & bumper</p>
+                  </button>
+
+                  {/* Option 4: Standalone Sticker */}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedTarget('sticker')}
+                    className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer relative flex flex-col gap-1 ${
+                      selectedTarget === 'sticker'
+                        ? 'border-amber-400 bg-amber-400/10 shadow-[0_0_20px_rgba(245,158,11,0.2)] text-white'
+                        : 'border-white/10 bg-[#161822] hover:border-white/25 text-white/80'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Tag className={`w-4 h-4 ${selectedTarget === 'sticker' ? 'text-amber-400' : 'text-white/60'}`} />
+                        <span className="font-extrabold text-sm text-white">Sticker Only</span>
+                      </div>
+                      <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-white/10 text-white/70">
+                        Die-Cut
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-white/50">360° pure vinyl turntable</p>
+                  </button>
                 </div>
               </div>
 
-              {/* ================= BUNDLE PACKAGE SELECTOR TILES ================= */}
-              <div className="mt-6">
+              {/* ================= BUNDLE PACKAGE QUANTITY SELECTOR (ZERO PRICING) ================= */}
+              <div className="mt-5">
                 <span className="text-xs font-extrabold text-white/80 uppercase tracking-wider block mb-2.5">
-                  Select Quantity & Save:
+                  Select Quantity:
                 </span>
 
                 <div className="grid grid-cols-3 gap-2.5">
@@ -324,7 +365,7 @@ export default function ProductPage() {
                   >
                     <span className={`text-[11px] font-bold block ${quantity === 1 ? 'text-black/70' : 'text-white/60'}`}>Single Tag</span>
                     <span className="font-extrabold text-sm block mt-0.5">1 Sticker</span>
-                    <span className="text-xs font-bold block mt-1">PKR 999</span>
+                    <span className={`text-[10px] block mt-1 ${quantity === 1 ? 'text-black/60' : 'text-white/40'}`}>Standard Pack</span>
                   </button>
 
                   {/* 2-Pack Tile */}
@@ -342,7 +383,7 @@ export default function ProductPage() {
                     </span>
                     <span className={`text-[11px] font-bold block ${quantity === 2 ? 'text-black/70' : 'text-white/60'}`}>2-Pack</span>
                     <span className="font-extrabold text-sm block mt-0.5">2 Stickers</span>
-                    <span className="text-xs font-bold block mt-1">PKR 1,499</span>
+                    <span className={`text-[10px] block mt-1 ${quantity === 2 ? 'text-black/60' : 'text-white/40'}`}>Double Protection</span>
                   </button>
 
                   {/* 3-Pack Tile */}
@@ -360,7 +401,7 @@ export default function ProductPage() {
                     </span>
                     <span className={`text-[11px] font-bold block ${quantity === 3 ? 'text-black/70' : 'text-white/60'}`}>3-Pack</span>
                     <span className="font-extrabold text-sm block mt-0.5">3 Stickers</span>
-                    <span className="text-xs font-bold block mt-1">PKR 1,999</span>
+                    <span className={`text-[10px] block mt-1 ${quantity === 3 ? 'text-black/60' : 'text-white/40'}`}>Multi-Item Bundle</span>
                   </button>
                 </div>
               </div>
@@ -371,7 +412,7 @@ export default function ProductPage() {
                   type="button"
                   onClick={() => {
                     addToCart({
-                      id: `sticker-${product.editionId}-${product.id}`,
+                      id: `sticker-${product.editionId}-${product.id}-${selectedTarget}`,
                       name: product.name,
                       category: `${product.editionName} Edition`,
                       price: currentPrice,
@@ -379,7 +420,7 @@ export default function ProductPage() {
                       type: 'sticker',
                       accent: product.swatch || '#F59E0B',
                       image: product.image || product.src,
-                      badge: `${quantity === 1 ? 'Single Sticker' : quantity + '-Pack'} • Glossy Vinyl`
+                      badge: `${quantity === 1 ? 'Single Sticker' : quantity + '-Pack'} • ${selectedTarget === 'vehicle' ? '4"×4" Vehicle Fit' : '2"×2" ' + (selectedTarget === 'laptop' ? 'Laptop Fit' : selectedTarget === 'mobile' ? 'Mobile Fit' : 'Die-Cut Vinyl')}`
                     });
                   }}
                   className="flex-1 py-4 px-6 rounded-2xl bg-amber-400 hover:bg-amber-300 active:scale-[0.98] text-black font-extrabold text-sm flex items-center justify-center gap-2 shadow-[0_6px_20px_rgba(245,158,11,0.25)] transition-all cursor-pointer"
@@ -392,7 +433,7 @@ export default function ProductPage() {
                   type="button"
                   onClick={() => {
                     addToCart({
-                      id: `sticker-${product.editionId}-${product.id}`,
+                      id: `sticker-${product.editionId}-${product.id}-${selectedTarget}`,
                       name: product.name,
                       category: `${product.editionName} Edition`,
                       price: currentPrice,
@@ -400,7 +441,7 @@ export default function ProductPage() {
                       type: 'sticker',
                       accent: product.swatch || '#F59E0B',
                       image: product.image || product.src,
-                      badge: `${quantity === 1 ? 'Single Sticker' : quantity + '-Pack'} • Glossy Vinyl`
+                      badge: `${quantity === 1 ? 'Single Sticker' : quantity + '-Pack'} • ${selectedTarget === 'vehicle' ? '4"×4" Vehicle Fit' : '2"×2" ' + (selectedTarget === 'laptop' ? 'Laptop Fit' : selectedTarget === 'mobile' ? 'Mobile Fit' : 'Die-Cut Vinyl')}`
                     });
                     navigate('/cart');
                   }}
@@ -499,8 +540,8 @@ export default function ProductPage() {
                     <span className="text-[10px] font-extrabold uppercase tracking-wider text-white/50">
                       {other.editionName}
                     </span>
-                    <span className="font-mono text-[11px] font-bold text-white/60">
-                      PKR {other.pricePkr}
+                    <span className="font-mono text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                      In Stock
                     </span>
                   </div>
 
@@ -689,17 +730,16 @@ export default function ProductPage() {
             </div>
 
             <div className="w-full flex items-center justify-between pt-4 border-t border-white/10">
-              <span className="font-manrope font-extrabold text-xl text-white">
-                PKR {currentPrice}
+              <span className="font-manrope font-extrabold text-sm sm:text-base text-white/90">
+                {product.name} • {selectedTarget === 'vehicle' ? '4" × 4" Vehicle Fit' : '2" × 2" Fit'}
               </span>
-              <Link
-                to={orderHref}
-                className="px-6 py-2.5 rounded-full bg-white hover:bg-zinc-100 text-black font-extrabold text-sm flex items-center gap-2"
+              <button
+                type="button"
+                className="px-6 py-2.5 rounded-full bg-amber-400 hover:bg-amber-300 text-black font-extrabold text-sm flex items-center gap-2 cursor-pointer transition-all"
                 onClick={() => setZoom(false)}
               >
-                <span>Buy This Design</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
+                <span>Done</span>
+              </button>
             </div>
           </div>
         </div>
