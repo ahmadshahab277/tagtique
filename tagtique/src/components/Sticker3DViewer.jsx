@@ -17,9 +17,9 @@ function createShadowTexture() {
   const ctx = canvas.getContext('2d');
 
   const gradient = ctx.createRadialGradient(128, 128, 10, 128, 128, 128);
-  gradient.addColorStop(0, 'rgba(0, 0, 0, 0.32)');
-  gradient.addColorStop(0.35, 'rgba(0, 0, 0, 0.16)');
-  gradient.addColorStop(0.7, 'rgba(0, 0, 0, 0.04)');
+  gradient.addColorStop(0, 'rgba(0, 0, 0, 0.65)');
+  gradient.addColorStop(0.35, 'rgba(0, 0, 0, 0.35)');
+  gradient.addColorStop(0.7, 'rgba(0, 0, 0, 0.10)');
   gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
   ctx.fillStyle = gradient;
@@ -32,7 +32,7 @@ function createShadowTexture() {
 /**
  * Procedural fallback canvas for QR sticker when image is loading
  */
-function createFallbackTexture(name) {
+function createFallbackTexture(name, swatch = '#F59E0B') {
   const canvas = document.createElement('canvas');
   canvas.width = 512;
   canvas.height = 512;
@@ -41,7 +41,7 @@ function createFallbackTexture(name) {
   ctx.fillStyle = '#FFFFFF';
   ctx.fillRect(0, 0, 512, 512);
 
-  ctx.strokeStyle = '#F59E0B';
+  ctx.strokeStyle = swatch;
   ctx.lineWidth = 14;
   ctx.strokeRect(20, 20, 472, 472);
 
@@ -56,7 +56,7 @@ function createFallbackTexture(name) {
     }
   }
 
-  ctx.fillStyle = '#F59E0B';
+  ctx.fillStyle = swatch;
   ctx.font = 'bold 32px sans-serif';
   ctx.textAlign = 'center';
   ctx.fillText(name || 'TAGTIQUE', 256, 455);
@@ -72,7 +72,7 @@ function createFallbackTexture(name) {
 function createRefinedMaterial(matName, stickerTexture) {
   // 1. STICKER MATERIAL: High-gloss vinyl with authentic PNG transparency
   if (matName === 'sticker_vinyl' || matName === 'sticker') {
-    return new THREE.MeshStandardMaterial({
+    const mat = new THREE.MeshStandardMaterial({
       map: stickerTexture,
       transparent: true,
       alphaTest: 0.01,
@@ -83,6 +83,8 @@ function createRefinedMaterial(matName, stickerTexture) {
       polygonOffsetFactor: -2,
       polygonOffsetUnits: -2
     });
+    mat.name = 'sticker_vinyl';
+    return mat;
   }
 
   // 2. PHONE MATERIALS
@@ -145,7 +147,7 @@ function createRefinedMaterial(matName, stickerTexture) {
   // 3. LAPTOP MATERIALS (MacBook Pro Aluminum Unibody)
   if (matName === 'aluminum') {
     return new THREE.MeshStandardMaterial({
-      color: 0xDCDDE2, // Apple Silver / Space Grey
+      color: 0xDCDDE2, // Apple Silver
       metalness: 0.84,
       roughness: 0.24
     });
@@ -299,31 +301,35 @@ async function loadTargetModel(target, stickerTexture) {
               }
             });
 
-            // Normalize and center model at origin (0, 0, 0)
-            const box = new THREE.Box3().setFromObject(object);
-            const center = box.getCenter(new THREE.Vector3());
-            const size = box.getSize(new THREE.Vector3());
-            const maxDim = Math.max(size.x, size.y, size.z);
-
-            object.position.x -= center.x;
-            object.position.y -= center.y;
-            object.position.z -= center.z;
-
+            // CRITICAL FIX: Scale first, then compute bounding box and dead-center at (0, 0, 0)
+            const rawBox = new THREE.Box3().setFromObject(object);
+            const rawSize = rawBox.getSize(new THREE.Vector3());
+            const maxDim = Math.max(rawSize.x, rawSize.y, rawSize.z) || 1;
             const scale = config.targetScale / maxDim;
-            object.scale.setScalar(scale);
 
-            // Wrap in an outer group for clean rotation control
+            object.scale.setScalar(scale);
+            object.updateMatrixWorld(true);
+
+            // Center exactly at origin (0, 0, 0)
+            const scaledBox = new THREE.Box3().setFromObject(object);
+            const scaledCenter = scaledBox.getCenter(new THREE.Vector3());
+            object.position.set(-scaledCenter.x, -scaledCenter.y, -scaledCenter.z);
+            object.updateMatrixWorld(true);
+
+            // Wrap in an outer group for clean turntable rotation control
             const outerGroup = new THREE.Group();
+            outerGroup.rotation.order = 'YXZ';
             outerGroup.add(object);
 
             // Set default orientation so the sticker is immediately facing the user
             if (target === 'mobile') {
-              outerGroup.rotation.set(0.06, -0.22, 0);
+              outerGroup.rotation.set(0.08, -0.22, 0);
             } else if (target === 'laptop') {
-              outerGroup.rotation.set(0.16, -0.42, 0);
+              // MacBook Pro lid centered facing user
+              outerGroup.rotation.set(0.22, -0.38, 0);
             } else if (target === 'vehicle') {
-              // Car length is along X; rotate so the rear window with the sticker is prominent
-              outerGroup.rotation.set(0.12, Math.PI * 0.72, 0);
+              // Car upright on wheels (+Y up), windshield with sticker prominent
+              outerGroup.rotation.set(0.18, -Math.PI * 0.38, 0);
             }
 
             // Cache base model
@@ -342,44 +348,35 @@ async function loadTargetModel(target, stickerTexture) {
 
 /**
  * Builds standalone original 3D floating sticker preserving authentic aspect ratio
+ * Shows ONLY the die-cut vinyl sticker with zero square/rectangular card backing
  */
 function buildStickerOnlyModel(stickerTexture, aspect = 1) {
   const group = new THREE.Group();
   group.name = 'sticker-only';
+  group.rotation.order = 'YXZ';
 
-  let stickerH = 3.6;
+  let stickerH = 3.8;
   let stickerW = stickerH * aspect;
   if (stickerW > 4.2) {
     stickerW = 4.2;
     stickerH = stickerW / aspect;
   }
 
-  // Front High-Gloss Vinyl Face
+  // Front High-Gloss Die-Cut Vinyl Face ONLY - no back card!
   const frontGeo = new THREE.PlaneGeometry(stickerW, stickerH);
   const frontMat = new THREE.MeshStandardMaterial({
     map: stickerTexture,
     transparent: true,
     alphaTest: 0.01,
-    roughness: 0.12,
-    metalness: 0.05
+    roughness: 0.15,
+    metalness: 0.05,
+    side: THREE.DoubleSide
   });
   const frontMesh = new THREE.Mesh(frontGeo, frontMat);
-  frontMesh.position.z = 0.02;
   group.add(frontMesh);
 
-  // Backing Adhesive Paper Face
-  const backGeo = new THREE.PlaneGeometry(stickerW, stickerH);
-  const backMat = new THREE.MeshStandardMaterial({
-    color: 0xFAFAFA,
-    roughness: 0.8,
-    metalness: 0.0
-  });
-  const backMesh = new THREE.Mesh(backGeo, backMat);
-  backMesh.rotation.y = Math.PI;
-  backMesh.position.z = -0.02;
-  group.add(backMesh);
-
-  group.rotation.set(0.06, -0.15, 0);
+  // Directly faces camera
+  group.rotation.set(0, 0, 0);
   return group;
 }
 
@@ -394,6 +391,7 @@ export default function Sticker3DViewer({
   const rendererRef = useRef(null);
   const activeModelRef = useRef(null);
   const shadowMeshRef = useRef(null);
+  const accentLightRef = useRef(null);
   const animFrameRef = useRef(null);
   const textureRef = useRef(null);
   const aspectRef = useRef(1);
@@ -402,6 +400,8 @@ export default function Sticker3DViewer({
   const [autoRotate, setAutoRotate] = useState(true);
   const [loaded, setLoaded] = useState(false);
   const [modelLoading, setModelLoading] = useState(false);
+
+  const swatchColor = product?.swatch || product?.accent || '#F59E0B';
 
   const dragRef = useRef({
     isDown: false,
@@ -415,15 +415,15 @@ export default function Sticker3DViewer({
   });
 
   const SIZES = {
-    mobile: { label: 'iPhone Pro', surface: 'Titanium & Glass Back' },
+    mobile: { label: 'iPhone Pro', surface: 'Titanium & Frosted Glass' },
     laptop: { label: 'MacBook Pro', surface: 'Aluminum Unibody Lid' },
-    vehicle: { label: 'Sports Sedan', surface: 'Rear Windshield Glass' },
+    vehicle: { label: 'Sports Sedan', surface: 'Front Windshield Fit' },
     sticker: { label: 'Sticker Only', surface: 'High-Gloss Die-Cut Vinyl' }
   };
 
   const currentInfo = SIZES[selectedTarget] || SIZES.mobile;
 
-  // 1. Initial Scene Setup (PURE WHITE STUDIO)
+  // 1. Initial Scene Setup (Transparent WebGL on Dynamic Harmonized Studio Card)
   useEffect(() => {
     const container = mountRef.current;
     if (!container) return;
@@ -431,9 +431,9 @@ export default function Sticker3DViewer({
     const width = container.clientWidth || 450;
     const height = container.clientHeight || 450;
 
-    // Scene with PURE WHITE background
+    // Scene with transparent background so CSS studio glow shines through
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xFFFFFF);
+    scene.background = null;
     sceneRef.current = scene;
 
     // Camera
@@ -441,32 +441,38 @@ export default function Sticker3DViewer({
     camera.position.set(0, 0, 8.2);
     cameraRef.current = camera;
 
-    // WebGL Renderer
-    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+    // WebGL Renderer with alpha: true
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.setSize(width, height);
-    renderer.setClearColor(0xFFFFFF, 1);
+    renderer.setClearColor(0x000000, 0);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.05;
+    renderer.toneMappingExposure = 1.1;
     rendererRef.current = renderer;
 
     container.appendChild(renderer.domElement);
 
     // Studio 3-Point Lighting
-    const ambientLight = new THREE.AmbientLight(0xFFFFFF, 1.4);
+    const ambientLight = new THREE.AmbientLight(0xFFFFFF, 1.3);
     scene.add(ambientLight);
 
-    const keyLight = new THREE.DirectionalLight(0xFFFFFF, 1.5);
+    const keyLight = new THREE.DirectionalLight(0xFFFFFF, 1.8);
     keyLight.position.set(6, 8, 7);
     scene.add(keyLight);
 
-    const fillLight = new THREE.DirectionalLight(0xF1F5F9, 1.0);
+    const fillLight = new THREE.DirectionalLight(0xF8FAFC, 1.2);
     fillLight.position.set(-6, 4, 6);
     scene.add(fillLight);
 
-    const rimLight = new THREE.DirectionalLight(0xFFFFFF, 0.9);
-    rimLight.position.set(0, 7, -6);
+    const rimLight = new THREE.DirectionalLight(0xFFFFFF, 1.1);
+    rimLight.position.set(0, 8, -6);
     scene.add(rimLight);
+
+    // Dynamic Swatch Accent Point Light
+    const accentLight = new THREE.PointLight(new THREE.Color(swatchColor), 2.0, 15);
+    accentLight.position.set(0, 3, 5);
+    scene.add(accentLight);
+    accentLightRef.current = accentLight;
 
     // Soft Studio Ground Shadow Plane
     const shadowTex = createShadowTexture();
@@ -474,12 +480,12 @@ export default function Sticker3DViewer({
     const shadowMat = new THREE.MeshBasicMaterial({
       map: shadowTex,
       transparent: true,
-      opacity: 0.45,
+      opacity: 0.55,
       depthWrite: false
     });
     const shadowMesh = new THREE.Mesh(shadowGeo, shadowMat);
     shadowMesh.rotation.x = -Math.PI / 2;
-    shadowMesh.position.y = -2.1;
+    shadowMesh.position.y = -2.42;
     scene.add(shadowMesh);
     shadowMeshRef.current = shadowMesh;
 
@@ -503,13 +509,13 @@ export default function Sticker3DViewer({
         },
         undefined,
         () => {
-          textureRef.current = createFallbackTexture(product?.name);
+          textureRef.current = createFallbackTexture(product?.name, swatchColor);
           aspectRef.current = 1;
           setLoaded(true);
         }
       );
     } else {
-      textureRef.current = createFallbackTexture(product?.name);
+      textureRef.current = createFallbackTexture(product?.name, swatchColor);
       aspectRef.current = 1;
       setLoaded(true);
     }
@@ -535,6 +541,13 @@ export default function Sticker3DViewer({
     };
   }, [product?.image, product?.src, product?.name]);
 
+  // Update accent light when swatch changes
+  useEffect(() => {
+    if (accentLightRef.current) {
+      accentLightRef.current.color.set(swatchColor);
+    }
+  }, [swatchColor]);
+
   // 2. Load and Switch Model when Target Changes
   useEffect(() => {
     const scene = sceneRef.current;
@@ -548,7 +561,7 @@ export default function Sticker3DViewer({
       activeModelRef.current = null;
     }
 
-    const tex = textureRef.current || createFallbackTexture(product?.name);
+    const tex = textureRef.current || createFallbackTexture(product?.name, swatchColor);
     const aspect = aspectRef.current || 1;
 
     if (selectedTarget === 'sticker') {
@@ -556,10 +569,13 @@ export default function Sticker3DViewer({
       scene.add(stickerModel);
       activeModelRef.current = stickerModel;
       if (cameraRef.current) cameraRef.current.position.set(0, 0, 6.8);
-      if (shadowMeshRef.current) shadowMeshRef.current.position.y = -2.1;
+      if (shadowMeshRef.current) {
+        shadowMeshRef.current.position.y = -2.2;
+        shadowMeshRef.current.scale.set(0.75, 0.75, 1);
+      }
 
-      dragRef.current.rotX = stickerModel.rotation.x;
-      dragRef.current.rotY = stickerModel.rotation.y;
+      dragRef.current.rotX = 0;
+      dragRef.current.rotY = 0;
       dragRef.current.velX = 0;
       dragRef.current.velY = 0;
       setModelLoading(false);
@@ -576,19 +592,34 @@ export default function Sticker3DViewer({
         activeModelRef.current = model;
 
         if (selectedTarget === 'laptop') {
-          if (cameraRef.current) cameraRef.current.position.set(0, 0, 8.5);
-          if (shadowMeshRef.current) shadowMeshRef.current.position.y = -1.3;
+          // MacBook Pro centered
+          if (cameraRef.current) cameraRef.current.position.set(0, 0, 8.2);
+          if (shadowMeshRef.current) {
+            shadowMeshRef.current.position.y = -1.43;
+            shadowMeshRef.current.scale.set(1.1, 1.1, 1);
+          }
+          dragRef.current.rotX = 0.22;
+          dragRef.current.rotY = -0.38;
         } else if (selectedTarget === 'vehicle') {
-          if (cameraRef.current) cameraRef.current.position.set(0, 0, 9.2);
-          if (shadowMeshRef.current) shadowMeshRef.current.position.y = -1.1;
+          // Sports car upright on wheels
+          if (cameraRef.current) cameraRef.current.position.set(0, 0, 8.8);
+          if (shadowMeshRef.current) {
+            shadowMeshRef.current.position.y = -0.89;
+            shadowMeshRef.current.scale.set(1.35, 0.95, 1);
+          }
+          dragRef.current.rotX = 0.18;
+          dragRef.current.rotY = -Math.PI * 0.38;
         } else {
-          // iPhone
+          // iPhone Pro
           if (cameraRef.current) cameraRef.current.position.set(0, 0, 7.8);
-          if (shadowMeshRef.current) shadowMeshRef.current.position.y = -2.1;
+          if (shadowMeshRef.current) {
+            shadowMeshRef.current.position.y = -2.42;
+            shadowMeshRef.current.scale.set(0.65, 0.65, 1);
+          }
+          dragRef.current.rotX = 0.08;
+          dragRef.current.rotY = -0.22;
         }
 
-        dragRef.current.rotX = model.rotation.x;
-        dragRef.current.rotY = model.rotation.y;
         dragRef.current.velX = 0;
         dragRef.current.velY = 0;
         setModelLoading(false);
@@ -601,7 +632,7 @@ export default function Sticker3DViewer({
     return () => {
       isCancelled = true;
     };
-  }, [selectedTarget, loaded, product?.name]);
+  }, [selectedTarget, loaded, product?.name, swatchColor]);
 
   // 3. Smooth Momentum Drag & Idle Auto-Rotation
   useEffect(() => {
@@ -631,7 +662,21 @@ export default function Sticker3DViewer({
           }
         }
 
-        dragRef.current.rotX = Math.max(-0.95, Math.min(0.95, dragRef.current.rotX));
+        // Clamp pitch according to model type to prevent upside-down flipping
+        let minPitch = -0.55;
+        let maxPitch = 0.65;
+        if (selectedTarget === 'vehicle') {
+          minPitch = -0.15;
+          maxPitch = 0.55;
+        } else if (selectedTarget === 'laptop') {
+          minPitch = -0.25;
+          maxPitch = 0.65;
+        } else if (selectedTarget === 'sticker') {
+          minPitch = -0.45;
+          maxPitch = 0.45;
+        }
+
+        dragRef.current.rotX = Math.max(minPitch, Math.min(maxPitch, dragRef.current.rotX));
         model.rotation.y = dragRef.current.rotY;
         model.rotation.x = dragRef.current.rotX;
       }
@@ -644,7 +689,7 @@ export default function Sticker3DViewer({
     return () => {
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     };
-  }, [autoRotate]);
+  }, [autoRotate, selectedTarget]);
 
   // 4. Pointer Drag Handlers
   const handlePointerDown = (e) => {
@@ -687,18 +732,18 @@ export default function Sticker3DViewer({
 
   const handleResetView = useCallback(() => {
     if (!activeModelRef.current) return;
-    let defX = 0.06;
+    let defX = 0.08;
     let defY = -0.22;
 
     if (selectedTarget === 'laptop') {
-      defX = 0.16;
-      defY = -0.42;
+      defX = 0.22;
+      defY = -0.38;
     } else if (selectedTarget === 'vehicle') {
-      defX = 0.12;
-      defY = Math.PI * 0.72;
+      defX = 0.18;
+      defY = -Math.PI * 0.38;
     } else if (selectedTarget === 'sticker') {
-      defX = 0.06;
-      defY = -0.15;
+      defX = 0;
+      defY = 0;
     }
 
     dragRef.current.rotX = defX;
@@ -709,20 +754,28 @@ export default function Sticker3DViewer({
 
   return (
     <div className="w-full flex flex-col items-center">
-      {/* 3D Stage Card - PURE WHITE STUDIO BACKGROUND */}
+      {/* 3D Stage Card - DYNAMICALLY HARMONIZED WITH STICKER SWATCH */}
       <div
-        className="w-full max-w-[500px] aspect-[4/5] rounded-[36px] bg-white border border-black/10 p-4 sm:p-6 flex flex-col items-center justify-between relative shadow-[0_20px_50px_rgba(0,0,0,0.12)] overflow-hidden group select-none"
-        style={{ touchAction: 'none' }}
+        className="w-full max-w-[500px] aspect-[4/5] rounded-[36px] border p-4 sm:p-6 flex flex-col items-center justify-between relative overflow-hidden group select-none transition-all duration-700"
+        style={{
+          touchAction: 'none',
+          background: `radial-gradient(circle at 50% 45%, ${swatchColor}38 0%, ${swatchColor}18 35%, #13141D 70%, #0D0E15 100%)`,
+          borderColor: `${swatchColor}35`,
+          boxShadow: `0 25px 60px -15px ${swatchColor}25, 0 0 40px ${swatchColor}10, inset 0 1px 1px rgba(255, 255, 255, 0.12)`
+        }}
       >
         {/* Top Floating Controls Bar */}
         <div className="w-full flex items-center justify-between relative z-20 pointer-events-none">
           <div className="flex items-center gap-2">
-            <span className="px-3 py-1 rounded-full bg-black/80 text-white text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-md">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span>3D Interactive Studio</span>
+            <span className="px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-white text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-lg">
+              <Sparkles className="w-3.5 h-3.5" style={{ color: swatchColor }} />
+              <span>3D Studio</span>
             </span>
 
-            <span className="px-2.5 py-1 rounded-full bg-black/5 text-black font-mono font-bold text-xs border border-black/10">
+            <span
+              className="px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-md text-white font-mono font-bold text-xs border"
+              style={{ borderColor: `${swatchColor}40` }}
+            >
               {currentInfo.label}
             </span>
           </div>
@@ -731,7 +784,7 @@ export default function Sticker3DViewer({
           <button
             type="button"
             onClick={handleResetView}
-            className="w-8 h-8 rounded-full bg-white hover:bg-gray-100 border border-black/15 text-gray-700 hover:text-black flex items-center justify-center transition-all pointer-events-auto cursor-pointer shadow-md active:scale-95"
+            className="w-8 h-8 rounded-full bg-black/60 hover:bg-black/90 backdrop-blur-md border border-white/15 text-white/80 hover:text-white flex items-center justify-center transition-all pointer-events-auto cursor-pointer shadow-lg active:scale-95"
             title="Reset viewing angle"
           >
             <RotateCw className="w-3.5 h-3.5" />
@@ -740,9 +793,9 @@ export default function Sticker3DViewer({
 
         {/* Loading Indicator Overlay */}
         {modelLoading && (
-          <div className="absolute inset-0 z-30 bg-white/70 backdrop-blur-sm flex items-center justify-center pointer-events-none">
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-black text-white text-xs font-mono font-bold shadow-lg">
-              <RefreshCw className="w-3.5 h-3.5 animate-spin text-amber-400" />
+          <div className="absolute inset-0 z-30 bg-black/60 backdrop-blur-sm flex items-center justify-center pointer-events-none">
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/90 border border-white/20 text-white text-xs font-mono font-bold shadow-2xl">
+              <RefreshCw className="w-3.5 h-3.5 animate-spin" style={{ color: swatchColor }} />
               <span>Loading 3D Model...</span>
             </div>
           </div>
@@ -764,16 +817,16 @@ export default function Sticker3DViewer({
         />
 
         {/* Bottom Stage Overlay Bar */}
-        <div className="w-full flex items-center justify-between pt-3 border-t border-black/10 relative z-20 text-xs text-gray-600">
-          <div className="flex items-center gap-1.5 font-medium text-[11px] text-gray-700">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Drag in any direction to rotate 360°</span>
+        <div className="w-full flex items-center justify-between pt-3 border-t border-white/10 relative z-20 text-xs text-white/60">
+          <div className="flex items-center gap-1.5 font-medium text-[11px] text-white/80">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>Drag to rotate 360°</span>
           </div>
 
           <button
             type="button"
             onClick={() => setAutoRotate(!autoRotate)}
-            className="text-[11px] font-mono text-gray-500 hover:text-black transition-colors cursor-pointer"
+            className="text-[11px] font-mono text-white/50 hover:text-white transition-colors cursor-pointer"
           >
             {autoRotate ? 'Auto-spin: ON' : 'Auto-spin: OFF'}
           </button>
@@ -785,7 +838,7 @@ export default function Sticker3DViewer({
         {[
           { id: 'mobile', label: 'iPhone', desc: 'Phone Back', icon: Smartphone },
           { id: 'laptop', label: 'MacBook', desc: 'Laptop Lid', icon: Laptop },
-          { id: 'vehicle', label: 'Car', desc: 'Rear Window', icon: Car },
+          { id: 'vehicle', label: 'Car', desc: 'Windshield', icon: Car },
           { id: 'sticker', label: 'Sticker', desc: 'Die-Cut View', icon: Tag }
         ].map((item) => {
           const Icon = item.icon;
@@ -795,15 +848,31 @@ export default function Sticker3DViewer({
               key={item.id}
               type="button"
               onClick={() => onSelectTarget && onSelectTarget(item.id)}
+              style={
+                isSelected
+                  ? {
+                      backgroundColor: swatchColor,
+                      borderColor: swatchColor,
+                      boxShadow: `0 4px 20px ${swatchColor}50`
+                    }
+                  : {}
+              }
               className={`p-2.5 rounded-2xl border text-center flex flex-col items-center gap-1 transition-all cursor-pointer ${
                 isSelected
-                  ? 'bg-amber-400 text-black border-amber-400 shadow-[0_4px_20px_rgba(245,158,11,0.3)] font-bold'
+                  ? 'text-black font-bold'
                   : 'bg-[#12131A] hover:bg-[#181A24] text-white/70 hover:text-white border-white/10'
               }`}
             >
-              <Icon className={`w-4 h-4 ${isSelected ? 'text-black' : 'text-amber-400'}`} />
+              <Icon
+                className="w-4 h-4"
+                style={isSelected ? { color: '#000000' } : { color: swatchColor }}
+              />
               <span className="text-xs font-extrabold leading-none">{item.label}</span>
-              <span className={`text-[10px] font-mono leading-none ${isSelected ? 'text-black/80' : 'text-white/40'}`}>
+              <span
+                className={`text-[10px] font-mono leading-none ${
+                  isSelected ? 'text-black/80' : 'text-white/40'
+                }`}
+              >
                 {item.desc}
               </span>
             </button>
