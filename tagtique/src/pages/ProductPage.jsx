@@ -244,19 +244,19 @@ export default function ProductPage() {
                 <div className="flex items-center justify-between mb-3">
                   <div>
                     <span className="text-xs font-extrabold text-white uppercase tracking-wider block">
-                      Select Placement Surface:
+                      Preview on Real Objects:
                     </span>
                     <span className="text-[11px] text-white/50">
-                      Tap an object to view on 3D movable model
+                      Tap to see how this sticker looks on iPhone, MacBook, or Car
                     </span>
                   </div>
                   <span className="text-xs font-mono font-bold text-amber-400 bg-amber-400/10 border border-amber-400/30 px-2.5 py-1 rounded-full shadow-sm">
-                    {selectedTarget === 'vehicle' ? 'Real Scale: 4" × 4"' : 'Real Scale: 2" × 2"'}
+                    {selectedTarget === 'vehicle' ? 'Car Placement' : selectedTarget === 'laptop' ? 'MacBook Placement' : selectedTarget === 'mobile' ? 'iPhone Placement' : 'Die-Cut View'}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2.5">
-                  {/* Option 1: Mobile */}
+                  {/* Option 1: iPhone */}
                   <button
                     type="button"
                     onClick={() => setSelectedTarget('mobile')}
@@ -269,16 +269,16 @@ export default function ProductPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Smartphone className={`w-4 h-4 ${selectedTarget === 'mobile' ? 'text-amber-400' : 'text-white/60'}`} />
-                        <span className="font-extrabold text-sm text-white">Mobile Phone</span>
+                        <span className="font-extrabold text-sm text-white">iPhone</span>
                       </div>
                       <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-white/10 text-amber-300">
-                        2" × 2"
+                        Phone Back
                       </span>
                     </div>
-                    <p className="text-[11px] text-white/50">Sleek back glass fit for smartphones</p>
+                    <p className="text-[11px] text-white/50">Titanium frame & frosted glass fit</p>
                   </button>
 
-                  {/* Option 2: Laptop */}
+                  {/* Option 2: MacBook */}
                   <button
                     type="button"
                     onClick={() => setSelectedTarget('laptop')}
@@ -291,16 +291,16 @@ export default function ProductPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Laptop className={`w-4 h-4 ${selectedTarget === 'laptop' ? 'text-amber-400' : 'text-white/60'}`} />
-                        <span className="font-extrabold text-sm text-white">Laptop / PC</span>
+                        <span className="font-extrabold text-sm text-white">MacBook</span>
                       </div>
                       <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-white/10 text-amber-300">
-                        2" × 2"
+                        Laptop Lid
                       </span>
                     </div>
-                    <p className="text-[11px] text-white/50">MacBook & PC aluminium lid fit</p>
+                    <p className="text-[11px] text-white/50">Apple aluminum unibody lid fit</p>
                   </button>
 
-                  {/* Option 3: Vehicle */}
+                  {/* Option 3: Car */}
                   <button
                     type="button"
                     onClick={() => setSelectedTarget('vehicle')}
@@ -313,13 +313,13 @@ export default function ProductPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Car className={`w-4 h-4 ${selectedTarget === 'vehicle' ? 'text-amber-400' : 'text-white/60'}`} />
-                        <span className="font-extrabold text-sm text-white">Car / Vehicle</span>
+                        <span className="font-extrabold text-sm text-white">Car</span>
                       </div>
                       <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-amber-400 text-black">
-                        4" × 4"
+                        Rear Glass
                       </span>
                     </div>
-                    <p className="text-[11px] text-white/50">Weatherproof rear windshield & bumper</p>
+                    <p className="text-[11px] text-white/50">Weatherproof tinted glass fit</p>
                   </button>
 
                   {/* Option 4: Standalone Sticker */}
