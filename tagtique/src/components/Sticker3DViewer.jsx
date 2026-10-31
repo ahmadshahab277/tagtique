@@ -2,10 +2,64 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js';
-import { RotateCw, Sparkles, Smartphone, Laptop, Car, Tag, RefreshCw } from 'lucide-react';
+import { RotateCw, ZoomIn, Eye, Smartphone, Laptop, Car, Tag, RefreshCw } from 'lucide-react';
 
 // In-memory cache for loaded and cloned OBJ models so switching is instantaneous
 const MODEL_CACHE = new Map();
+
+/**
+ * Camera and Focus Configuration for Overview vs Close-up modes
+ */
+const VIEW_CONFIG = {
+  mobile: {
+    overview: {
+      camPos: new THREE.Vector3(0, 0, 7.8),
+      target: new THREE.Vector3(0, 0, 0),
+      defRot: { x: 0.08, y: -0.22 }
+    },
+    closeup: {
+      camPos: new THREE.Vector3(-0.01, -0.62, 2.7),
+      target: new THREE.Vector3(-0.01, -0.62, 0.04),
+      defRot: { x: 0.02, y: -0.05 }
+    }
+  },
+  laptop: {
+    overview: {
+      camPos: new THREE.Vector3(0, 0, 8.2),
+      target: new THREE.Vector3(0, 0, 0),
+      defRot: { x: 0.22, y: -0.38 }
+    },
+    closeup: {
+      camPos: new THREE.Vector3(-0.29, -0.08, 3.8),
+      target: new THREE.Vector3(-0.29, -0.14, 1.62),
+      defRot: { x: 0.18, y: -0.25 }
+    }
+  },
+  vehicle: {
+    overview: {
+      camPos: new THREE.Vector3(0, 0, 8.8),
+      target: new THREE.Vector3(0, 0, 0),
+      defRot: { x: 0.18, y: -Math.PI * 0.38 }
+    },
+    closeup: {
+      camPos: new THREE.Vector3(-0.17, 0.42, 2.45),
+      target: new THREE.Vector3(-0.17, 0.34, 0.93),
+      defRot: { x: 0.15, y: -Math.PI * 0.35 }
+    }
+  },
+  sticker: {
+    overview: {
+      camPos: new THREE.Vector3(0, 0, 6.8),
+      target: new THREE.Vector3(0, 0, 0),
+      defRot: { x: 0, y: 0 }
+    },
+    closeup: {
+      camPos: new THREE.Vector3(0, 0, 3.2),
+      target: new THREE.Vector3(0, 0, 0),
+      defRot: { x: 0, y: 0 }
+    }
+  }
+};
 
 /**
  * Creates soft studio radial shadow under the 3D model
@@ -301,7 +355,7 @@ async function loadTargetModel(target, stickerTexture) {
               }
             });
 
-            // CRITICAL FIX: Scale first, then compute bounding box and dead-center at (0, 0, 0)
+            // Scale first, then compute bounding box and dead-center at (0, 0, 0)
             const rawBox = new THREE.Box3().setFromObject(object);
             const rawSize = rawBox.getSize(new THREE.Vector3());
             const maxDim = Math.max(rawSize.x, rawSize.y, rawSize.z) || 1;
@@ -325,10 +379,8 @@ async function loadTargetModel(target, stickerTexture) {
             if (target === 'mobile') {
               outerGroup.rotation.set(0.08, -0.22, 0);
             } else if (target === 'laptop') {
-              // MacBook Pro lid centered facing user
               outerGroup.rotation.set(0.22, -0.38, 0);
             } else if (target === 'vehicle') {
-              // Car upright on wheels (+Y up), windshield with sticker prominent
               outerGroup.rotation.set(0.18, -Math.PI * 0.38, 0);
             }
 
@@ -362,7 +414,7 @@ function buildStickerOnlyModel(stickerTexture, aspect = 1) {
     stickerH = stickerW / aspect;
   }
 
-  // Front High-Gloss Die-Cut Vinyl Face ONLY - no back card!
+  // Front High-Gloss Die-Cut Vinyl Face ONLY
   const frontGeo = new THREE.PlaneGeometry(stickerW, stickerH);
   const frontMat = new THREE.MeshStandardMaterial({
     map: stickerTexture,
@@ -396,12 +448,19 @@ export default function Sticker3DViewer({
   const textureRef = useRef(null);
   const aspectRef = useRef(1);
 
+  // View mode: 'overview' shows entire product; 'closeup' zooms in on sticker
+  const [viewMode, setViewMode] = useState('overview');
   const [isDragging, setIsDragging] = useState(false);
   const [autoRotate, setAutoRotate] = useState(true);
   const [loaded, setLoaded] = useState(false);
   const [modelLoading, setModelLoading] = useState(false);
 
   const swatchColor = product?.swatch || product?.accent || '#F59E0B';
+
+  // Smooth camera position & lookAt target references
+  const currentLookAtRef = useRef(new THREE.Vector3(0, 0, 0));
+  const targetLookAtRef = useRef(new THREE.Vector3(0, 0, 0));
+  const targetCamPosRef = useRef(new THREE.Vector3(0, 0, 8.2));
 
   const dragRef = useRef({
     isDown: false,
@@ -413,15 +472,6 @@ export default function Sticker3DViewer({
     velY: 0,
     lastMoveTime: 0
   });
-
-  const SIZES = {
-    mobile: { label: 'iPhone Pro', surface: 'Titanium & Frosted Glass' },
-    laptop: { label: 'MacBook Pro', surface: 'Aluminum Unibody Lid' },
-    vehicle: { label: 'Sports Sedan', surface: 'Front Windshield Fit' },
-    sticker: { label: 'Sticker Only', surface: 'High-Gloss Die-Cut Vinyl' }
-  };
-
-  const currentInfo = SIZES[selectedTarget] || SIZES.mobile;
 
   // 1. Initial Scene Setup (Transparent WebGL on Dynamic Harmonized Studio Card)
   useEffect(() => {
@@ -436,9 +486,17 @@ export default function Sticker3DViewer({
     scene.background = null;
     sceneRef.current = scene;
 
+    // Initial camera position & target from VIEW_CONFIG
+    const cfg = VIEW_CONFIG[selectedTarget] || VIEW_CONFIG.mobile;
+    const initialMode = cfg[viewMode] || cfg.overview;
+    targetCamPosRef.current.copy(initialMode.camPos);
+    targetLookAtRef.current.copy(initialMode.target);
+    currentLookAtRef.current.copy(initialMode.target);
+
     // Camera
     const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
-    camera.position.set(0, 0, 8.2);
+    camera.position.copy(initialMode.camPos);
+    camera.lookAt(initialMode.target);
     cameraRef.current = camera;
 
     // WebGL Renderer with alpha: true
@@ -548,7 +606,7 @@ export default function Sticker3DViewer({
     }
   }, [swatchColor]);
 
-  // 2. Load and Switch Model when Target Changes
+  // 2. Load and Switch Model when Target or ViewMode Changes
   useEffect(() => {
     const scene = sceneRef.current;
     if (!scene || !loaded) return;
@@ -563,19 +621,24 @@ export default function Sticker3DViewer({
 
     const tex = textureRef.current || createFallbackTexture(product?.name, swatchColor);
     const aspect = aspectRef.current || 1;
+    const cfg = VIEW_CONFIG[selectedTarget] || VIEW_CONFIG.mobile;
+    const targetMode = cfg[viewMode] || cfg.overview;
+
+    targetCamPosRef.current.copy(targetMode.camPos);
+    targetLookAtRef.current.copy(targetMode.target);
 
     if (selectedTarget === 'sticker') {
       const stickerModel = buildStickerOnlyModel(tex, aspect);
       scene.add(stickerModel);
       activeModelRef.current = stickerModel;
-      if (cameraRef.current) cameraRef.current.position.set(0, 0, 6.8);
+
       if (shadowMeshRef.current) {
         shadowMeshRef.current.position.y = -2.2;
         shadowMeshRef.current.scale.set(0.75, 0.75, 1);
       }
 
-      dragRef.current.rotX = 0;
-      dragRef.current.rotY = 0;
+      dragRef.current.rotX = targetMode.defRot.x;
+      dragRef.current.rotY = targetMode.defRot.y;
       dragRef.current.velX = 0;
       dragRef.current.velY = 0;
       setModelLoading(false);
@@ -592,34 +655,25 @@ export default function Sticker3DViewer({
         activeModelRef.current = model;
 
         if (selectedTarget === 'laptop') {
-          // MacBook Pro centered
-          if (cameraRef.current) cameraRef.current.position.set(0, 0, 8.2);
           if (shadowMeshRef.current) {
             shadowMeshRef.current.position.y = -1.43;
             shadowMeshRef.current.scale.set(1.1, 1.1, 1);
           }
-          dragRef.current.rotX = 0.22;
-          dragRef.current.rotY = -0.38;
         } else if (selectedTarget === 'vehicle') {
-          // Sports car upright on wheels
-          if (cameraRef.current) cameraRef.current.position.set(0, 0, 8.8);
           if (shadowMeshRef.current) {
             shadowMeshRef.current.position.y = -0.89;
             shadowMeshRef.current.scale.set(1.35, 0.95, 1);
           }
-          dragRef.current.rotX = 0.18;
-          dragRef.current.rotY = -Math.PI * 0.38;
         } else {
           // iPhone Pro
-          if (cameraRef.current) cameraRef.current.position.set(0, 0, 7.8);
           if (shadowMeshRef.current) {
             shadowMeshRef.current.position.y = -2.42;
             shadowMeshRef.current.scale.set(0.65, 0.65, 1);
           }
-          dragRef.current.rotX = 0.08;
-          dragRef.current.rotY = -0.22;
         }
 
+        dragRef.current.rotX = targetMode.defRot.x;
+        dragRef.current.rotY = targetMode.defRot.y;
         dragRef.current.velX = 0;
         dragRef.current.velY = 0;
         setModelLoading(false);
@@ -634,7 +688,7 @@ export default function Sticker3DViewer({
     };
   }, [selectedTarget, loaded, product?.name, swatchColor]);
 
-  // 3. Smooth Momentum Drag & Idle Auto-Rotation
+  // 3. Smooth Camera Glide & Interactive Rotation Animation Loop
   useEffect(() => {
     const renderer = rendererRef.current;
     const scene = sceneRef.current;
@@ -657,7 +711,8 @@ export default function Sticker3DViewer({
           dragRef.current.velX *= 0.92;
           dragRef.current.velY *= 0.92;
 
-          if (autoRotate && Math.abs(dragRef.current.velY) < 0.001) {
+          // Only auto-spin in overview mode so close-up sticker inspection remains rock solid
+          if (autoRotate && viewMode === 'overview' && Math.abs(dragRef.current.velY) < 0.001) {
             dragRef.current.rotY += 0.005;
           }
         }
@@ -681,6 +736,11 @@ export default function Sticker3DViewer({
         model.rotation.x = dragRef.current.rotX;
       }
 
+      // Smooth cinematic camera position and target interpolation
+      camera.position.lerp(targetCamPosRef.current, 0.08);
+      currentLookAtRef.current.lerp(targetLookAtRef.current, 0.08);
+      camera.lookAt(currentLookAtRef.current);
+
       renderer.render(scene, camera);
     };
 
@@ -689,7 +749,7 @@ export default function Sticker3DViewer({
     return () => {
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     };
-  }, [autoRotate, selectedTarget]);
+  }, [autoRotate, selectedTarget, viewMode]);
 
   // 4. Pointer Drag Handlers
   const handlePointerDown = (e) => {
@@ -711,7 +771,8 @@ export default function Sticker3DViewer({
     const dx = clientX - dragRef.current.startX;
     const dy = clientY - dragRef.current.startY;
 
-    const rotSensitivity = 0.007;
+    // Finer rotation control when in close-up
+    const rotSensitivity = viewMode === 'closeup' ? 0.0035 : 0.007;
     dragRef.current.rotY += dx * rotSensitivity;
     dragRef.current.rotX += dy * rotSensitivity;
 
@@ -730,27 +791,38 @@ export default function Sticker3DViewer({
     dragRef.current.isDown = false;
   };
 
+  // Switch between Overview and Close-up with smooth camera glide
+  const handleSetViewMode = (mode) => {
+    setViewMode(mode);
+    const cfg = VIEW_CONFIG[selectedTarget] || VIEW_CONFIG.mobile;
+    const targetMode = cfg[mode] || cfg.overview;
+
+    targetCamPosRef.current.copy(targetMode.camPos);
+    targetLookAtRef.current.copy(targetMode.target);
+
+    // When entering closeup, immediately bring the sticker into focus
+    if (mode === 'closeup') {
+      dragRef.current.rotX = targetMode.defRot.x;
+      dragRef.current.rotY = targetMode.defRot.y;
+      dragRef.current.velX = 0;
+      dragRef.current.velY = 0;
+    }
+  };
+
+  // Reset Camera View Button Handler
   const handleResetView = useCallback(() => {
     if (!activeModelRef.current) return;
-    let defX = 0.08;
-    let defY = -0.22;
+    const cfg = VIEW_CONFIG[selectedTarget] || VIEW_CONFIG.mobile;
+    const currentMode = cfg[viewMode] || cfg.overview;
 
-    if (selectedTarget === 'laptop') {
-      defX = 0.22;
-      defY = -0.38;
-    } else if (selectedTarget === 'vehicle') {
-      defX = 0.18;
-      defY = -Math.PI * 0.38;
-    } else if (selectedTarget === 'sticker') {
-      defX = 0;
-      defY = 0;
-    }
-
-    dragRef.current.rotX = defX;
-    dragRef.current.rotY = defY;
+    dragRef.current.rotX = currentMode.defRot.x;
+    dragRef.current.rotY = currentMode.defRot.y;
     dragRef.current.velX = 0;
     dragRef.current.velY = 0;
-  }, [selectedTarget]);
+
+    targetCamPosRef.current.copy(currentMode.camPos);
+    targetLookAtRef.current.copy(currentMode.target);
+  }, [selectedTarget, viewMode]);
 
   return (
     <div className="w-full flex flex-col items-center">
@@ -766,18 +838,51 @@ export default function Sticker3DViewer({
       >
         {/* Top Floating Controls Bar */}
         <div className="w-full flex items-center justify-between relative z-20 pointer-events-none">
-          <div className="flex items-center gap-2">
-            <span className="px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-white text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-lg">
-              <Sparkles className="w-3.5 h-3.5" style={{ color: swatchColor }} />
-              <span>3D Studio</span>
-            </span>
-
-            <span
-              className="px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-md text-white font-mono font-bold text-xs border"
-              style={{ borderColor: `${swatchColor}40` }}
+          {/* Closeup / Overview Mode Selector Pill */}
+          <div className="flex items-center p-1 rounded-full bg-black/60 backdrop-blur-md border border-white/15 shadow-xl pointer-events-auto gap-1">
+            <button
+              type="button"
+              onClick={() => handleSetViewMode('overview')}
+              style={
+                viewMode === 'overview'
+                  ? {
+                      backgroundColor: swatchColor,
+                      color: '#000000',
+                      boxShadow: `0 2px 12px ${swatchColor}60`
+                    }
+                  : {}
+              }
+              className={`px-3 py-1.5 rounded-full text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                viewMode === 'overview'
+                  ? 'font-extrabold'
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
+              }`}
             >
-              {currentInfo.label}
-            </span>
+              <Eye className="w-3.5 h-3.5" />
+              <span>Overview</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleSetViewMode('closeup')}
+              style={
+                viewMode === 'closeup'
+                  ? {
+                      backgroundColor: swatchColor,
+                      color: '#000000',
+                      boxShadow: `0 2px 12px ${swatchColor}60`
+                    }
+                  : {}
+              }
+              className={`px-3 py-1.5 rounded-full text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                viewMode === 'closeup'
+                  ? 'font-extrabold'
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <ZoomIn className="w-3.5 h-3.5" />
+              <span>Close-up</span>
+            </button>
           </div>
 
           {/* Reset Camera View Button */}
@@ -820,7 +925,9 @@ export default function Sticker3DViewer({
         <div className="w-full flex items-center justify-between pt-3 border-t border-white/10 relative z-20 text-xs text-white/60">
           <div className="flex items-center gap-1.5 font-medium text-[11px] text-white/80">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>Drag to rotate 360°</span>
+            <span>
+              {viewMode === 'closeup' ? 'Close-up: Sticker Detail Focused' : 'Overview: Drag to rotate 360°'}
+            </span>
           </div>
 
           <button
