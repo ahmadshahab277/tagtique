@@ -9,8 +9,8 @@ const MODEL_CACHE = new Map();
 
 /**
  * Camera and Focus Configuration for Overview vs Close-up modes
- * In Close-up mode, the camera aligns directly along the sticker's normal at close range,
- * fixing the viewpoint firmly on the sticker artwork.
+ * In Close-up mode, the camera aligns directly along the sticker's normal,
+ * comfortably framing the FULL sticker with breathing room so no edges are cut off.
  */
 const VIEW_CONFIG = {
   mobile: {
@@ -20,7 +20,8 @@ const VIEW_CONFIG = {
       defRot: { x: 0.08, y: -0.22 }
     },
     closeup: {
-      camPos: new THREE.Vector3(-0.445, -0.467, 1.986),
+      // Adjusted distance so the entire sticker (character head to contact label) is fully visible
+      camPos: new THREE.Vector3(-0.641, -0.397, 2.862),
       target: new THREE.Vector3(-0.009, -0.623, 0.040),
       defRot: { x: 0.08, y: -0.22 }
     }
@@ -52,12 +53,13 @@ const VIEW_CONFIG = {
   },
   sticker: {
     overview: {
-      camPos: new THREE.Vector3(0, 0, 6.8),
+      camPos: new THREE.Vector3(0, 0, 7.5),
       target: new THREE.Vector3(0, 0, 0),
       defRot: { x: 0, y: 0 }
     },
     closeup: {
-      camPos: new THREE.Vector3(0, 0, 3.2),
+      // Adjusted so the full die-cut sticker artwork is completely visible without top/bottom cropping
+      camPos: new THREE.Vector3(0, 0, 5.5),
       target: new THREE.Vector3(0, 0, 0),
       defRot: { x: 0, y: 0 }
     }
@@ -410,10 +412,10 @@ function buildStickerOnlyModel(stickerTexture, aspect = 1) {
   group.name = 'sticker-only';
   group.rotation.order = 'YXZ';
 
-  let stickerH = 3.8;
+  let stickerH = 3.0;
   let stickerW = stickerH * aspect;
-  if (stickerW > 4.2) {
-    stickerW = 4.2;
+  if (stickerW > 2.8) {
+    stickerW = 2.8;
     stickerH = stickerW / aspect;
   }
 
@@ -644,7 +646,7 @@ export default function Sticker3DViewer({
       activeModelRef.current = stickerModel;
 
       if (shadowMeshRef.current) {
-        shadowMeshRef.current.position.y = -2.2;
+        shadowMeshRef.current.position.y = -1.8;
         shadowMeshRef.current.scale.set(0.75, 0.75, 1);
       }
 
