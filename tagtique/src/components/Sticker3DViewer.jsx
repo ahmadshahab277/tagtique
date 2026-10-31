@@ -9,6 +9,8 @@ const MODEL_CACHE = new Map();
 
 /**
  * Camera and Focus Configuration for Overview vs Close-up modes
+ * In Close-up mode, the camera aligns directly along the sticker's normal at close range,
+ * fixing the viewpoint firmly on the sticker artwork.
  */
 const VIEW_CONFIG = {
   mobile: {
@@ -18,9 +20,9 @@ const VIEW_CONFIG = {
       defRot: { x: 0.08, y: -0.22 }
     },
     closeup: {
-      camPos: new THREE.Vector3(-0.01, -0.62, 2.7),
-      target: new THREE.Vector3(-0.01, -0.62, 0.04),
-      defRot: { x: 0.02, y: -0.05 }
+      camPos: new THREE.Vector3(-0.445, -0.467, 1.986),
+      target: new THREE.Vector3(-0.009, -0.623, 0.040),
+      defRot: { x: 0.08, y: -0.22 }
     }
   },
   laptop: {
@@ -30,9 +32,9 @@ const VIEW_CONFIG = {
       defRot: { x: 0.22, y: -0.38 }
     },
     closeup: {
-      camPos: new THREE.Vector3(-0.29, -0.08, 3.8),
-      target: new THREE.Vector3(-0.29, -0.14, 1.62),
-      defRot: { x: 0.18, y: -0.25 }
+      camPos: new THREE.Vector3(-1.189, -0.946, 2.665),
+      target: new THREE.Vector3(-0.288, -0.138, 1.618),
+      defRot: { x: 0.22, y: -0.38 }
     }
   },
   vehicle: {
@@ -42,9 +44,10 @@ const VIEW_CONFIG = {
       defRot: { x: 0.18, y: -Math.PI * 0.38 }
     },
     closeup: {
-      camPos: new THREE.Vector3(-0.17, 0.42, 2.45),
-      target: new THREE.Vector3(-0.17, 0.34, 0.93),
-      defRot: { x: 0.15, y: -Math.PI * 0.35 }
+      // Perpendicular to car windshield at 0.32 units distance: sticker fills ~70% of screen width
+      camPos: new THREE.Vector3(-0.168, 0.628, 1.078),
+      target: new THREE.Vector3(-0.171, 0.345, 0.930),
+      defRot: { x: 0.18, y: -Math.PI * 0.38 }
     }
   },
   sticker: {
@@ -448,10 +451,9 @@ export default function Sticker3DViewer({
   const textureRef = useRef(null);
   const aspectRef = useRef(1);
 
-  // View mode: 'overview' shows entire product; 'closeup' zooms in on sticker
+  // View mode: 'overview' shows whole product (360° rotatable); 'closeup' fixes focus firmly on the sticker
   const [viewMode, setViewMode] = useState('overview');
   const [isDragging, setIsDragging] = useState(false);
-  const [autoRotate, setAutoRotate] = useState(true);
   const [loaded, setLoaded] = useState(false);
   const [modelLoading, setModelLoading] = useState(false);
 
@@ -472,6 +474,15 @@ export default function Sticker3DViewer({
     velY: 0,
     lastMoveTime: 0
   });
+
+  const SIZES = {
+    mobile: { label: 'iPhone Pro', surface: 'Titanium & Glass' },
+    laptop: { label: 'MacBook Pro', surface: 'Aluminum Unibody' },
+    vehicle: { label: 'Sports Sedan', surface: 'Front Windshield' },
+    sticker: { label: 'Sticker Only', surface: 'Die-Cut Vinyl' }
+  };
+
+  const currentInfo = SIZES[selectedTarget] || SIZES.mobile;
 
   // 1. Initial Scene Setup (Transparent WebGL on Dynamic Harmonized Studio Card)
   useEffect(() => {
@@ -494,7 +505,7 @@ export default function Sticker3DViewer({
     currentLookAtRef.current.copy(initialMode.target);
 
     // Camera
-    const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
+    const camera = new THREE.PerspectiveCamera(40, width / height, 0.05, 100);
     camera.position.copy(initialMode.camPos);
     camera.lookAt(initialMode.target);
     cameraRef.current = camera;
@@ -688,7 +699,7 @@ export default function Sticker3DViewer({
     };
   }, [selectedTarget, loaded, product?.name, swatchColor]);
 
-  // 3. Smooth Camera Glide & Interactive Rotation Animation Loop
+  // 3. Smooth Camera Glide & Interactive Rotation Animation Loop (NO AUTO-SPIN)
   useEffect(() => {
     const renderer = rendererRef.current;
     const scene = sceneRef.current;
@@ -704,20 +715,15 @@ export default function Sticker3DViewer({
 
       const model = activeModelRef.current;
       if (model) {
-        if (!dragRef.current.isDown) {
+        if (!dragRef.current.isDown && viewMode === 'overview') {
           dragRef.current.rotY += dragRef.current.velY;
           dragRef.current.rotX += dragRef.current.velX;
 
           dragRef.current.velX *= 0.92;
           dragRef.current.velY *= 0.92;
-
-          // Only auto-spin in overview mode so close-up sticker inspection remains rock solid
-          if (autoRotate && viewMode === 'overview' && Math.abs(dragRef.current.velY) < 0.001) {
-            dragRef.current.rotY += 0.005;
-          }
         }
 
-        // Clamp pitch according to model type to prevent upside-down flipping
+        // Clamp pitch according to model type in overview mode
         let minPitch = -0.55;
         let maxPitch = 0.65;
         if (selectedTarget === 'vehicle') {
@@ -736,7 +742,7 @@ export default function Sticker3DViewer({
         model.rotation.x = dragRef.current.rotX;
       }
 
-      // Smooth cinematic camera position and target interpolation
+      // Smooth camera interpolation
       camera.position.lerp(targetCamPosRef.current, 0.08);
       currentLookAtRef.current.lerp(targetLookAtRef.current, 0.08);
       camera.lookAt(currentLookAtRef.current);
@@ -749,10 +755,11 @@ export default function Sticker3DViewer({
     return () => {
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     };
-  }, [autoRotate, selectedTarget, viewMode]);
+  }, [selectedTarget, viewMode]);
 
-  // 4. Pointer Drag Handlers
+  // 4. Pointer Drag Handlers (Active ONLY in Overview; in Close-up, focus is firmly locked on sticker)
   const handlePointerDown = (e) => {
+    if (viewMode === 'closeup') return; // Fixed focus on sticker in closeup mode
     e.preventDefault();
     setIsDragging(true);
     dragRef.current.isDown = true;
@@ -764,15 +771,14 @@ export default function Sticker3DViewer({
   };
 
   const handlePointerMove = (e) => {
-    if (!dragRef.current.isDown) return;
+    if (viewMode === 'closeup' || !dragRef.current.isDown) return;
     const clientX = e.clientX || (e.touches && e.touches[0].clientX) || 0;
     const clientY = e.clientY || (e.touches && e.touches[0].clientY) || 0;
 
     const dx = clientX - dragRef.current.startX;
     const dy = clientY - dragRef.current.startY;
 
-    // Finer rotation control when in close-up
-    const rotSensitivity = viewMode === 'closeup' ? 0.0035 : 0.007;
+    const rotSensitivity = 0.007;
     dragRef.current.rotY += dx * rotSensitivity;
     dragRef.current.rotX += dy * rotSensitivity;
 
@@ -800,13 +806,13 @@ export default function Sticker3DViewer({
     targetCamPosRef.current.copy(targetMode.camPos);
     targetLookAtRef.current.copy(targetMode.target);
 
-    // When entering closeup, immediately bring the sticker into focus
-    if (mode === 'closeup') {
-      dragRef.current.rotX = targetMode.defRot.x;
-      dragRef.current.rotY = targetMode.defRot.y;
-      dragRef.current.velX = 0;
-      dragRef.current.velY = 0;
-    }
+    // Immediately fix and lock model orientation squarely onto the sticker
+    dragRef.current.rotX = targetMode.defRot.x;
+    dragRef.current.rotY = targetMode.defRot.y;
+    dragRef.current.velX = 0;
+    dragRef.current.velY = 0;
+    dragRef.current.isDown = false;
+    setIsDragging(false);
   };
 
   // Reset Camera View Button Handler
@@ -819,6 +825,8 @@ export default function Sticker3DViewer({
     dragRef.current.rotY = currentMode.defRot.y;
     dragRef.current.velX = 0;
     dragRef.current.velY = 0;
+    dragRef.current.isDown = false;
+    setIsDragging(false);
 
     targetCamPosRef.current.copy(currentMode.camPos);
     targetLookAtRef.current.copy(currentMode.target);
@@ -852,7 +860,7 @@ export default function Sticker3DViewer({
                     }
                   : {}
               }
-              className={`px-3 py-1.5 rounded-full text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3.5 py-1.5 rounded-full text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                 viewMode === 'overview'
                   ? 'font-extrabold'
                   : 'text-white/70 hover:text-white hover:bg-white/10'
@@ -874,7 +882,7 @@ export default function Sticker3DViewer({
                     }
                   : {}
               }
-              className={`px-3 py-1.5 rounded-full text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3.5 py-1.5 rounded-full text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                 viewMode === 'closeup'
                   ? 'font-extrabold'
                   : 'text-white/70 hover:text-white hover:bg-white/10'
@@ -916,8 +924,12 @@ export default function Sticker3DViewer({
           onTouchStart={handlePointerDown}
           onTouchMove={handlePointerMove}
           onTouchEnd={handlePointerUp}
-          className={`w-full h-full flex-1 flex items-center justify-center relative cursor-grab active:cursor-grabbing ${
-            isDragging ? 'cursor-grabbing' : ''
+          className={`w-full h-full flex-1 flex items-center justify-center relative ${
+            viewMode === 'closeup'
+              ? 'cursor-default'
+              : isDragging
+              ? 'cursor-grabbing'
+              : 'cursor-grab active:cursor-grabbing'
           }`}
         />
 
@@ -926,17 +938,15 @@ export default function Sticker3DViewer({
           <div className="flex items-center gap-1.5 font-medium text-[11px] text-white/80">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <span>
-              {viewMode === 'closeup' ? 'Close-up: Sticker Detail Focused' : 'Overview: Drag to rotate 360°'}
+              {viewMode === 'closeup'
+                ? 'Close-up View • Fixed on Sticker'
+                : '360° Overview • Drag to rotate'}
             </span>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setAutoRotate(!autoRotate)}
-            className="text-[11px] font-mono text-white/50 hover:text-white transition-colors cursor-pointer"
-          >
-            {autoRotate ? 'Auto-spin: ON' : 'Auto-spin: OFF'}
-          </button>
+          <span className="text-[11px] font-mono text-white/40">
+            {currentInfo.surface}
+          </span>
         </div>
       </div>
 
