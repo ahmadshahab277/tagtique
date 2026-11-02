@@ -4,13 +4,10 @@
  * Ensures both old printed QR codes and newly registered tags resolve
  * instantly in offline mode.
  *
- * Logic:
- * Offline routing dials the vehicle owner's phone number.
- *
  * Automatically keeps localStorage and Service Worker Cache in sync.
  */
 
-import { settingsService } from './settingsService';
+import { settingsService } from './settingsService.js';
 
 const STORAGE_KEY = 'tagtique_offline_tag_registry';
 
@@ -86,15 +83,27 @@ class TagRegistryService {
     const record = {
       token: token || vehicleNumber,
       vehicleNumber: vehicleNumber || token,
-      vehicleName: tag.vehicleName || tag.vehicleType || 'Vehicle',
-      vehicleType: tag.vehicleType || 'Car',
-      itemTarget: tag.itemTarget || 'mobile',
+      tagId: token || vehicleNumber,
+      itemName: tag.itemName || tag.vehicleName || tag.vehicleType || 'Smart Tag',
+      vehicleName: tag.vehicleName || tag.itemName || tag.vehicleType || 'Vehicle',
+      vehicleType: tag.vehicleType || tag.category || 'Device',
+      category: tag.category || tag.itemTarget || 'mobile',
+      itemTarget: tag.itemTarget || tag.category || 'mobile',
       ownerName: tag.ownerName || tag.customerName || 'Owner',
       phoneNumber: tag.phoneNumber || tag.phone_number || tag.phone || '',
       guardianNumber: tag.guardianNumber || tag.guardian_phone || '',
+      city: tag.city || 'Faisalabad, PK',
+      customNote: tag.customNote || tag.note || '',
+      rewardOffered: Boolean(tag.rewardOffered),
+      pin: tag.pin || '1234',
+      whatsappEnabled: tag.whatsappEnabled !== false,
+      callEnabled: tag.callEnabled !== false,
       phonePrivacy: 'public',
       supportPhone: settingsService.getSupportPhone(),
       status: tag.status || 'active',
+      isRegistered: tag.isRegistered ?? (
+        Boolean(tag.ownerName && tag.phoneNumber && !String(tag.phoneNumber).includes('0000000') && tag.status !== 'unassigned')
+      ),
       updatedAt: Date.now()
     };
 
@@ -102,6 +111,38 @@ class TagRegistryService {
     if (cleanPlate) this._registry[cleanPlate] = record;
 
     this._persist();
+  }
+
+  /**
+   * Checks whether a tag is already registered by an owner.
+   */
+  isTagRegistered(identifier) {
+    const tag = this.getTag(identifier);
+    if (!tag) return false;
+    if (tag.isRegistered === true) return true;
+    if (tag.status === 'unassigned' || !tag.phoneNumber || tag.phoneNumber.includes('0000000')) return false;
+    return Boolean(tag.ownerName && tag.phoneNumber);
+  }
+
+  /**
+   * Saves a newly registered tag from the first-time setup page.
+   */
+  saveRegisteredTag(tagData) {
+    this.registerTag({
+      ...tagData,
+      isRegistered: true,
+      status: 'active'
+    });
+    return this.getTag(tagData.token || tagData.qrToken || tagData.tagId);
+  }
+
+  /**
+   * Validates owner management PIN
+   */
+  verifyPin(identifier, pin) {
+    const tag = this.getTag(identifier);
+    if (!tag) return false;
+    return String(tag.pin || '1234').trim() === String(pin).trim();
   }
 
   /**
@@ -161,7 +202,7 @@ class TagRegistryService {
       return {
         phoneNumber: tag.phoneNumber,
         isPrivate: false,
-        label: 'Vehicle Owner',
+        label: 'Tag Owner',
         tag
       };
     }
@@ -169,7 +210,7 @@ class TagRegistryService {
     return {
       phoneNumber: supportPhone,
       isPrivate: false,
-      label: tag ? 'Vehicle Owner' : 'Tagtique Helpline',
+      label: tag ? 'Tag Owner' : 'Tagtique Helpline',
       tag: tag || null
     };
   }

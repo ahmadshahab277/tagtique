@@ -14,6 +14,7 @@ const NfcCardPage = lazy(() => import('./pages/NfcCardPage'));
 const NfcSetupPage = lazy(() => import('./pages/NfcSetupPage'));
 const NfcPublicProfilePage = lazy(() => import('./pages/NfcPublicProfilePage'));
 const CatalogPage = lazy(() => import('./pages/CatalogPage'));
+const QrScanHubPage = lazy(() => import('./pages/QrScanHubPage'));
 
 // Scroll to top on every route change
 function ScrollToTop() {
@@ -121,10 +122,11 @@ function AppContent() {
             {/* Dedicated Order Confirmation Receipt */}
             <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
 
-            {/* Redirect any legacy scan/tag URLs to Home */}
-            <Route path="/scan" element={<Navigate to="/" replace />} />
-            <Route path="/tag/*" element={<Navigate to="/" replace />} />
-            <Route path="/u/*" element={<Navigate to="/" replace />} />
+            {/* Dynamic Smart QR & Barcode Activation / Contact Pages */}
+            <Route path="/scan" element={<QrScanHubPage />} />
+            <Route path="/tag/:tagId" element={<QrScanHubPage />} />
+            <Route path="/qr/:tagId" element={<QrScanHubPage />} />
+            <Route path="/activate/:tagId" element={<QrScanHubPage />} />
 
             {/* Legacy Profile Card Route */}
             <Route path="/card/:username" element={<PublicProfilePage />} />
