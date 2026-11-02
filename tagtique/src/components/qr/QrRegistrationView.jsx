@@ -93,7 +93,7 @@ export default function QrRegistrationView({
   const [rewardOffered, setRewardOffered] = useState(initialData?.rewardOffered ?? true);
   const [whatsappEnabled, setWhatsappEnabled] = useState(initialData?.whatsappEnabled ?? true);
   const [callEnabled, setCallEnabled] = useState(initialData?.callEnabled ?? true);
-  const [pin, setPin] = useState(initialData?.pin || '1234');
+  const [passcode, setPasscode] = useState(initialData?.passcode || initialData?.pin || '12345');
   const [errorMsg, setErrorMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -129,6 +129,10 @@ export default function QrRegistrationView({
       setErrorMsg('Please enter a name or model for your tagged item.');
       return;
     }
+    if (!passcode || passcode.length !== 5) {
+      setErrorMsg('Please enter a valid 5-digit passcode (numbers only).');
+      return;
+    }
 
     setIsSubmitting(true);
 
@@ -151,7 +155,8 @@ export default function QrRegistrationView({
         rewardOffered,
         whatsappEnabled,
         callEnabled,
-        pin: pin.trim() || '1234',
+        passcode: passcode.trim(),
+        pin: passcode.trim(),
         isRegistered: true,
         status: 'active'
       });
@@ -445,24 +450,24 @@ export default function QrRegistrationView({
 
           </div>
 
-          {/* SECURITY PIN */}
+          {/* SECURITY PASSCODE */}
           <div className="pt-3 border-t border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-xl bg-amber-400/10 text-amber-400 flex items-center justify-center border border-amber-400/20">
                 <Lock className="w-4 h-4" />
               </div>
               <div>
-                <span className="font-bold text-xs text-white block">Tag Management PIN</span>
-                <span className="text-[11px] text-white/50 block">Keep this 4-digit code to edit your details anytime</span>
+                <span className="font-bold text-xs text-white block">5-Digit Management Passcode</span>
+                <span className="text-[11px] text-white/50 block">Set a 5-digit passcode. Required to re-edit your information later.</span>
               </div>
             </div>
             <input
               type="text"
-              maxLength={4}
-              value={pin}
-              onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
-              placeholder="1234"
-              className="w-24 text-center tracking-widest font-mono font-extrabold text-base py-2 px-3 rounded-xl bg-white/[0.06] border border-white/15 focus:border-amber-400 text-amber-400 outline-none"
+              maxLength={5}
+              value={passcode}
+              onChange={(e) => setPasscode(e.target.value.replace(/\D/g, '').slice(0, 5))}
+              placeholder="12345"
+              className="w-28 text-center tracking-widest font-mono font-extrabold text-base py-2 px-3 rounded-xl bg-white/[0.06] border border-white/15 focus:border-amber-400 text-amber-400 outline-none"
             />
           </div>
         </div>
@@ -501,3 +506,4 @@ export default function QrRegistrationView({
     </div>
   );
 }
+

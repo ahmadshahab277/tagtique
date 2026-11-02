@@ -95,7 +95,8 @@ class TagRegistryService {
       city: tag.city || 'Faisalabad, PK',
       customNote: tag.customNote || tag.note || '',
       rewardOffered: Boolean(tag.rewardOffered),
-      pin: tag.pin || '1234',
+      passcode: String(tag.passcode || tag.pin || '12345').trim(),
+      pin: String(tag.passcode || tag.pin || '12345').trim(),
       whatsappEnabled: tag.whatsappEnabled !== false,
       callEnabled: tag.callEnabled !== false,
       phonePrivacy: 'public',
@@ -120,7 +121,8 @@ class TagRegistryService {
     const tag = this.getTag(identifier);
     if (!tag) return false;
     if (tag.isRegistered === true) return true;
-    if (tag.status === 'unassigned' || !tag.phoneNumber || tag.phoneNumber.includes('0000000')) return false;
+    if (tag.status === 'unassigned' || !tag.phoneNumber || String(tag.phoneNumber).includes('0000000')) return false;
+    if (!tag.ownerName || tag.ownerName === 'Owner' || tag.ownerName === 'Unassigned') return false;
     return Boolean(tag.ownerName && tag.phoneNumber);
   }
 
@@ -137,12 +139,42 @@ class TagRegistryService {
   }
 
   /**
-   * Validates owner management PIN
+   * Clears/resets tag information back to unregistered state
    */
-  verifyPin(identifier, pin) {
+  clearTagInfo(identifier) {
+    if (!identifier) return;
+    const clean = String(identifier).trim().toLowerCase();
+    if (this._registry[clean]) {
+      this._registry[clean] = {
+        ...this._registry[clean],
+        ownerName: '',
+        phoneNumber: '',
+        guardianNumber: '',
+        itemName: '',
+        customNote: '',
+        isRegistered: false,
+        status: 'unassigned',
+        updatedAt: Date.now()
+      };
+      this._persist();
+    }
+  }
+
+  /**
+   * Validates owner management 5-digit passcode
+   */
+  verifyPasscode(identifier, passcode) {
     const tag = this.getTag(identifier);
     if (!tag) return false;
-    return String(tag.pin || '1234').trim() === String(pin).trim();
+    const expected = String(tag.passcode || tag.pin || '12345').trim();
+    return expected === String(passcode || '').trim();
+  }
+
+  /**
+   * Backwards compatible alias for verifyPasscode
+   */
+  verifyPin(identifier, pin) {
+    return this.verifyPasscode(identifier, pin);
   }
 
   /**
