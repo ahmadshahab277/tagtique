@@ -55,6 +55,7 @@ export default function CatalogPage() {
       sectionId: 'mascot',
       sectionName: 'Mascot Edition',
       productType: 'sticker',
+      price: 600,
       href: `/product/${item.slug}`,
       badge: 'Cyber Chibi',
       icon: Layers
@@ -65,6 +66,7 @@ export default function CatalogPage() {
       sectionId: 'anime',
       sectionName: 'Anime Edition',
       productType: 'sticker',
+      price: 600,
       href: `/product/${item.slug}`,
       badge: 'Shonen Anime',
       icon: Flame
@@ -75,6 +77,7 @@ export default function CatalogPage() {
       sectionId: 'collections',
       sectionName: 'Collections Edition',
       productType: 'sticker',
+      price: 600,
       href: `/product/${item.slug}`,
       badge: 'Mature & Vintage',
       icon: Layers
@@ -320,7 +323,7 @@ export default function CatalogPage() {
                         {product.series || product.badge}
                       </span>
                       <span className="font-mono text-[10px] font-bold text-amber-400/90 bg-amber-400/10 px-2 py-0.5 rounded-full border border-amber-400/20">
-                        Exclusive
+                        {isNfc ? 'PKR 999' : 'From PKR 600'}
                       </span>
                     </div>
 
@@ -374,15 +377,17 @@ export default function CatalogPage() {
                           e.preventDefault();
                           e.stopPropagation();
                           addToCart({
-                            id: isNfc ? `nfc-${product.id}` : `sticker-${product.sectionId}-${product.id}`,
+                            id: isNfc ? `nfc-${product.id}` : `sticker-${product.sectionId}-${product.id}-mobile`,
                             name: product.name,
                             category: product.series || product.badge,
-                            price: product.price || 999,
+                            target: isNfc ? null : 'mobile',
+                            price: product.price || (isNfc ? 999 : 600),
+                            unitPrice: isNfc ? 999 : 600,
                             quantity: 1,
                             type: isNfc ? 'nfc' : 'sticker',
                             accent: product.accentColor || '#F59E0B',
                             image: isNfc ? (product.frontImage || product.image || product.src) : product.src,
-                            badge: isNfc ? 'NFC Metal Card + Dynamic QR' : 'Glossy Vinyl Sticker'
+                            badge: isNfc ? 'NFC Metal Card + Dynamic QR' : 'Single Sticker • Mobile Fit'
                           });
                         }}
                         className="flex-1 py-2 px-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-95 cursor-pointer"

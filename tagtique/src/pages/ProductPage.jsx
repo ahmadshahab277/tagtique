@@ -6,6 +6,13 @@ import { useCart } from '../context/CartContext';
 import StickerArt from '../components/StickerArt';
 import Sticker3DViewer from '../components/Sticker3DViewer';
 import {
+  calculateStickerPrice,
+  calculateStickerOriginalPrice,
+  calculateStickerSavings,
+  getTargetPricingSummary,
+  isCompactTarget
+} from '../data/pricing';
+import {
   ShieldCheck,
   Zap,
   Truck,
@@ -69,12 +76,6 @@ function packageForQuantity(quantity) {
   if (quantity <= 1) return 'single';
   if (quantity === 2) return 'pack2';
   return 'pack3';
-}
-
-function priceForQuantity(quantity) {
-  if (quantity <= 1) return 999;
-  if (quantity === 2) return 1499;
-  return 1999;
 }
 
 export default function ProductPage() {
@@ -143,7 +144,10 @@ export default function ProductPage() {
   }
 
   const orderHref = `/order?edition=${product.editionId}&style=${product.id}&package=${packageForQuantity(quantity)}`;
-  const currentPrice = priceForQuantity(quantity);
+  const currentPrice = calculateStickerPrice(selectedTarget, quantity);
+  const originalPrice = calculateStickerOriginalPrice(selectedTarget, quantity);
+  const savings = calculateStickerSavings(selectedTarget, quantity);
+  const pricingSummary = getTargetPricingSummary(selectedTarget);
 
   return (
     <article className="min-h-screen bg-[#08090D] text-white pb-24 selection:bg-amber-400 selection:text-black">
@@ -239,6 +243,27 @@ export default function ProductPage() {
                 Premium die-cut vinyl emergency identity sticker. When scanned, it instantly launches your private contact card or direct phone dialer so lost items find their way back to you.
               </p>
 
+              {/* ================= OFFICIAL PRICE BLOCK ================= */}
+              <div className="mt-5 pt-4 border-t border-white/10 flex items-end justify-between">
+                <div>
+                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-white/50 block">OFFICIAL PRICE</span>
+                  <div className="flex items-center gap-3 mt-1 flex-wrap">
+                    <span className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+                      PKR {currentPrice.toLocaleString('en-PK')}
+                    </span>
+                    {savings > 0 && (
+                      <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400">
+                        Save PKR {savings.toLocaleString('en-PK')}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="text-xs font-bold text-white/90 block">Free Shipping</span>
+                  <span className="text-[10px] text-white/50 block">Cash on Delivery</span>
+                </div>
+              </div>
+
               {/* ================= TARGET SURFACE SELECTOR (3D REAL-SCALE) ================= */}
               <div className="mt-6 pt-5 border-t border-white/10">
                 <div className="flex items-center justify-between mb-3">
@@ -272,7 +297,7 @@ export default function ProductPage() {
                         <span className="font-extrabold text-sm text-white">iPhone</span>
                       </div>
                       <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-white/10 text-amber-300">
-                        Phone Back
+                        PKR 600
                       </span>
                     </div>
                     <p className="text-[11px] text-white/50">Titanium frame & frosted glass fit</p>
@@ -294,7 +319,7 @@ export default function ProductPage() {
                         <span className="font-extrabold text-sm text-white">MacBook</span>
                       </div>
                       <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-white/10 text-amber-300">
-                        Laptop Lid
+                        PKR 600
                       </span>
                     </div>
                     <p className="text-[11px] text-white/50">Apple aluminum unibody lid fit</p>
@@ -316,7 +341,7 @@ export default function ProductPage() {
                         <span className="font-extrabold text-sm text-white">Car</span>
                       </div>
                       <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-amber-400 text-black">
-                        Rear Glass
+                        PKR 1,000
                       </span>
                     </div>
                     <p className="text-[11px] text-white/50">Weatherproof tinted glass fit</p>
@@ -338,7 +363,7 @@ export default function ProductPage() {
                         <span className="font-extrabold text-sm text-white">Sticker Only</span>
                       </div>
                       <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-white/10 text-white/70">
-                        Die-Cut
+                        PKR 1,000
                       </span>
                     </div>
                     <p className="text-[11px] text-white/50">360° pure vinyl turntable</p>
@@ -346,11 +371,16 @@ export default function ProductPage() {
                 </div>
               </div>
 
-              {/* ================= BUNDLE PACKAGE QUANTITY SELECTOR (ZERO PRICING) ================= */}
+              {/* ================= BUNDLE PACKAGE QUANTITY SELECTOR ================= */}
               <div className="mt-5">
-                <span className="text-xs font-extrabold text-white/80 uppercase tracking-wider block mb-2.5">
-                  Select Quantity:
-                </span>
+                <div className="flex items-center justify-between mb-2.5">
+                  <span className="text-xs font-extrabold text-white/80 uppercase tracking-wider block">
+                    SELECT QUANTITY &amp; SAVE:
+                  </span>
+                  <span className="text-[11px] text-amber-300 font-mono font-bold">
+                    {pricingSummary.bundleLabel}
+                  </span>
+                </div>
 
                 <div className="grid grid-cols-3 gap-2.5">
                   {/* Single Tile */}
@@ -365,7 +395,9 @@ export default function ProductPage() {
                   >
                     <span className={`text-[11px] font-bold block ${quantity === 1 ? 'text-black/70' : 'text-white/60'}`}>Single Tag</span>
                     <span className="font-extrabold text-sm block mt-0.5">1 Sticker</span>
-                    <span className={`text-[10px] block mt-1 ${quantity === 1 ? 'text-black/60' : 'text-white/40'}`}>Standard Pack</span>
+                    <span className={`text-xs font-mono font-extrabold block mt-1 ${quantity === 1 ? 'text-black' : 'text-amber-400'}`}>
+                      PKR {calculateStickerPrice(selectedTarget, 1).toLocaleString('en-PK')}
+                    </span>
                   </button>
 
                   {/* 2-Pack Tile */}
@@ -383,7 +415,9 @@ export default function ProductPage() {
                     </span>
                     <span className={`text-[11px] font-bold block ${quantity === 2 ? 'text-black/70' : 'text-white/60'}`}>2-Pack</span>
                     <span className="font-extrabold text-sm block mt-0.5">2 Stickers</span>
-                    <span className={`text-[10px] block mt-1 ${quantity === 2 ? 'text-black/60' : 'text-white/40'}`}>Double Protection</span>
+                    <span className={`text-xs font-mono font-extrabold block mt-1 ${quantity === 2 ? 'text-black' : 'text-amber-400'}`}>
+                      PKR {calculateStickerPrice(selectedTarget, 2).toLocaleString('en-PK')}
+                    </span>
                   </button>
 
                   {/* 3-Pack Tile */}
@@ -401,7 +435,9 @@ export default function ProductPage() {
                     </span>
                     <span className={`text-[11px] font-bold block ${quantity === 3 ? 'text-black/70' : 'text-white/60'}`}>3-Pack</span>
                     <span className="font-extrabold text-sm block mt-0.5">3 Stickers</span>
-                    <span className={`text-[10px] block mt-1 ${quantity === 3 ? 'text-black/60' : 'text-white/40'}`}>Multi-Item Bundle</span>
+                    <span className={`text-xs font-mono font-extrabold block mt-1 ${quantity === 3 ? 'text-black' : 'text-amber-400'}`}>
+                      PKR {calculateStickerPrice(selectedTarget, 3).toLocaleString('en-PK')}
+                    </span>
                   </button>
                 </div>
               </div>
@@ -415,12 +451,14 @@ export default function ProductPage() {
                       id: `sticker-${product.editionId}-${product.id}-${selectedTarget}`,
                       name: product.name,
                       category: `${product.editionName} Edition`,
+                      target: selectedTarget,
                       price: currentPrice,
+                      unitPrice: isCompactTarget(selectedTarget) ? 600 : 1000,
                       quantity: quantity,
                       type: 'sticker',
                       accent: product.swatch || '#F59E0B',
                       image: product.image || product.src,
-                      badge: `${quantity === 1 ? 'Single Sticker' : quantity + '-Pack'} • ${selectedTarget === 'vehicle' ? '4"×4" Vehicle Fit' : '2"×2" ' + (selectedTarget === 'laptop' ? 'Laptop Fit' : selectedTarget === 'mobile' ? 'Mobile Fit' : 'Die-Cut Vinyl')}`
+                      badge: `${quantity === 1 ? 'Single Sticker' : quantity + '-Pack'} • ${selectedTarget === 'vehicle' ? 'Vehicle Fit' : selectedTarget === 'laptop' ? 'MacBook Fit' : selectedTarget === 'mobile' ? 'iPhone Fit' : 'Die-Cut Vinyl'}`
                     });
                   }}
                   className="flex-1 py-4 px-6 rounded-2xl bg-amber-400 hover:bg-amber-300 active:scale-[0.98] text-black font-extrabold text-sm flex items-center justify-center gap-2 shadow-[0_6px_20px_rgba(245,158,11,0.25)] transition-all cursor-pointer"
@@ -436,12 +474,14 @@ export default function ProductPage() {
                       id: `sticker-${product.editionId}-${product.id}-${selectedTarget}`,
                       name: product.name,
                       category: `${product.editionName} Edition`,
+                      target: selectedTarget,
                       price: currentPrice,
+                      unitPrice: isCompactTarget(selectedTarget) ? 600 : 1000,
                       quantity: quantity,
                       type: 'sticker',
                       accent: product.swatch || '#F59E0B',
                       image: product.image || product.src,
-                      badge: `${quantity === 1 ? 'Single Sticker' : quantity + '-Pack'} • ${selectedTarget === 'vehicle' ? '4"×4" Vehicle Fit' : '2"×2" ' + (selectedTarget === 'laptop' ? 'Laptop Fit' : selectedTarget === 'mobile' ? 'Mobile Fit' : 'Die-Cut Vinyl')}`
+                      badge: `${quantity === 1 ? 'Single Sticker' : quantity + '-Pack'} • ${selectedTarget === 'vehicle' ? 'Vehicle Fit' : selectedTarget === 'laptop' ? 'MacBook Fit' : selectedTarget === 'mobile' ? 'iPhone Fit' : 'Die-Cut Vinyl'}`
                     });
                     navigate('/cart');
                   }}

@@ -4,6 +4,12 @@ import { useCart } from '../context/CartContext';
 import { orderBackendService } from '../services/orderBackendService';
 import { findNfcDesign, NFC_DESIGNS, NFC_CARD_PRICE_PKR } from '../data/nfcCards';
 import { EDITIONS, findEdition } from '../data/editions';
+import {
+  calculateStickerPrice,
+  calculateItemTotal,
+  isCompactTarget,
+  PRICING_CONFIG
+} from '../data/pricing';
 import confetti from 'canvas-confetti';
 import {
   ShoppingBag,
@@ -68,23 +74,25 @@ export default function CartPage() {
     const editionId = searchParams.get('edition');
     const styleId = searchParams.get('style');
     const pkg = searchParams.get('package');
+    const target = searchParams.get('target') || 'mobile';
 
     if (editionId || styleId || pkg) {
       const ed = findEdition(editionId) || EDITIONS[0];
       const style = ed.styles.find((s) => s.id === styleId) || ed.styles[0];
       const qty = pkg === 'pack3' ? 3 : pkg === 'pack2' ? 2 : 1;
-      const price = qty === 3 ? 1999 : qty === 2 ? 1499 : 999;
+      const price = calculateStickerPrice(target, qty);
 
       return {
-        id: `sticker-${ed.id}-${style.id}`,
+        id: `sticker-${ed.id}-${style.id}-${target}`,
         name: style.name,
         category: ed.name,
         type: 'sticker',
+        target,
         price,
         quantity: qty,
         accent: style.swatch || '#F59E0B',
         image: style.image || null,
-        badge: `${qty === 1 ? 'Single Sticker' : qty + '-Pack'} • Glossy Vinyl`
+        badge: `${qty === 1 ? 'Single Sticker' : qty + '-Pack'} • ${target === 'vehicle' ? 'Vehicle Fit' : target === 'laptop' ? 'MacBook Fit' : target === 'sticker' ? 'Die-Cut Vinyl' : 'iPhone Fit'}`
       };
     }
 
@@ -103,12 +111,24 @@ export default function CartPage() {
           image = found.frontImage;
         }
       }
+
+      const itemTarget = item.target || (
+        item.badge?.toLowerCase().includes('vehicle') || item.id?.includes('vehicle')
+          ? 'vehicle'
+          : item.badge?.toLowerCase().includes('laptop') || item.id?.includes('laptop')
+          ? 'laptop'
+          : item.badge?.toLowerCase().includes('sticker') || item.id?.includes('sticker-only')
+          ? 'sticker'
+          : 'mobile'
+      );
+
       return {
         id: item.id,
         name: item.name || item.finishName || 'Custom Smart Tag',
         category: item.category || item.edition || (isNfc ? 'Executive Hardware' : 'Custom Identity'),
         type: isNfc ? 'nfc' : (item.type || 'sticker'),
-        price: Number(item.price || item.totalPrice || item.basePrice || 999),
+        target: itemTarget,
+        price: Number(item.price || item.totalPrice || item.basePrice || 600),
         quantity: Number(item.quantity || 1),
         accent: item.accent || '#F59E0B',
         image,
@@ -160,7 +180,7 @@ export default function CartPage() {
   const safePreviewIndex = Math.min(orderPreviewIndex, Math.max(0, effectiveItems.length - 1));
   const currentPreviewItem = effectiveItems[safePreviewIndex];
 
-  const subtotal = effectiveItems.reduce((acc, it) => acc + (it.price * (it.quantity || 1)), 0);
+  const subtotal = effectiveItems.reduce((acc, it) => acc + calculateItemTotal(it), 0);
   const shippingFee = 0; // FREE Doorstep Delivery
   const finalTotal = subtotal + shippingFee;
 
@@ -178,14 +198,11 @@ export default function CartPage() {
   const handleQuantityChange = (delta) => {
     if (directItem) {
       const newQty = Math.max(1, Math.min(10, directItem.quantity + delta));
-      const basePrice = directItem.type === 'nfc' ? (NFC_CARD_PRICE_PKR || 999) : 999;
-      // Bundle pricing for stickers
-      let newPrice = basePrice * newQty;
-      if (directItem.type === 'sticker') {
-        if (newQty === 1) newPrice = 999;
-        else if (newQty === 2) newPrice = 1499;
-        else if (newQty === 3) newPrice = 1999;
-        else newPrice = 1999 + (newQty - 3) * 600;
+      let newPrice;
+      if (directItem.type === 'nfc') {
+        newPrice = (NFC_CARD_PRICE_PKR || 999) * newQty;
+      } else {
+        newPrice = calculateStickerPrice(directItem.target || 'mobile', newQty);
       }
       setDirectItem({
         ...directItem,
@@ -503,9 +520,18 @@ export default function CartPage() {
                         </button>
                       )}
 
-                      <div className="text-right">
-                        <span className="font-extrabold text-xs text-amber-400 font-mono block uppercase px-2 py-1 rounded-lg bg-amber-400/10 border border-amber-400/20">
-                          {item.type === 'nfc' ? 'Metal Card' : 'Smart Tag'}
+                      <div className="text-right min-w-[95px]">
+                        <span className="font-extrabold text-sm sm:text-base text-white font-mono block">
+                          PKR {calculateItemTotal(item).toLocaleString('en-PK')}
+                        </span>
+                        <span className="text-[10px] text-white/50 font-mono block">
+                          {item.quantity > 1
+                            ? `${item.quantity}-Pack Bundle`
+                            : item.type === 'nfc'
+                            ? 'PKR 999 each'
+                            : isCompactTarget(item.target)
+                            ? 'PKR 600 each'
+                            : 'PKR 1,000 each'}
                         </span>
                       </div>
                     </div>
@@ -932,6 +958,11 @@ export default function CartPage() {
                 </div>
 
                 <div className="flex justify-between items-center text-white/70">
+                  <span>Subtotal</span>
+                  <span className="font-mono font-bold text-white">PKR {subtotal.toLocaleString('en-PK')}</span>
+                </div>
+
+                <div className="flex justify-between items-center text-white/70">
                   <span className="flex items-center gap-1.5">
                     <Truck className="w-4 h-4 text-emerald-400" />
                     <span>Doorstep Express Courier</span>
@@ -947,15 +978,15 @@ export default function CartPage() {
 
               <div className="h-px bg-white/10" />
 
-              {/* Dispatch Mode */}
+              {/* Total Amount */}
               <div className="flex justify-between items-baseline pt-1">
                 <div>
-                  <span className="font-extrabold text-xl text-white block">Dispatch Service</span>
-                  <span className="text-xs text-white/50">Cash on Delivery • Direct Verification</span>
+                  <span className="font-extrabold text-xl text-white block">Total Amount</span>
+                  <span className="text-xs text-white/50">Cash on Delivery • Express Dispatch</span>
                 </div>
                 <div className="text-right">
-                  <span className="font-extrabold text-base sm:text-lg text-emerald-400 font-mono bg-emerald-500/10 px-3 py-1 rounded-xl border border-emerald-500/20">
-                    PRIORITY DISPATCH
+                  <span className="font-extrabold text-2xl sm:text-3xl text-amber-400 font-mono">
+                    PKR {finalTotal.toLocaleString('en-PK')}
                   </span>
                 </div>
               </div>
@@ -974,7 +1005,7 @@ export default function CartPage() {
                 onClick={handlePlaceOrder}
                 className="w-full py-4 px-6 rounded-2xl bg-amber-400 hover:bg-amber-300 active:scale-[0.98] text-black font-extrabold text-base flex items-center justify-center gap-2 shadow-[0_10px_30px_rgba(245,158,11,0.3)] transition-all cursor-pointer disabled:opacity-50"
               >
-                <span>{isSubmitting ? 'Confirming Order...' : `Confirm & Place Order`}</span>
+                <span>{isSubmitting ? 'Confirming Order...' : `Confirm & Place Order • PKR ${finalTotal.toLocaleString('en-PK')}`}</span>
                 <ArrowRight className="w-5 h-5" />
               </button>
 

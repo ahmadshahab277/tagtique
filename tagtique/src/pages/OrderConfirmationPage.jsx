@@ -182,6 +182,14 @@ export default function OrderConfirmationPage() {
                 <span>Setup & Routing:</span>
                 <span className="text-emerald-400 font-bold">INCLUDED FREE</span>
               </div>
+              {order.totalAmount && (
+                <div className="flex justify-between text-sm font-extrabold text-white pt-2 border-t border-white/10">
+                  <span>Total Payable:</span>
+                  <span className="text-amber-400 font-mono">
+                    PKR {Number(order.totalAmount).toLocaleString('en-PK')}
+                  </span>
+                </div>
+              )}
               <div className="flex justify-between text-base font-extrabold text-white pt-2 border-t border-white/10">
                 <span>Dispatch Status:</span>
                 <span className="text-emerald-400 font-mono">
