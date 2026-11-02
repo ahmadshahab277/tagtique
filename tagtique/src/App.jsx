@@ -1,10 +1,9 @@
 import React, { Suspense, lazy, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { CartProvider } from './context/CartContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import WhatsAppButton from './components/WhatsAppButton';
-import PublicVehicleScanPage from './pages/PublicVehicleScanPage';
 
 const HomePage = lazy(() => import('./pages/HomePage'));
 const CartPage = lazy(() => import('./pages/CartPage'));
@@ -97,19 +96,11 @@ class ErrorBoundary extends React.Component {
 }
 
 function AppContent() {
-  const location = useLocation();
-  const isPublicScan =
-    location.pathname.startsWith('/scan') ||
-    location.pathname.startsWith('/tag') ||
-    location.pathname.startsWith('/nfc') ||
-    location.pathname.startsWith('/u/');
-  const isStandalone = isPublicScan;
-
   return (
     <div className="min-h-screen flex flex-col bg-[#08090D] text-white selection:bg-amber-400 selection:text-black">
-      {!isStandalone && <Navbar />}
+      <Navbar />
       
-      <main className={`flex-1 ${!isStandalone ? 'pt-[68px]' : ''}`}>
+      <main className="flex-1 pt-[68px]">
         <ErrorBoundary>
           <Suspense fallback={<div className="min-h-[50vh]" />}>
           <Routes>
@@ -130,11 +121,10 @@ function AppContent() {
             {/* Dedicated Order Confirmation Receipt */}
             <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
 
-            {/* Dedicated Smart Vehicle QR Communication Page */}
-            <Route path="/scan" element={<PublicVehicleScanPage />} />
-            <Route path="/tag/:tagId" element={<PublicVehicleScanPage />} />
-            <Route path="/nfc/:tagId" element={<PublicVehicleScanPage />} />
-            <Route path="/u/:username" element={<PublicVehicleScanPage />} />
+            {/* Redirect any legacy scan/tag URLs to Home */}
+            <Route path="/scan" element={<Navigate to="/" replace />} />
+            <Route path="/tag/*" element={<Navigate to="/" replace />} />
+            <Route path="/u/*" element={<Navigate to="/" replace />} />
 
             {/* Legacy Profile Card Route */}
             <Route path="/card/:username" element={<PublicProfilePage />} />
@@ -146,8 +136,8 @@ function AppContent() {
         </ErrorBoundary>
       </main>
 
-      {!isStandalone && <Footer />}
-      {!isStandalone && <WhatsAppButton />}
+      <Footer />
+      <WhatsAppButton />
     </div>
   );
 }

@@ -5,7 +5,6 @@ import confetti from 'canvas-confetti';
 import {
   CheckCircle2,
   Truck,
-  Eye,
   ArrowRight,
   PackageCheck,
   ShieldCheck,
@@ -59,7 +58,6 @@ export default function OrderConfirmationPage() {
   }
 
   const order = lastOrder;
-  const targetToken = order.targetToken || order.orderId;
   const items = order.items || [];
 
   return (
@@ -123,11 +121,11 @@ export default function OrderConfirmationPage() {
           {/* Action CTAs */}
           <div className="flex flex-wrap items-center justify-center gap-3 w-full max-w-md pt-2">
             <Link
-              to={`/scan?token=${encodeURIComponent(targetToken)}`}
+              to="/catalog"
               className="flex-1 py-3.5 px-6 rounded-2xl bg-amber-400 hover:bg-amber-300 text-black font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg transition-all"
             >
-              <Eye className="w-4 h-4" />
-              <span>Test Scanned Profile</span>
+              <span>Continue Shopping</span>
+              <ArrowRight className="w-4 h-4" />
             </Link>
 
             <a
