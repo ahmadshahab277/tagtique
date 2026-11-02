@@ -17,7 +17,7 @@
  *      - 4 Stickers: PKR 3,000 (Save PKR 1,000)
  *
  * 3. NFC Cards:
- *    - PKR 999 each
+ *    - PKR 1,999 each
  */
 
 export const PRICING_CONFIG = {
@@ -32,7 +32,7 @@ export const PRICING_CONFIG = {
     additionalPerUnit: 750,
   },
   nfc: {
-    single: 999,
+    single: 1999,
   }
 };
 

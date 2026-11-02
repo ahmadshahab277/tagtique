@@ -455,10 +455,10 @@ export default function NfcCardSection() {
                 </div>
 
                 <div className="text-right shrink-0">
-                  <span className="text-[10px] font-mono font-bold text-amber-400 bg-amber-400/10 px-2.5 py-1 rounded-full border border-amber-400/20 block">
-                    Exclusive Metal
+                  <span className="text-base sm:text-lg font-mono font-extrabold text-white block">
+                    PKR {NFC_CARD_PRICE_PKR.toLocaleString('en-PK')}
                   </span>
-                  <span className="text-[10px] font-bold text-emerald-400 block mt-1">
+                  <span className="text-[10px] font-bold text-emerald-400 block mt-0.5">
                     Free 24h Delivery
                   </span>
                 </div>
@@ -513,7 +513,7 @@ export default function NfcCardSection() {
                       id: `nfc-${activeDesign.id}`,
                       name: activeDesign.name,
                       category: activeDesign.category,
-                      price: NFC_CARD_PRICE_PKR || 999,
+                      price: NFC_CARD_PRICE_PKR || 1999,
                       quantity: 1,
                       type: 'nfc',
                       accent: activeDesign.accent || '#F59E0B',

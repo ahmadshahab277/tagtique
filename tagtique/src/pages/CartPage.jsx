@@ -62,7 +62,7 @@ export default function CartPage() {
           category: design.category,
           editionCode: design.code,
           type: 'nfc',
-          price: NFC_CARD_PRICE_PKR || 999,
+          price: NFC_CARD_PRICE_PKR || 1999,
           quantity: 1,
           accent: design.accent || '#F59E0B',
           image: design.frontImage || design.previewImg || null,
@@ -200,7 +200,7 @@ export default function CartPage() {
       const newQty = Math.max(1, Math.min(10, directItem.quantity + delta));
       let newPrice;
       if (directItem.type === 'nfc') {
-        newPrice = (NFC_CARD_PRICE_PKR || 999) * newQty;
+        newPrice = (NFC_CARD_PRICE_PKR || 1999) * newQty;
       } else {
         newPrice = calculateStickerPrice(directItem.target || 'mobile', newQty);
       }
@@ -528,7 +528,7 @@ export default function CartPage() {
                           {item.quantity > 1
                             ? `${item.quantity}-Pack Bundle`
                             : item.type === 'nfc'
-                            ? 'PKR 999 each'
+                            ? 'PKR 1,999 each'
                             : isCompactTarget(item.target)
                             ? 'PKR 600 each'
                             : 'PKR 1,000 each'}

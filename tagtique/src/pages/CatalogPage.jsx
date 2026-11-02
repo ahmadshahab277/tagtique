@@ -323,7 +323,7 @@ export default function CatalogPage() {
                         {product.series || product.badge}
                       </span>
                       <span className="font-mono text-[10px] font-bold text-amber-400/90 bg-amber-400/10 px-2 py-0.5 rounded-full border border-amber-400/20">
-                        {isNfc ? 'PKR 999' : 'From PKR 600'}
+                        {isNfc ? 'PKR 1,999' : 'From PKR 600'}
                       </span>
                     </div>
 
@@ -369,41 +369,15 @@ export default function CatalogPage() {
                       {product.line || product.title}
                     </p>
 
-                    {/* Action Button Group */}
-                    <div className="mt-3 flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          addToCart({
-                            id: isNfc ? `nfc-${product.id}` : `sticker-${product.sectionId}-${product.id}-mobile`,
-                            name: product.name,
-                            category: product.series || product.badge,
-                            target: isNfc ? null : 'mobile',
-                            price: product.price || (isNfc ? 999 : 600),
-                            unitPrice: isNfc ? 999 : 600,
-                            quantity: 1,
-                            type: isNfc ? 'nfc' : 'sticker',
-                            accent: product.accentColor || '#F59E0B',
-                            image: isNfc ? (product.frontImage || product.image || product.src) : product.src,
-                            badge: isNfc ? 'NFC Metal Card + Dynamic QR' : 'Single Sticker • Mobile Fit'
-                          });
-                        }}
-                        className="flex-1 py-2 px-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-95 cursor-pointer"
-                        title="Add to Cart"
-                      >
-                        <ShoppingBag className="w-3.5 h-3.5" />
-                        <span>+ Cart</span>
-                      </button>
-
+                    {/* Action Button: Details Only */}
+                    <div className="mt-3">
                       <Link
                         to={product.href}
-                        className="py-2 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs flex items-center justify-center gap-1 transition-all cursor-pointer"
+                        className="w-full py-2.5 px-3 rounded-xl bg-white/10 hover:bg-amber-400 hover:text-black text-white font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm group-hover:bg-amber-400 group-hover:text-black"
                         title="View Details"
                       >
                         <span>Details</span>
-                        <ArrowRight className="w-3 h-3 text-white/60" />
+                        <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
                       </Link>
                     </div>
                   </div>

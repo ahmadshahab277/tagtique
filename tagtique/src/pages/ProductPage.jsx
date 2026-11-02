@@ -420,25 +420,69 @@ export default function ProductPage() {
                     </span>
                   </button>
 
-                  {/* 3-Pack Tile */}
-                  <button
-                    type="button"
-                    onClick={() => setQuantity(3)}
-                    className={`p-3 rounded-2xl border text-left transition-all cursor-pointer relative ${
-                      quantity === 3
+                  {/* No. of Stickers Button */}
+                  <div
+                    onClick={() => {
+                      if (quantity < 3) setQuantity(3);
+                    }}
+                    className={`p-3 rounded-2xl border text-left transition-all cursor-pointer relative flex flex-col justify-between select-none ${
+                      quantity >= 3
                         ? 'border-amber-400 bg-amber-400 text-black shadow-lg font-bold'
                         : 'border-white/10 bg-[#161822] hover:border-white/30 text-white'
                     }`}
                   >
-                    <span className="absolute -top-2 right-2 px-1.5 py-0.5 rounded-full bg-emerald-400 text-black text-[9px] font-extrabold uppercase">
+                    <span className="absolute -top-2 right-2 px-1.5 py-0.5 rounded-full bg-emerald-400 text-black text-[9px] font-extrabold uppercase tracking-wide">
                       Best Value
                     </span>
-                    <span className={`text-[11px] font-bold block ${quantity === 3 ? 'text-black/70' : 'text-white/60'}`}>3-Pack</span>
-                    <span className="font-extrabold text-sm block mt-0.5">3 Stickers</span>
-                    <span className={`text-xs font-mono font-extrabold block mt-1 ${quantity === 3 ? 'text-black' : 'text-amber-400'}`}>
-                      PKR {calculateStickerPrice(selectedTarget, 3).toLocaleString('en-PK')}
+                    <span className={`text-[11px] font-bold block ${quantity >= 3 ? 'text-black/70' : 'text-white/60'}`}>
+                      No. of Stickers
                     </span>
-                  </button>
+
+                    <div className="flex items-center justify-between gap-1 my-1">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (quantity > 3) {
+                            setQuantity(quantity - 1);
+                          }
+                        }}
+                        disabled={quantity <= 3}
+                        className={`w-6 h-6 rounded-lg flex items-center justify-center font-extrabold text-xs transition-all ${
+                          quantity >= 3
+                            ? 'bg-black/15 hover:bg-black/30 text-black disabled:opacity-25 cursor-pointer'
+                            : 'bg-white/10 hover:bg-white/20 text-white disabled:opacity-25 cursor-pointer'
+                        }`}
+                        title="Decrease stickers"
+                      >
+                        -
+                      </button>
+
+                      <span className="font-extrabold text-xs sm:text-sm block">
+                        {quantity >= 3 ? quantity : 3} Stickers
+                      </span>
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setQuantity((prev) => (prev < 3 ? 4 : Math.min(25, prev + 1)));
+                        }}
+                        className={`w-6 h-6 rounded-lg flex items-center justify-center font-extrabold text-xs transition-all ${
+                          quantity >= 3
+                            ? 'bg-black/15 hover:bg-black/30 text-black cursor-pointer'
+                            : 'bg-white/10 hover:bg-white/20 text-white cursor-pointer'
+                        }`}
+                        title="Increase stickers"
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    <span className={`text-xs font-mono font-extrabold block ${quantity >= 3 ? 'text-black' : 'text-amber-400'}`}>
+                      PKR {calculateStickerPrice(selectedTarget, quantity >= 3 ? quantity : 3).toLocaleString('en-PK')}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -458,7 +502,7 @@ export default function ProductPage() {
                       type: 'sticker',
                       accent: product.swatch || '#F59E0B',
                       image: product.image || product.src,
-                      badge: `${quantity === 1 ? 'Single Sticker' : quantity + '-Pack'} • ${selectedTarget === 'vehicle' ? 'Vehicle Fit' : selectedTarget === 'laptop' ? 'MacBook Fit' : selectedTarget === 'mobile' ? 'iPhone Fit' : 'Die-Cut Vinyl'}`
+                      badge: `${quantity === 1 ? 'Single Sticker' : quantity + ' Stickers'} • ${selectedTarget === 'vehicle' ? 'Vehicle Fit' : selectedTarget === 'laptop' ? 'MacBook Fit' : selectedTarget === 'mobile' ? 'iPhone Fit' : 'Die-Cut Vinyl'}`
                     });
                   }}
                   className="flex-1 py-4 px-6 rounded-2xl bg-amber-400 hover:bg-amber-300 active:scale-[0.98] text-black font-extrabold text-sm flex items-center justify-center gap-2 shadow-[0_6px_20px_rgba(245,158,11,0.25)] transition-all cursor-pointer"
@@ -481,7 +525,7 @@ export default function ProductPage() {
                       type: 'sticker',
                       accent: product.swatch || '#F59E0B',
                       image: product.image || product.src,
-                      badge: `${quantity === 1 ? 'Single Sticker' : quantity + '-Pack'} • ${selectedTarget === 'vehicle' ? 'Vehicle Fit' : selectedTarget === 'laptop' ? 'MacBook Fit' : selectedTarget === 'mobile' ? 'iPhone Fit' : 'Die-Cut Vinyl'}`
+                      badge: `${quantity === 1 ? 'Single Sticker' : quantity + ' Stickers'} • ${selectedTarget === 'vehicle' ? 'Vehicle Fit' : selectedTarget === 'laptop' ? 'MacBook Fit' : selectedTarget === 'mobile' ? 'iPhone Fit' : 'Die-Cut Vinyl'}`
                     });
                     navigate('/cart');
                   }}

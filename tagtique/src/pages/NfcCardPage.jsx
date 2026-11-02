@@ -233,6 +233,22 @@ export default function NfcCardPage() {
                   </div>
                 ))}
               </div>
+
+              {/* Official Price Section */}
+              <div className="mt-5 pt-4 border-t border-white/10 flex items-end justify-between">
+                <div>
+                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-white/50 block">OFFICIAL PRICE</span>
+                  <div className="flex items-center gap-3 mt-1">
+                    <span className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+                      PKR {NFC_CARD_PRICE_PKR.toLocaleString('en-PK')}
+                    </span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="text-xs font-bold text-white/90 block">Free Shipping</span>
+                  <span className="text-[10px] text-white/50 block">Cash on Delivery</span>
+                </div>
+              </div>
             </div>
 
             {/* CTAs */}
@@ -245,7 +261,7 @@ export default function NfcCardPage() {
                       id: `nfc-${design.id}`,
                       name: design.name,
                       category: design.category,
-                      price: NFC_CARD_PRICE_PKR || 999,
+                      price: NFC_CARD_PRICE_PKR || 1999,
                       quantity: 1,
                       type: 'nfc',
                       accent: design.accent || '#F59E0B',

@@ -1,4 +1,4 @@
-export const NFC_CARD_PRICE_PKR = 999;
+export const NFC_CARD_PRICE_PKR = 1999;
 
 export const NFC_CATEGORIES = [
   'All',
