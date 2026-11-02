@@ -73,19 +73,28 @@ class TagCommunicationService {
               (o.vehicleNumber && o.vehicleNumber.toLowerCase() === clean.toLowerCase()) ||
               (o.serialNumber && o.serialNumber.toLowerCase().includes(clean.toLowerCase())) ||
               (o.qr_code_value && o.qr_code_value.includes(clean)) ||
-              (o.orderId && o.orderId.toLowerCase().includes(clean.toLowerCase()))
+              (o.order_number && o.order_number.toLowerCase() === clean.toLowerCase()) ||
+              (o.orderId && o.orderId.toLowerCase().includes(clean.toLowerCase())) ||
+              (o.rawId && clean.includes(o.rawId))
           );
           if (match) {
+            const itemTarget = match.itemTarget || (
+              (match.vehicleType || '').toLowerCase().includes('laptop') ? 'laptop' :
+              (match.vehicleType || '').toLowerCase().includes('vehicle') ? 'vehicle' :
+              (match.vehicleType || '').toLowerCase().includes('mobile') ? 'mobile' : 'mobile'
+            );
             return {
               success: true,
               data: {
                 tagId: match.tag_id || match.rawId || clean,
-                vehicleName: `${match.vehicleType || 'Car'}`,
-                registrationNumber: match.vehicleNumber || 'ABC-123',
-                vehicleType: match.vehicleType || 'Car',
+                qrToken: clean,
+                vehicleName: match.vehicleName || match.vehicleType || 'Smart Tag',
+                registrationNumber: match.vehicleNumber || 'TAG-1',
+                vehicleType: match.vehicleType || 'Smart Tag',
+                itemTarget: itemTarget,
                 status: match.status === 'Deactivated' ? 'inactive' : 'active',
                 isVerified: true,
-                ownerName: match.customerName ? match.customerName.split(' ')[0] : (match.displayName || 'Ali Khan'),
+                ownerName: match.customerName ? match.customerName.split(' ')[0] : (match.displayName || 'Owner'),
                 phoneNumber: match.phoneNumber || match.phone_number || match.phone || '03001234567',
                 guardianNumber: match.guardianNumber || match.guardian_number || match.emergencyPhone || '',
                 phonePrivacy: 'public',
@@ -99,7 +108,7 @@ class TagCommunicationService {
                 emergencyEscalationSeconds: 180,
                 maskedCallAvailable: true,
                 maskedSmsAvailable: true,
-                city: 'Faisalabad'
+                city: match.city || 'Faisalabad'
               }
             };
           }

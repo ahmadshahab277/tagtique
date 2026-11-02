@@ -115,14 +115,32 @@ export function calculateItemTotal(item) {
   }
 
   // Derive target placement from item
-  const target = item.target || (
-    item.badge?.toLowerCase().includes('vehicle') ||
-    item.badge?.toLowerCase().includes('car') ||
-    item.id?.includes('vehicle') ||
-    item.id?.includes('sticker')
-      ? (item.id?.includes('vehicle') || item.badge?.toLowerCase().includes('vehicle') ? 'vehicle' : 'sticker')
-      : (item.id?.includes('laptop') || item.badge?.toLowerCase().includes('laptop') ? 'laptop' : 'mobile')
-  );
+  let target = item.target;
+  if (!target) {
+    const lowerBadge = String(item.badge || '').toLowerCase();
+    const lowerId = String(item.id || '').toLowerCase();
+    if (
+      lowerBadge.includes('iphone') ||
+      lowerBadge.includes('mobile') ||
+      lowerId.endsWith('-mobile')
+    ) {
+      target = 'mobile';
+    } else if (
+      lowerBadge.includes('macbook') ||
+      lowerBadge.includes('laptop') ||
+      lowerId.endsWith('-laptop')
+    ) {
+      target = 'laptop';
+    } else if (
+      lowerBadge.includes('vehicle') ||
+      lowerBadge.includes('car') ||
+      lowerId.endsWith('-vehicle')
+    ) {
+      target = 'vehicle';
+    } else {
+      target = 'sticker';
+    }
+  }
 
   return calculateStickerPrice(target, item.quantity || 1);
 }

@@ -9,7 +9,10 @@ import {
   ShieldAlert,
   UserCheck,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Smartphone,
+  Laptop,
+  Tag
 } from 'lucide-react';
 import { smsUrl, telUrl, whatsappUrl } from '../../utils/contactLinks';
 import { settingsService } from '../../services/settingsService';
@@ -29,37 +32,6 @@ export function formatPhoneDisplay(raw) {
   return raw;
 }
 
-const QUICK_SCENARIOS = [
-  {
-    id: 'blocking',
-    icon: Car,
-    label: 'Car Blocking Way',
-    getMessage: (plate) =>
-      `Assalam-o-Alaikum! Your vehicle (${plate}) is currently blocking the path. Could you please move it when convenient? Thank you!`
-  },
-  {
-    id: 'lights',
-    icon: Lightbulb,
-    label: 'Headlights On',
-    getMessage: (plate) =>
-      `Assalam-o-Alaikum! The lights on your vehicle (${plate}) appear to be left on.`
-  },
-  {
-    id: 'window',
-    icon: AlertTriangle,
-    label: 'Window Open',
-    getMessage: (plate) =>
-      `Assalam-o-Alaikum! A window on your vehicle (${plate}) was left open/unattended.`
-  },
-  {
-    id: 'alarm',
-    icon: Bell,
-    label: 'Alarm Ringing',
-    getMessage: (plate) =>
-      `Assalam-o-Alaikum! The security alarm on your vehicle (${plate}) is currently ringing.`
-  }
-];
-
 function openLink(url) {
   if (!url) return;
   window.location.href = url;
@@ -67,11 +39,188 @@ function openLink(url) {
 
 export default function ActionCards({ vehicle }) {
   const plate = vehicle?.registrationNumber || 'TAG-1';
-  const ownerName = vehicle?.ownerName || 'Vehicle Owner';
+  const ownerName = vehicle?.ownerName || 'Tag Owner';
 
-  const defaultText = `Assalam-o-Alaikum! Your vehicle (${plate}) is currently blocking the path. Could you please move it when convenient? Thank you!`;
+  // Determine target device/placement
+  const target = vehicle?.itemTarget || vehicle?.target || (
+    vehicle?.vehicleType?.toLowerCase().includes('iphone') ||
+    vehicle?.vehicleType?.toLowerCase().includes('mobile') ||
+    vehicle?.vehicleName?.toLowerCase().includes('iphone') ||
+    vehicle?.vehicleName?.toLowerCase().includes('mobile')
+      ? 'mobile'
+      : vehicle?.vehicleType?.toLowerCase().includes('macbook') ||
+        vehicle?.vehicleType?.toLowerCase().includes('laptop') ||
+        vehicle?.vehicleName?.toLowerCase().includes('macbook') ||
+        vehicle?.vehicleName?.toLowerCase().includes('laptop')
+      ? 'laptop'
+      : vehicle?.vehicleType?.toLowerCase().includes('car') ||
+        vehicle?.vehicleType?.toLowerCase().includes('vehicle') ||
+        vehicle?.vehicleName?.toLowerCase().includes('car') ||
+        vehicle?.vehicleName?.toLowerCase().includes('vehicle')
+      ? 'vehicle'
+      : 'mobile'
+  );
 
-  const [selectedScenario, setSelectedScenario] = useState('blocking');
+  const getScenarios = () => {
+    if (target === 'mobile') {
+      return {
+        header: 'Contact Phone Owner',
+        subtitle: 'Found this mobile device or need to alert the owner? Tap WhatsApp or Call.',
+        whatsappLabel: 'WhatsApp Phone Owner',
+        callLabel: 'Call Phone Owner',
+        list: [
+          {
+            id: 'found_phone',
+            icon: Smartphone,
+            label: 'Found Your Phone',
+            getMessage: () =>
+              `Assalam-o-Alaikum! I have found your mobile phone (${plate}). It is safe with me. Please reply so we can arrange to return it to you safely.`
+          },
+          {
+            id: 'left_behind',
+            icon: AlertTriangle,
+            label: 'Left in Public Area',
+            getMessage: () =>
+              `Assalam-o-Alaikum! Your mobile device (${plate}) was left behind. Please reply to retrieve it.`
+          },
+          {
+            id: 'emergency',
+            icon: ShieldAlert,
+            label: 'Emergency Alert',
+            getMessage: () =>
+              `Assalam-o-Alaikum! Reaching out urgently via your Tagtique emergency QR tag regarding your phone.`
+          },
+          {
+            id: 'direct_msg',
+            icon: MessageCircle,
+            label: 'Direct Note',
+            getMessage: () =>
+              `Assalam-o-Alaikum! I scanned your Tagtique emergency QR tag on your mobile. Please get in touch.`
+          }
+        ]
+      };
+    }
+
+    if (target === 'laptop') {
+      return {
+        header: 'Contact Laptop Owner',
+        subtitle: 'Found this laptop or bag? Tap WhatsApp or Call to alert the owner.',
+        whatsappLabel: 'WhatsApp Laptop Owner',
+        callLabel: 'Call Laptop Owner',
+        list: [
+          {
+            id: 'found_laptop',
+            icon: Laptop,
+            label: 'Found Laptop / Bag',
+            getMessage: () =>
+              `Assalam-o-Alaikum! I found your laptop / gear bag (${plate}). It is safe with me. Please reply to arrange return.`
+          },
+          {
+            id: 'at_desk',
+            icon: AlertTriangle,
+            label: 'Left at Desk / Cafe',
+            getMessage: () =>
+              `Assalam-o-Alaikum! Your laptop device (${plate}) was left behind in a public area. Reaching out so you can retrieve it.`
+          },
+          {
+            id: 'reception',
+            icon: UserCheck,
+            label: 'Handed to Security',
+            getMessage: () =>
+              `Assalam-o-Alaikum! Your laptop (${plate}) was found and handed to the building reception / security for safekeeping.`
+          },
+          {
+            id: 'direct_msg',
+            icon: MessageCircle,
+            label: 'Direct Contact',
+            getMessage: () =>
+              `Assalam-o-Alaikum! I scanned your Tagtique laptop tag to reach you.`
+          }
+        ]
+      };
+    }
+
+    if (target === 'vehicle') {
+      return {
+        header: 'Contact Vehicle Owner',
+        subtitle: 'Choose a quick reason below, then tap WhatsApp or Call to alert the driver.',
+        whatsappLabel: 'WhatsApp Vehicle Owner',
+        callLabel: 'Call Vehicle Owner',
+        list: [
+          {
+            id: 'blocking',
+            icon: Car,
+            label: 'Car Blocking Way',
+            getMessage: () =>
+              `Assalam-o-Alaikum! Your vehicle (${plate}) is currently blocking the path. Could you please move it when convenient? Thank you!`
+          },
+          {
+            id: 'lights',
+            icon: Lightbulb,
+            label: 'Headlights Left On',
+            getMessage: () =>
+              `Assalam-o-Alaikum! The lights on your vehicle (${plate}) appear to be left on.`
+          },
+          {
+            id: 'window',
+            icon: AlertTriangle,
+            label: 'Window Open',
+            getMessage: () =>
+              `Assalam-o-Alaikum! A window on your vehicle (${plate}) was left open/unattended.`
+          },
+          {
+            id: 'alarm',
+            icon: Bell,
+            label: 'Alarm Ringing',
+            getMessage: () =>
+              `Assalam-o-Alaikum! The security alarm on your vehicle (${plate}) is currently ringing.`
+          }
+        ]
+      };
+    }
+
+    return {
+      header: 'Contact Owner',
+      subtitle: 'Found this item with Tagtique emergency tag? Tap WhatsApp or Call.',
+      whatsappLabel: 'WhatsApp Owner',
+      callLabel: 'Call Owner',
+      list: [
+        {
+          id: 'found_item',
+          icon: Tag,
+          label: 'Found Your Belonging',
+          getMessage: () =>
+            `Assalam-o-Alaikum! I found your item (${plate}) with the Tagtique emergency QR tag. Please let me know how to return it.`
+        },
+        {
+          id: 'left_behind',
+          icon: AlertTriangle,
+          label: 'Left in Public Area',
+          getMessage: () =>
+            `Assalam-o-Alaikum! Your belonging (${plate}) was left behind. Reaching out so you can retrieve it safely.`
+        },
+        {
+          id: 'emergency',
+          icon: ShieldAlert,
+          label: 'Emergency Alert',
+          getMessage: () =>
+            `Assalam-o-Alaikum! Contacting you urgently via your Tagtique emergency identity tag.`
+        },
+        {
+          id: 'direct_msg',
+          icon: MessageCircle,
+          label: 'Direct Contact',
+          getMessage: () =>
+            `Assalam-o-Alaikum! I scanned your Tagtique smart QR code to get in touch.`
+        }
+      ]
+    };
+  };
+
+  const scenarioConfig = getScenarios();
+  const defaultText = scenarioConfig.list[0].getMessage();
+
+  const [selectedScenario, setSelectedScenario] = useState(scenarioConfig.list[0].id);
   const [message, setMessage] = useState(defaultText);
   const [showCustomInput, setShowCustomInput] = useState(false);
 
@@ -94,34 +243,34 @@ export default function ActionCards({ vehicle }) {
   const targetGuardianCall = rawGuardianPhone;
   const targetGuardianWhatsApp = rawGuardianPhone;
 
-  const handleSelectScenario = (scenario) => {
-    setSelectedScenario(scenario.id);
-    setMessage(scenario.getMessage(plate));
+  const handleSelectScenario = (item) => {
+    setSelectedScenario(item.id);
+    setMessage(item.getMessage());
   };
 
   const finalMessage = message.trim() || defaultText;
 
-  const guardianEmergencyMessage = `🚨 *[EMERGENCY VEHICLE ALERT]*\n\nAssalam-o-Alaikum, I am contacting you as the registered emergency guardian for vehicle *${plate}* (${vehicle?.vehicleName || 'Vehicle'}).\n\nI am trying to reach the owner (${ownerName}), but am unable to connect. Please assist urgently.\n\nThank you!`;
+  const guardianEmergencyMessage = `🚨 *[EMERGENCY TAG ALERT]*\n\nAssalam-o-Alaikum, I am contacting you as the registered emergency guardian for *${plate}* (${vehicle?.vehicleName || 'Tagtique Item'}).\n\nI am trying to reach the owner (${ownerName}), but am unable to connect. Please assist urgently.\n\nThank you!`;
 
   return (
     <div className="w-full flex flex-col gap-5">
-      {/* 1. Main Action Card: Contact Vehicle Owner */}
+      {/* 1. Main Action Card */}
       <div className="w-full bg-[#12131A] rounded-[28px] border border-white/10 p-5 sm:p-6 shadow-[0_20px_50px_rgba(0,0,0,0.6)] flex flex-col gap-5 relative backdrop-blur-xl">
         <div className="flex flex-col text-left">
           <div className="flex items-center gap-2.5">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.8)]" />
             <h2 className="font-extrabold text-2xl sm:text-3xl text-white font-manrope leading-none tracking-tight">
-              Contact Vehicle Owner
+              {scenarioConfig.header}
             </h2>
           </div>
           <p className="text-xs text-white/60 font-medium mt-2 leading-relaxed">
-            Choose a quick reason below, then tap WhatsApp or Call to alert the driver.
+            {scenarioConfig.subtitle}
           </p>
         </div>
 
         {/* Quick Reason Chips */}
         <div className="grid grid-cols-2 gap-2.5">
-          {QUICK_SCENARIOS.map((item) => {
+          {scenarioConfig.list.map((item) => {
             const Icon = item.icon;
             const isSelected = selectedScenario === item.id;
             return (
@@ -181,7 +330,7 @@ export default function ActionCards({ vehicle }) {
                 rows={2}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="Type your message to the vehicle owner..."
+                placeholder="Type your message to the owner..."
                 className="w-full px-3.5 py-2.5 rounded-xl bg-[#181920] border border-white/15 text-xs text-white outline-none focus:border-amber-400 transition-colors resize-none"
               />
             </div>
@@ -217,7 +366,7 @@ export default function ActionCards({ vehicle }) {
                 {typeof navigator !== 'undefined' && !navigator.onLine ? 'Requires Internet' : 'Fastest Response'}
               </span>
               <span className="text-base font-black leading-tight text-black mt-0.5">
-                WhatsApp Vehicle Owner
+                {scenarioConfig.whatsappLabel}
               </span>
             </div>
           </button>
@@ -233,10 +382,10 @@ export default function ActionCards({ vehicle }) {
             </div>
             <div className="flex flex-col text-left">
               <span className="text-[10px] uppercase tracking-wider text-black/70 font-black leading-none">
-                Direct Call
+                Direct Call (Works Offline)
               </span>
               <span className="text-base font-black leading-tight text-black mt-0.5">
-                {`Call Owner (${formatPhoneDisplay(rawOwnerPhone)})`}
+                {`${scenarioConfig.callLabel} (${formatPhoneDisplay(rawOwnerPhone)})`}
               </span>
             </div>
           </button>
@@ -274,7 +423,7 @@ export default function ActionCards({ vehicle }) {
             Emergency or Owner Not Responding?
           </h3>
           <p className="text-xs text-white/70 font-medium mt-1 leading-relaxed">
-            In case of an urgent emergency, accident, or if the driver does not answer, contact the registered guardian directly.
+            In case of an urgent emergency or if the owner does not answer, contact the registered guardian directly.
           </p>
         </div>
 

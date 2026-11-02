@@ -128,20 +128,41 @@ export default function PublicVehicleScanPage() {
       return;
     }
 
-    // Default demo fallback if specific token not yet saved so users viewing the page always see the design
+    // Intelligent fallback for preview and active orders
+    let fallbackTarget = 'mobile';
+    let fallbackOwner = 'Valued Customer';
+    let fallbackPhone = '03001234567';
+    let fallbackCity = 'Faisalabad';
+    let fallbackName = 'iPhone Emergency QR Tag';
+
+    try {
+      const lastOrd = JSON.parse(localStorage.getItem('tagtique_last_order') || '{}');
+      if (lastOrd && lastOrd.orderId && (idToFetch.includes(lastOrd.orderId) || lastOrd.orderId.includes(idToFetch) || idToFetch.startsWith('TGT-'))) {
+        fallbackOwner = lastOrd.customer?.name || fallbackOwner;
+        fallbackPhone = lastOrd.customer?.phone || fallbackPhone;
+        fallbackCity = lastOrd.shippingAddress?.city || fallbackCity;
+        const firstItem = lastOrd.items?.[0];
+        if (firstItem) {
+          fallbackTarget = firstItem.target || 'mobile';
+          fallbackName = firstItem.name || (fallbackTarget === 'laptop' ? 'MacBook Emergency Tag' : fallbackTarget === 'vehicle' ? 'Vehicle Roadside Tag' : 'iPhone Emergency Tag');
+        }
+      }
+    } catch (_) {}
+
     const demoPlate = idToFetch.startsWith('TGT-') ? idToFetch.replace('TGT-', 'TAG-') : (idToFetch.toUpperCase() || 'TAG-1');
     setVehicle({
       tagId: idToFetch,
       qrToken: idToFetch,
-      vehicleName: 'Vehicle QR Tag',
+      vehicleName: fallbackName,
       registrationNumber: demoPlate,
-      vehicleType: 'Car',
+      vehicleType: fallbackTarget === 'laptop' ? 'MacBook / Laptop Tag' : fallbackTarget === 'vehicle' ? 'Vehicle QR Tag' : 'iPhone / Mobile Tag',
+      itemTarget: fallbackTarget,
       status: 'active',
       isVerified: true,
-      ownerName: 'Shade',
-      phoneNumber: '03001234567',
+      ownerName: fallbackOwner,
+      phoneNumber: fallbackPhone,
       guardianNumber: '03019876543',
-      city: 'Faisalabad'
+      city: fallbackCity
     });
     setErrorType(null);
     setLoading(false);
@@ -223,15 +244,15 @@ export default function PublicVehicleScanPage() {
 
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-400">
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>Protect Your Own Ride</span>
+                <span>Protect Your Devices &amp; Belongings</span>
               </div>
 
               <div className="flex flex-col">
                 <h3 className="font-extrabold text-xl leading-tight text-white font-manrope">
-                  Want a Smart QR Tag for your vehicle?
+                  Want a Smart QR Sticker for your Phone, Laptop, or Car?
                 </h3>
                 <p className="text-xs text-white/70 font-medium mt-1.5 leading-relaxed">
-                  Never get blocked in parking again. Connect with drivers safely without sharing your personal number. Weatherproof & UV protected.
+                  Lost items find their way back to you instantly with 1-tap WhatsApp and phone dialing. Weatherproof, UV-cured acrylic vinyl with zero subscription fees.
                 </p>
               </div>
 
@@ -239,7 +260,7 @@ export default function PublicVehicleScanPage() {
                 to="/catalog"
                 className="mt-1.5 w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 active:scale-[0.99] text-black font-extrabold text-sm flex items-center justify-center gap-2.5 shadow-[0_4px_25px_rgba(245,158,11,0.25)] transition-all cursor-pointer"
               >
-                <span>Get Your Smart Sticker</span>
+                <span>Explore All Stickers</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
@@ -261,7 +282,7 @@ export default function PublicVehicleScanPage() {
                 </span>
               </div>
               <p className="text-[10px] text-white/35 mt-1">
-                Powered by Tagtique Pakistan — Smart Vehicle Safety Network
+                Powered by Tagtique Pakistan — Smart QR Lost &amp; Found Network
               </p>
             </div>
           </>

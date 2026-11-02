@@ -112,12 +112,24 @@ export function CartProvider({ children }) {
   const addToCart = (item) => {
     const hydrated = hydrateCartItem(item);
     const qty = Number(hydrated.quantity) || 1;
+    const target = hydrated.target || (
+      hydrated.badge?.toLowerCase().includes('laptop') || hydrated.badge?.toLowerCase().includes('macbook') || hydrated.id?.endsWith('-laptop')
+        ? 'laptop'
+        : hydrated.badge?.toLowerCase().includes('vehicle') || hydrated.badge?.toLowerCase().includes('car') || hydrated.id?.endsWith('-vehicle')
+        ? 'vehicle'
+        : hydrated.badge?.toLowerCase().includes('sticker')
+        ? 'sticker'
+        : 'mobile'
+    );
     const normalizedItem = {
+      ...hydrated,
       id: hydrated.id || `item-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
       name: hydrated.name || 'Custom Smart Tag',
       category: hydrated.category || 'Custom Identity',
       type: hydrated.type || 'sticker',
-      price: Number(hydrated.price || hydrated.totalPrice || 999),
+      target: target,
+      price: Number(hydrated.price || hydrated.totalPrice || (hydrated.type === 'nfc' ? 1999 : (target === 'mobile' || target === 'laptop' ? 600 : 1000))),
+      unitPrice: Number(hydrated.unitPrice || (hydrated.type === 'nfc' ? 1999 : (target === 'mobile' || target === 'laptop' ? 600 : 1000))),
       quantity: qty,
       accent: hydrated.accent || '#F59E0B',
       image: hydrated.image || null,
@@ -127,12 +139,13 @@ export function CartProvider({ children }) {
     setCartItems((prev) => {
       // Check if matching item is already in cart
       const existingIdx = prev.findIndex(
-        (p) => (p.id === normalizedItem.id) || (p.name === normalizedItem.name && p.type === normalizedItem.type)
+        (p) => (p.id === normalizedItem.id) || (p.name === normalizedItem.name && p.type === normalizedItem.type && (p.target || 'mobile') === normalizedItem.target)
       );
       if (existingIdx !== -1) {
         const updated = [...prev];
         updated[existingIdx] = {
           ...updated[existingIdx],
+          target: normalizedItem.target,
           quantity: (Number(updated[existingIdx].quantity) || 1) + qty,
           price: normalizedItem.price
         };

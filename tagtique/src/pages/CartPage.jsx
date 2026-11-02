@@ -112,15 +112,32 @@ export default function CartPage() {
         }
       }
 
-      const itemTarget = item.target || (
-        item.badge?.toLowerCase().includes('vehicle') || item.id?.includes('vehicle')
-          ? 'vehicle'
-          : item.badge?.toLowerCase().includes('laptop') || item.id?.includes('laptop')
-          ? 'laptop'
-          : item.badge?.toLowerCase().includes('sticker') || item.id?.includes('sticker-only')
-          ? 'sticker'
-          : 'mobile'
-      );
+      let itemTarget = item.target;
+      if (!itemTarget) {
+        const lowerBadge = String(item.badge || '').toLowerCase();
+        const lowerId = String(item.id || '').toLowerCase();
+        if (
+          lowerBadge.includes('iphone') ||
+          lowerBadge.includes('mobile') ||
+          lowerId.endsWith('-mobile')
+        ) {
+          itemTarget = 'mobile';
+        } else if (
+          lowerBadge.includes('macbook') ||
+          lowerBadge.includes('laptop') ||
+          lowerId.endsWith('-laptop')
+        ) {
+          itemTarget = 'laptop';
+        } else if (
+          lowerBadge.includes('vehicle') ||
+          lowerBadge.includes('car') ||
+          lowerId.endsWith('-vehicle')
+        ) {
+          itemTarget = 'vehicle';
+        } else {
+          itemTarget = 'sticker';
+        }
+      }
 
       return {
         id: item.id,
@@ -128,7 +145,7 @@ export default function CartPage() {
         category: item.category || item.edition || (isNfc ? 'Executive Hardware' : 'Custom Identity'),
         type: isNfc ? 'nfc' : (item.type || 'sticker'),
         target: itemTarget,
-        price: Number(item.price || item.totalPrice || item.basePrice || 600),
+        price: Number(item.price || item.totalPrice || item.basePrice || (itemTarget === 'mobile' || itemTarget === 'laptop' ? 600 : 1000)),
         quantity: Number(item.quantity || 1),
         accent: item.accent || '#F59E0B',
         image,
@@ -246,7 +263,16 @@ export default function CartPage() {
         vehicles: effectiveItems.map((item, idx) => ({
           name: item.name,
           vehicleNumber: `TAG-${item.editionCode || idx + 1}`,
-          vehicleType: item.type === 'nfc' ? 'NFC Smart Card' : 'Vehicle QR Tag',
+          vehicleType: item.type === 'nfc'
+            ? 'NFC Smart Card'
+            : item.target === 'mobile'
+            ? 'iPhone / Mobile Tag'
+            : item.target === 'laptop'
+            ? 'MacBook / Laptop Tag'
+            : item.target === 'vehicle'
+            ? 'Vehicle QR Tag'
+            : 'Smart Identity Tag',
+          itemTarget: item.target || 'mobile',
           displayName: item.name,
           phone: phone.trim(),
           emergencyPhone: ''
@@ -303,7 +329,7 @@ export default function CartPage() {
           spread: 70,
           origin: { y: 0.6 }
         });
-      } catch (_) {}
+      } catch (_) { }
 
       // Navigate to confirmed receipt
       navigate('/order-confirmation');
@@ -413,10 +439,10 @@ export default function CartPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-          
+
           {/* ================= LEFT COLUMN: CART ITEMS & CHECKOUT FORM ================= */}
           <div className="lg:col-span-7 flex flex-col gap-6">
-            
+
             {/* CARD 1: Selected Order Items */}
             <div className="bg-[#12131A] border border-white/10 rounded-3xl p-6 sm:p-7 shadow-2xl relative overflow-hidden">
               <div className="flex items-center justify-between pb-4 border-b border-white/10">
@@ -441,14 +467,14 @@ export default function CartPage() {
                   <div key={item.id || index} className="py-4 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3.5 min-w-0">
                       {/* Product Thumbnail */}
-                      <div 
+                      <div
                         className={`w-14 h-14 rounded-2xl border border-white/15 bg-[#181824] flex items-center justify-center ${item.type === 'nfc' ? 'p-1' : 'p-1.5'} shrink-0 overflow-hidden relative shadow-inner`}
                       >
                         {item.image ? (
-                          <img 
-                            src={item.image} 
-                            alt={item.name} 
-                            className={`w-full h-full ${item.type === 'nfc' ? 'object-cover rounded-xl shadow-xs' : 'object-contain'}`} 
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            className={`w-full h-full ${item.type === 'nfc' ? 'object-cover rounded-xl shadow-xs' : 'object-contain'}`}
                           />
                         ) : (
                           <QrCode className="w-7 h-7 text-amber-400/80" />
@@ -528,10 +554,10 @@ export default function CartPage() {
                           {item.quantity > 1
                             ? `${item.quantity}-Pack Bundle`
                             : item.type === 'nfc'
-                            ? 'PKR 1,999 each'
-                            : isCompactTarget(item.target)
-                            ? 'PKR 600 each'
-                            : 'PKR 1,000 each'}
+                              ? 'PKR 1,999 each'
+                              : isCompactTarget(item.target)
+                                ? 'PKR 600 each'
+                                : 'PKR 1,000 each'}
                         </span>
                       </div>
                     </div>
@@ -622,11 +648,10 @@ export default function CartPage() {
                         key={c}
                         type="button"
                         onClick={() => setCity(c)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                          city === c
+                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${city === c
                             ? 'bg-amber-400 text-black font-extrabold shadow-sm'
                             : 'bg-white/[0.05] border border-white/10 text-white/70 hover:text-white hover:bg-white/10'
-                        }`}
+                          }`}
                       >
                         {c}
                       </button>
@@ -679,11 +704,10 @@ export default function CartPage() {
                 {/* Option 1: Cash on Delivery */}
                 <div
                   onClick={() => setPaymentMethod('cod')}
-                  className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-3 ${
-                    paymentMethod === 'cod'
+                  className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-3 ${paymentMethod === 'cod'
                       ? 'border-amber-400 bg-amber-400/10 shadow-[0_0_20px_rgba(245,158,11,0.15)]'
                       : 'border-white/10 bg-white/[0.02] hover:border-white/25'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2.5">
@@ -707,11 +731,10 @@ export default function CartPage() {
                 {/* Option 2: Raast / Direct Bank Transfer */}
                 <div
                   onClick={() => setPaymentMethod('raast')}
-                  className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-3 ${
-                    paymentMethod === 'raast'
+                  className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-3 ${paymentMethod === 'raast'
                       ? 'border-amber-400 bg-amber-400/10 shadow-[0_0_20px_rgba(245,158,11,0.15)]'
                       : 'border-white/10 bg-white/[0.02] hover:border-white/25'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2.5">
@@ -779,9 +802,9 @@ export default function CartPage() {
 
           {/* ================= RIGHT COLUMN: STICKY ORDER SUMMARY ================= */}
           <div className="lg:col-span-5 flex flex-col gap-6 lg:sticky lg:top-24">
-            
+
             <div className="bg-[#12131A] border border-white/15 rounded-3xl p-6 sm:p-7 shadow-2xl flex flex-col gap-5 relative overflow-hidden">
-              
+
               {/* Subtle Ambient Glow */}
               <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
 
@@ -796,7 +819,7 @@ export default function CartPage() {
               {effectiveItems.length > 0 && currentPreviewItem && (
                 <div className="rounded-2xl bg-gradient-to-b from-[#181924] via-[#12131A] to-[#0A0B0E] border border-white/10 p-4 relative overflow-hidden flex flex-col gap-3 group shadow-inner">
                   {/* Dynamic Aura Glow matching item accent */}
-                  <div 
+                  <div
                     className="absolute -top-10 -right-10 w-36 h-36 rounded-full blur-3xl opacity-25 pointer-events-none transition-all duration-500"
                     style={{ backgroundColor: currentPreviewItem.accent || '#F59E0B' }}
                   />
@@ -927,9 +950,8 @@ export default function CartPage() {
                               key={dotIdx}
                               type="button"
                               onClick={() => setOrderPreviewIndex(dotIdx)}
-                              className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                                dotIdx === safePreviewIndex ? 'w-4 bg-amber-400' : 'w-1.5 bg-white/25 hover:bg-white/50'
-                              }`}
+                              className={`h-1.5 rounded-full transition-all cursor-pointer ${dotIdx === safePreviewIndex ? 'w-4 bg-amber-400' : 'w-1.5 bg-white/25 hover:bg-white/50'
+                                }`}
                               title={`View item ${dotIdx + 1}`}
                             />
                           ))}
