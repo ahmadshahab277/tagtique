@@ -112,7 +112,11 @@ function AppContent() {
             <Route path="/product/:slug" element={<ProductPage />} />
             <Route path="/nfc-card/:designId" element={<NfcCardPage />} />
             <Route path="/nfc-card/:designId/setup" element={<NfcSetupPage />} />
+            <Route path="/setup/:cardId" element={<NfcSetupPage />} />
+            <Route path="/nfc-setup/:profileId" element={<NfcSetupPage />} />
+            <Route path="/nfc/setup" element={<NfcSetupPage />} />
             <Route path="/profile/:profileId" element={<NfcPublicProfilePage />} />
+            <Route path="/p/:profileId" element={<NfcPublicProfilePage />} />
 
             {/* Unified Luxury Cart & Checkout */}
             <Route path="/cart" element={<CartPage />} />

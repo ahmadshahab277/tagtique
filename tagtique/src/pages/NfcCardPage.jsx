@@ -282,13 +282,6 @@ export default function NfcCardPage() {
                   <CreditCard className="w-4 h-4" />
                   <span>Order Directly</span>
                 </Link>
-
-                <Link
-                  to={`/nfc-card/${design.id}/setup`}
-                  className="inline-flex bg-white/10 hover:bg-white/15 border border-white/15 text-white rounded-full py-3.5 px-6 text-sm font-extrabold items-center justify-center gap-2 transition-all cursor-pointer"
-                >
-                  <span>Preview Profile</span>
-                </Link>
               </div>
 
               <div className="mt-4 flex items-center justify-center gap-6 text-[11px] text-white/50 font-medium">

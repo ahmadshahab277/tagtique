@@ -1,29 +1,36 @@
 const STORAGE_KEY = 'tagtique_nfc_profiles';
 
 export const NFC_FIELDS = [
-  { id: 'instagram', label: 'Instagram', placeholder: 'username or profile URL', kind: 'social' },
-  { id: 'linkedin', label: 'LinkedIn', placeholder: 'https://linkedin.com/in/…', kind: 'url' },
   { id: 'whatsapp', label: 'WhatsApp', placeholder: '03xx or https://wa.me/…', kind: 'whatsapp' },
   { id: 'phone', label: 'Phone', placeholder: '03xx xxxxxxx', kind: 'phone' },
   { id: 'email', label: 'Email', placeholder: 'name@email.com', kind: 'email' },
+  { id: 'instagram', label: 'Instagram', placeholder: '@username or URL', kind: 'social' },
+  { id: 'linkedin', label: 'LinkedIn', placeholder: 'https://linkedin.com/in/…', kind: 'url' },
+  { id: 'twitter', label: 'Twitter / X', placeholder: '@handle or https://x.com/…', kind: 'social' },
+  { id: 'github', label: 'GitHub', placeholder: 'username or URL', kind: 'social' },
   { id: 'website', label: 'Website', placeholder: 'https://…', kind: 'url' },
-  { id: 'tiktok', label: 'TikTok', placeholder: 'username or profile URL', kind: 'social' },
-  { id: 'youtube', label: 'YouTube', placeholder: 'channel URL or @name', kind: 'social' },
-  { id: 'facebook', label: 'Facebook', placeholder: 'profile URL or name', kind: 'social' }
+  { id: 'youtube', label: 'YouTube', placeholder: '@channel or URL', kind: 'social' },
+  { id: 'tiktok', label: 'TikTok', placeholder: '@username or URL', kind: 'social' },
+  { id: 'facebook', label: 'Facebook', placeholder: 'profile URL or username', kind: 'social' }
 ];
 
 function emptyFields() {
   return Object.fromEntries(NFC_FIELDS.map((field) => [field.id, { enabled: false, value: '' }]));
 }
 
-export function createNfcProfile(designId) {
-  const id = `nfc-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+export function createNfcProfile(designId, existingId = null) {
+  const id = existingId || `nfc-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
   return {
     id,
-    designId,
+    designId: designId || 'executive-black',
     name: '',
+    title: '',
+    company: '',
+    city: 'Lahore, Pakistan',
     bio: '',
-    fields: emptyFields()
+    passcode: '12345',
+    fields: emptyFields(),
+    customLinks: []
   };
 }
 
@@ -38,15 +45,36 @@ function readAll() {
 }
 
 export function saveNfcProfile(profile) {
+  if (!profile || !profile.id) return profile;
   const all = readAll();
-  all[profile.id] = profile;
+  const normalized = {
+    ...profile,
+    passcode: String(profile.passcode || '12345').trim(),
+    updatedAt: Date.now()
+  };
+  all[profile.id] = normalized;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
-  return profile;
+  return normalized;
 }
 
 export function loadNfcProfile(id) {
   if (!id) return null;
-  return readAll()[id] || null;
+  const all = readAll();
+  if (all[id]) return all[id];
+
+  // Search case-insensitive or partial match
+  const clean = String(id).trim().toLowerCase();
+  const found = Object.values(all).find((p) => {
+    return String(p.id).toLowerCase() === clean || String(p.id).toLowerCase().includes(clean);
+  });
+  return found || null;
+}
+
+export function verifyNfcPasscode(profileId, passcode) {
+  const profile = loadNfcProfile(profileId);
+  if (!profile) return false;
+  const expected = String(profile.passcode || '12345').trim();
+  return expected === String(passcode || '').trim();
 }
 
 export function fieldError(field, value) {
@@ -69,12 +97,16 @@ export function publicFieldHref(field, value) {
   if (field.kind === 'phone') return `tel:${text.replace(/\s/g, '')}`;
   if (field.kind === 'whatsapp') {
     if (/^https?:\/\//.test(text)) return text;
-    return `https://wa.me/${text.replace(/\D/g, '')}`;
+    const digits = text.replace(/\D/g, '');
+    const cleanPhone = digits.startsWith('0') ? '92' + digits.slice(1) : digits.startsWith('92') ? digits : '92' + digits;
+    return `https://wa.me/${cleanPhone}`;
   }
   if (field.kind === 'url') return text;
   if (/^https?:\/\//.test(text)) return text;
   const handle = text.replace(/^@/, '');
   if (field.id === 'instagram') return `https://instagram.com/${handle}`;
+  if (field.id === 'twitter' || field.id === 'x') return `https://x.com/${handle}`;
+  if (field.id === 'github') return `https://github.com/${handle}`;
   if (field.id === 'tiktok') return `https://www.tiktok.com/@${handle}`;
   if (field.id === 'youtube') return `https://www.youtube.com/@${handle}`;
   if (field.id === 'facebook') return `https://facebook.com/${handle}`;
